@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap');
+@import "tailwindcss";
+
+:root {
+  --deep: #080e14;
+  --card-bg: #0d1b2a;
+  --aqua: #3fd2e6;
+  --aqua-bright: #7df9ff;
+  --aqua-dim: #1a6a78;
+  --gold: #ffd166;
+  --gold-dim: #8a6a20;
+  --coral: #ff6b6b;
+  --foam: #dffaff;
+  --muted: #4a6a80;
+  --border: rgba(63, 210, 230, 0.3);
+  --border-hover: rgba(125, 249, 255, 0.8);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  background-color: var(--deep);
+  color: var(--foam);
+}
+
+body {
+  font-family: 'VT323', monospace;
+}
+
+.font-pixel {
+  font-family: 'Press Start 2P', monospace;
+}
+
+.font-vt {
+  font-family: 'VT323', monospace;
+}
+
+/* Scanline overlay */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* CRT vignette */
+.vignette {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 55%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* Neon text glow */
+.neon-aqua {
+  color: var(--aqua-bright);
+  text-shadow:
+    0 0 7px var(--aqua),
+    0 0 14px var(--aqua),
+    0 0 30px var(--aqua);
+}
+
+.neon-gold {
+  color: var(--gold);
+  text-shadow:
+    0 0 7px rgba(255, 209, 102, 0.8),
+    0 0 14px rgba(255, 209, 102, 0.5);
+}
+
+/* Flicker animation for the main title */
+@keyframes flicker {
+  0%, 89%, 91%, 93%, 95%, 100% { opacity: 1; }
+  90%, 92%, 94% { opacity: 0.85; }
+}
+
+.flicker {
+  animation: flicker 6s ease-in-out infinite;
+}
+
+/* Blink for cursor/text */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.blink {
+  animation: blink 1s step-end infinite;
+}
+
+/* Pulse glow for buttons */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px var(--aqua), 0 4px 0 var(--aqua-dim); }
+  50% { box-shadow: 0 0 20px var(--aqua), 0 0 40px rgba(63, 210, 230, 0.4), 0 4px 0 var(--aqua-dim); }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Card hover lift */
+.game-card {
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.game-card:hover {
+  transform: translateY(-6px);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--deep); }
+::-webkit-scrollbar-thumb { background: var(--aqua-dim); border-radius: 3px; }
