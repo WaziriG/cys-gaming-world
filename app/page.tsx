@@ -19,20 +19,21 @@ const GAMES: Game[] = [
     players: '1P',
   },
   {
-    slug: 'coming-soon-2',
-    title: '???',
-    tagline: 'Something wicked this way comes.',
-    description: 'The next game is in development. Check back soon.',
-    icon: '❓',
-    iconBg: '🌑',
-    accentColor: '#8b5cf6',
-    glowColor: 'rgba(139, 92, 246, 0.2)',
-    borderColor: 'rgba(139, 92, 246, 0.3)',
-    hoverBorder: 'rgba(167, 139, 250, 0.6)',
-    href: '#',
-    live: false,
-    genre: '???',
-    players: '?P',
+    slug: 'elemental-trials',
+    title: 'ELEMENTAL TRIALS',
+    tagline: 'Seven guardians. One gauntlet.',
+    description:
+      'Battle 7 elemental guardians (and a hidden Void Universe of 5 more) across themed arenas. Collect and merge weapons, exploit boss weaknesses, and loop endlessly as bosses grow stronger.',
+    icon: '⚔️',
+    iconBg: '🔥',
+    accentColor: '#ff6b6b',
+    glowColor: 'rgba(255, 107, 107, 0.35)',
+    borderColor: 'rgba(255, 107, 107, 0.5)',
+    hoverBorder: 'rgba(255, 157, 157, 0.9)',
+    href: '/games/elemental-trials',
+    live: true,
+    genre: 'BOSS RUSH',
+    players: '1P',
   },
   {
     slug: 'coming-soon-3',
@@ -103,9 +104,9 @@ export default function ArcadeLobby() {
           className="mt-12 border rounded-lg px-6 py-4 flex flex-wrap gap-6 justify-center"
           style={{ borderColor: 'rgba(63,210,230,0.2)', background: 'rgba(13,27,42,0.8)' }}
         >
-          <Stat label="GAMES" value="1" />
-          <Stat label="TOTAL BOSSES" value="30+" />
-          <Stat label="WORLDS" value="2" />
+          <Stat label="GAMES" value="2" />
+          <Stat label="TOTAL BOSSES" value="40+" />
+          <Stat label="WORLDS" value="4" />
           <Stat label="PLAYERS" value="1" />
         </div>
       </main>

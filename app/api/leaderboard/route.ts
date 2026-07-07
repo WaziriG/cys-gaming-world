@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getTopScores, insertScore } from '@/lib/db'
 
-const VALID_GAMES = new Set(['aqua-survivor'])
-const MAX_SCORE_SECONDS = 7200 // 2 hours — generous cap
+const GAME_LIMITS: Record<string, { maxScore: number; maxKills: number; maxLevel: number }> = {
+  'aqua-survivor': { maxScore: 7200, maxKills: 9999, maxLevel: 200 }, // score = survival seconds, 2hr cap
+  'elemental-trials': { maxScore: 500000, maxKills: 999, maxLevel: 200 }, // score = points, endless-loop runs
+}
+const VALID_GAMES = new Set(Object.keys(GAME_LIMITS))
 
 export async function GET(req: NextRequest) {
   const game = req.nextUrl.searchParams.get('game') ?? ''
@@ -37,16 +40,17 @@ export async function POST(req: NextRequest) {
   if (typeof game !== 'string' || !VALID_GAMES.has(game)) {
     return NextResponse.json({ error: 'Invalid game' }, { status: 400 })
   }
+  const limits = GAME_LIMITS[game]
   if (typeof playerName !== 'string' || playerName.trim().length < 1 || playerName.trim().length > 20) {
     return NextResponse.json({ error: 'Name must be 1–20 characters' }, { status: 400 })
   }
-  if (typeof score !== 'number' || score < 0 || score > MAX_SCORE_SECONDS || !Number.isInteger(score)) {
+  if (typeof score !== 'number' || score < 0 || score > limits.maxScore || !Number.isInteger(score)) {
     return NextResponse.json({ error: 'Invalid score' }, { status: 400 })
   }
-  if (typeof kills !== 'number' || kills < 0 || kills > 9999 || !Number.isInteger(kills)) {
+  if (typeof kills !== 'number' || kills < 0 || kills > limits.maxKills || !Number.isInteger(kills)) {
     return NextResponse.json({ error: 'Invalid kills' }, { status: 400 })
   }
-  if (typeof level !== 'number' || level < 1 || level > 200 || !Number.isInteger(level)) {
+  if (typeof level !== 'number' || level < 1 || level > limits.maxLevel || !Number.isInteger(level)) {
     return NextResponse.json({ error: 'Invalid level' }, { status: 400 })
   }
 

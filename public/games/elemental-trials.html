@@ -1,0 +1,2290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Elemental Trials</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-user-select:none; user-select:none; touch-action:none; }
+  html,body { width:100%; height:100%; overflow:hidden; background:#0d0d14; font-family: 'Courier New', monospace; }
+  #wrap { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+  canvas { image-rendering: pixelated; image-rendering: crisp-edges; background:#1a1226; box-shadow:0 0 0 3px #000, 0 0 30px #000; }
+  #overlay { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+             background:rgba(10,8,18,0.92); color:#fff; text-align:center; z-index:10; padding:20px; }
+  #overlay h1 { font-size:28px; letter-spacing:2px; color:#8ff; text-shadow:2px 2px 0 #024; margin-bottom:6px; }
+  #overlay p { font-size:14px; line-height:1.7; color:#cdd; max-width:340px; margin-bottom:16px; }
+  .btn { background:#2a2; color:#000; border:3px solid #000; padding:14px 26px; font-family:inherit; font-weight:bold;
+          font-size:18px; cursor:pointer; box-shadow:3px 3px 0 #000; margin:6px; }
+  .btn:active { transform:translate(2px,2px); box-shadow:1px 1px 0 #000; }
+  .btn.blue { background:#39f; color:#fff; }
+  .btn.gold { background:#ffd23a; color:#000; }
+  #hint { font-size:12px; color:#889; margin-top:14px; }
+  #coinRow, #coinRow2 { font-size:18px; color:#ffd23a; font-weight:bold; margin-bottom:10px; }
+  #diffLabel { font-size:11px; color:#889; letter-spacing:2px; margin-bottom:4px; }
+  #diffRow { display:flex; gap:5px; justify-content:center; flex-wrap:wrap; margin-bottom:12px; }
+  .diffbtn { border:2px solid #000; border-radius:6px; padding:6px 8px; font-family:inherit; font-weight:bold;
+             font-size:10px; cursor:pointer; box-shadow:2px 2px 0 #000; background:#2a2440; color:#aab; }
+  .diffbtn.sel { outline:3px solid #fff; transform:translate(1px,1px); box-shadow:1px 1px 0 #000; }
+  #shopList { display:flex; flex-direction:column; gap:8px; width:280px; max-height:260px; overflow-y:auto; margin-bottom:12px; }
+  #rewardList { display:flex; flex-direction:column; gap:10px; width:280px; margin-bottom:12px; }
+  .rewardItem { display:flex; align-items:center; gap:10px; background:#1c1830; border:3px solid #000;
+                border-radius:10px; padding:10px 14px; cursor:pointer; box-shadow:3px 3px 0 #000; }
+  .rewardItem:active { transform:translate(2px,2px); box-shadow:1px 1px 0 #000; }
+  .rewardItem .ri-swatch { width:28px; height:28px; border:2px solid #000; border-radius:6px; flex-shrink:0; }
+  .rewardItem .ri-name { color:#fff; font-size:14px; font-weight:bold; text-align:left; }
+  .rewardItem .ri-desc { color:#99a; font-size:10px; text-align:left; }
+  .shopItem { display:flex; align-items:center; justify-content:space-between; background:#1c1830;
+              border:2px solid #000; border-radius:8px; padding:8px 12px; }
+  .shopItem .si-name { color:#fff; font-size:13px; text-align:left; }
+  .shopItem .si-desc { color:#99a; font-size:10px; text-align:left; }
+  .shopItem button { background:#ffd23a; color:#000; border:2px solid #000; border-radius:6px; padding:6px 10px;
+                     font-family:inherit; font-weight:bold; font-size:12px; box-shadow:2px 2px 0 #000; }
+  .shopItem button:disabled { background:#555; color:#999; }
+  .shopItem button.owned { background:#2a2; }
+  #ctrls { position:fixed; bottom:20px; left:16px; z-index:5; display:none; }
+  #joyBase { width:110px; height:110px; border-radius:50%; background:rgba(60,70,110,0.5);
+             border:3px solid #000; position:relative; touch-action:none; }
+  #joyStick { width:48px; height:48px; border-radius:50%; background:#88a; border:3px solid #000;
+              position:absolute; left:28px; top:28px; box-shadow:2px 2px 0 #000; }
+  .attackbtn { position:fixed; bottom:24px; right:20px; width:84px; height:84px; border-radius:50%;
+               background:#f44; border:3px solid #000; color:#fff; font-weight:bold; font-size:15px; z-index:5;
+               display:none; align-items:center; justify-content:center; box-shadow:3px 3px 0 #000; }
+  .attackbtn:active { transform:translate(2px,2px); }
+  /* four directional shoot keys arranged in a plus */
+  #shootPad { position:fixed; bottom:112px; right:14px; width:132px; height:132px; z-index:5; display:none; }
+  .sbtn { position:absolute; width:42px; height:42px; border-radius:8px; background:#39f; border:3px solid #000;
+          color:#fff; font-weight:bold; font-size:18px; display:flex; align-items:center; justify-content:center;
+          box-shadow:2px 2px 0 #000; }
+  .sbtn:active { transform:translate(2px,2px); background:#6cf; }
+  #sUp    { left:45px; top:0; }
+  #sLeft  { left:0;   top:45px; }
+  #sRight { left:90px; top:45px; }
+  #sDown  { left:45px; top:90px; }
+  .abilitybtn { position:fixed; bottom:24px; right:170px; width:60px; height:60px; border-radius:50%;
+              background:#9b5de5; border:3px solid #000; color:#fff; font-weight:bold; font-size:12px; z-index:5;
+              display:none; align-items:center; justify-content:center; box-shadow:3px 3px 0 #000; }
+  .abilitybtn:active { transform:translate(2px,2px); }
+  .abilitybtn.ready { background:#9b5de5; }
+  .abilitybtn.cooling { background:#555; opacity:0.6; }
+  .jumpbtn { position:fixed; bottom:92px; right:180px; width:56px; height:56px; border-radius:50%;
+             background:#2ac; border:3px solid #000; color:#fff; font-weight:bold; font-size:13px; z-index:5;
+             display:none; align-items:center; justify-content:center; box-shadow:3px 3px 0 #000; }
+  .jumpbtn:active { transform:translate(2px,2px); }
+  #soundBtn { position:fixed; top:10px; right:10px; z-index:6; display:none; background:#222; color:#fff;
+              border:2px solid #000; width:38px; height:34px; font-size:16px; box-shadow:2px 2px 0 #000;
+              border-radius:6px; text-align:center; line-height:32px; }
+  #weaponPicker { position:fixed; top:48px; left:10px; z-index:6; display:none; flex-direction:row; gap:6px; }
+  .wslot { width:40px; height:40px; border:3px solid #000; border-radius:6px; display:flex; align-items:center;
+           justify-content:center; font-family:'Courier New',monospace; font-weight:bold; font-size:10px;
+           color:#fff; box-shadow:2px 2px 0 #000; }
+  .wslot.sel { outline:3px solid #fff; outline-offset:1px; }
+  #leaveBtn { position:fixed; top:10px; left:50%; transform:translateX(-50%); z-index:6; display:none;
+              background:#222; color:#fff; border:2px solid #000; padding:8px 16px; font-family:inherit;
+              font-weight:bold; font-size:13px; box-shadow:2px 2px 0 #000; border-radius:6px; }
+  #leaveBtn:active { transform:translateX(-50%) translate(1px,1px); }
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="c"></canvas></div>
+
+<div id="ctrls">
+  <div id="joyBase"><div id="joyStick"></div></div>
+</div>
+<div class="attackbtn" id="atkBtn">SWING</div>
+<div id="shootPad">
+  <div class="sbtn" id="sUp" data-sdir="up">▲</div>
+  <div class="sbtn" id="sLeft" data-sdir="left">◀</div>
+  <div class="sbtn" id="sRight" data-sdir="right">▶</div>
+  <div class="sbtn" id="sDown" data-sdir="down">▼</div>
+</div>
+<div class="abilitybtn" id="abilityBtn">POWER</div>
+<div class="jumpbtn" id="jumpBtn">JUMP</div>
+<div id="weaponPicker"></div>
+<div id="soundBtn">🔊</div>
+<div id="leaveBtn">✕ LEAVE</div>
+
+<div id="overlay">
+  <div id="homePanel">
+    <h1>ELEMENTAL TRIALS</h1>
+    <p id="ovText">Cross the arenas and defeat the elemental guardians:
+       <b>Water · Fire · Earth · Lightning · Ice · Poison · Wind</b>. Each has deadly abilities — figure out how to survive.</p>
+    <div id="coinRow">🪙 <span id="coinCount">0</span> coins</div>
+    <div id="diffLabel">DIFFICULTY</div>
+    <div id="diffRow"></div>
+    <button class="btn blue" id="startBtn">PLAY (JOYSTICK)</button>
+    <button class="btn" id="tiltBtn">USE TILT INSTEAD</button>
+    <button class="btn gold" id="shopBtnHome">🛒 SHOP</button>
+    <div id="hint">Joystick to move · 4 arrows to shoot · SWING to attack · 🔊 for music</div>
+  </div>
+
+  <div id="endPanel" style="display:none">
+    <h1 id="endTitle">YOU WIN!</h1>
+    <p id="endText"></p>
+    <button class="btn blue" id="continueBtn">KEEP PLAYING (HARDER)</button>
+    <button class="btn gold" id="shopBtnEnd">🛒 SHOP</button>
+    <button class="btn" id="homeBtn">🏠 HOME</button>
+  </div>
+
+  <div id="shopPanel" style="display:none">
+    <h1>🛒 SHOP</h1>
+    <div id="coinRow2">🪙 <span id="coinCount2">0</span> coins</div>
+    <div id="shopList"></div>
+    <button class="btn" id="shopBackBtn">BACK</button>
+  </div>
+
+  <div id="rewardPanel" style="display:none">
+    <h1 id="rewardTitle">GUARDIAN DEFEATED!</h1>
+    <p id="rewardText">Choose the weapon/ability you want to receive:</p>
+    <div id="rewardList"></div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+// ---------- pixel canvas setup ----------
+const VW = 220, VH = 300;      // virtual (pixel) resolution
+canvas.width = VW; canvas.height = VH;
+function resize(){
+  const pad = 8;
+  const scale = Math.min((window.innerWidth-pad)/VW, (window.innerHeight-pad)/VH);
+  canvas.style.width = Math.floor(VW*scale)+'px';
+  canvas.style.height = Math.floor(VH*scale)+'px';
+}
+window.addEventListener('resize', resize); resize();
+ctx.imageSmoothingEnabled = false;
+
+// ============================================================
+//  AUDIO: chiptune background music (different per boss) + SFX
+//  All generated with Web Audio — no files, works offline.
+// ============================================================
+let AC = null;
+let musicGain = null, sfxGain = null;
+let soundOn = true;
+let musicTimer = null;
+let currentTrack = null;
+
+function initAudio(){
+  if(AC) return;
+  try{
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    musicGain = AC.createGain(); musicGain.gain.value = 0.18; musicGain.connect(AC.destination);
+    sfxGain = AC.createGain();   sfxGain.gain.value = 0.25;   sfxGain.connect(AC.destination);
+  }catch(e){ AC=null; }
+}
+
+function tone(freq, dur, type, gainNode, vol){
+  if(!AC || !soundOn) return;
+  const o = AC.createOscillator();
+  const g = AC.createGain();
+  o.type = type || 'square';
+  o.frequency.value = freq;
+  g.gain.value = 0;
+  g.gain.linearRampToValueAtTime(vol||0.5, AC.currentTime+0.01);
+  g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime+dur);
+  o.connect(g); g.connect(gainNode||sfxGain);
+  o.start(); o.stop(AC.currentTime+dur+0.02);
+}
+
+const NOTE = { C:261.63,D:293.66,E:329.63,F:349.23,G:392.00,A:440.00,B:493.88,
+               c:523.25,d:587.33,e:659.25,f:698.46,g:783.99,a:880.00, r:0 };
+function nf(n, oct){ const base=NOTE[n]||0; return base? base*Math.pow(2,(oct||0)) : 0; }
+
+const TRACKS = {
+  water: { tempo:0.28, wave:'sine',     bass:'triangle',
+           mel:['E','G','A','c','A','G','E','D','E','G','A','G','E','D','C','r'] },
+  fire:  { tempo:0.18, wave:'square',   bass:'sawtooth',
+           mel:['c','c','A','c','g','A','c','r','A','G','A','c','A','G','E','r'] },
+  earth: { tempo:0.30, wave:'triangle', bass:'square',
+           mel:['C','C','E','G','E','C','D','r','C','C','G','E','C','D','C','r'] },
+  wind:  { tempo:0.20, wave:'square',   bass:'triangle',
+           mel:['G','A','c','e','d','c','A','G','E','G','A','c','d','c','A','G'] },
+  lightning: { tempo:0.14, wave:'square', bass:'sawtooth',
+           mel:['e','r','e','g','e','c','e','r','d','r','d','f','d','A','d','r'] },
+  ice:   { tempo:0.32, wave:'sine',     bass:'triangle',
+           mel:['c','A','G','E','r','G','A','c','d','c','A','G','r','E','G','r'] },
+  poison:{ tempo:0.24, wave:'triangle', bass:'sawtooth',
+           mel:['E','F','E','D','r','E','F','A','G','F','E','D','r','C','D','r'] },
+  shadow:{ tempo:0.36, wave:'sine',     bass:'sawtooth',
+           mel:['D','r','F','r','A','r','G','F','D','r','C','r','D','F','E','r'] },
+  cosmic:{ tempo:0.20, wave:'triangle', bass:'sine',
+           mel:['c','e','g','e','c','g','e','r','d','f','a','f','d','a','f','r'] },
+  chrono:{ tempo:0.28, wave:'sine',     bass:'triangle',
+           mel:['G','c','G','e','G','c','G','r','F','A','F','d','F','A','F','r'] },
+  gravity:{ tempo:0.40, wave:'sawtooth', bass:'sawtooth',
+           mel:['C','r','C','r','D','r','C','r','A','r','A','r','G','r','C','r'] },
+  void:  { tempo:0.44, wave:'sine',     bass:'sawtooth',
+           mel:['C','r','r','E','r','r','D','r','r','F','r','E','r','C','r','r'] },
+  menu:  { tempo:0.26, wave:'square',   bass:'triangle',
+           mel:['C','E','G','c','G','E','C','r','D','F','A','c','A','F','D','r'] },
+};
+
+let melIndex = 0;
+function startMusic(name){
+  initAudio();
+  if(!AC) return;
+  if(currentTrack===name && musicTimer) return;
+  stopMusic();
+  currentTrack = name;
+  const track = TRACKS[name] || TRACKS.menu;
+  melIndex = 0;
+  const step = () => {
+    if(!soundOn){ return; }
+    const n = track.mel[melIndex % track.mel.length];
+    if(n!=='r') tone(nf(n,0), track.tempo*0.9, track.wave, musicGain, 0.5);
+    if(melIndex%2===0){
+      const bn = track.mel[melIndex % track.mel.length];
+      if(bn!=='r') tone(nf(bn,-1), track.tempo*1.6, track.bass, musicGain, 0.35);
+    }
+    melIndex++;
+    musicTimer = setTimeout(step, track.tempo*1000);
+  };
+  step();
+}
+function stopMusic(){
+  if(musicTimer){ clearTimeout(musicTimer); musicTimer=null; }
+  currentTrack=null;
+}
+
+function sfxShoot(){ tone(660,0.08,'square',sfxGain,0.3); }
+function sfxSwing(){ tone(180,0.10,'sawtooth',sfxGain,0.35); }
+function sfxHurt(){ tone(120,0.18,'square',sfxGain,0.4); }
+function sfxWin(){ [523,659,784,1046].forEach((f,i)=>setTimeout(()=>tone(f,0.2,'square',sfxGain,0.4), i*140)); }
+
+const soundBtn = document.getElementById('soundBtn');
+soundBtn.addEventListener('click',()=>{
+  soundOn = !soundOn;
+  soundBtn.textContent = soundOn ? '🔊' : '🔇';
+  if(soundOn){ if(gameState==='fight'&&boss) startMusic(boss.type); }
+  else { stopMusic(); }
+});
+
+// ---------- input ----------
+const input = { x:0, y:0, tilt:false };
+let useTilt = false;
+
+// ---------- on-screen JOYSTICK (analog movement) ----------
+const joyBase = document.getElementById('joyBase');
+const joyStick = document.getElementById('joyStick');
+let joyId = null;
+const JOY_R = 34;   // max travel radius
+function joyMove(clientX, clientY){
+  const rect = joyBase.getBoundingClientRect();
+  const cx = rect.left + rect.width/2;
+  const cy = rect.top + rect.height/2;
+  let dx = clientX - cx, dy = clientY - cy;
+  const d = Math.hypot(dx,dy) || 1;
+  const clamped = Math.min(d, JOY_R);
+  const nx = dx/d, ny = dy/d;
+  // visual
+  joyStick.style.left = (28 + nx*clamped) + 'px';
+  joyStick.style.top  = (28 + ny*clamped) + 'px';
+  // input (dead zone near center)
+  const mag = clamped/JOY_R;
+  if(mag < 0.15){ input.x=0; input.y=0; }
+  else { input.x = nx*mag; input.y = ny*mag; }
+}
+function joyReset(){
+  joyStick.style.left='28px'; joyStick.style.top='28px';
+  input.x=0; input.y=0; joyId=null;
+}
+joyBase.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  const t=e.changedTouches[0]; joyId=t.identifier; joyMove(t.clientX,t.clientY);
+},{passive:false});
+joyBase.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  for(const t of e.changedTouches){ if(t.identifier===joyId){ joyMove(t.clientX,t.clientY); } }
+},{passive:false});
+joyBase.addEventListener('touchend',e=>{
+  for(const t of e.changedTouches){ if(t.identifier===joyId){ joyReset(); } }
+},{passive:false});
+// mouse (for testing on computer)
+let joyMouse=false;
+joyBase.addEventListener('mousedown',e=>{ joyMouse=true; joyMove(e.clientX,e.clientY); });
+window.addEventListener('mousemove',e=>{ if(joyMouse) joyMove(e.clientX,e.clientY); });
+window.addEventListener('mouseup',()=>{ if(joyMouse){ joyMouse=false; joyReset(); } });
+
+// ---------- four directional SHOOT keys (hold to auto-fire!) ----------
+document.querySelectorAll('.sbtn').forEach(b=>{
+  const dir=b.dataset.sdir;
+  let holdTimer=null;
+  const start=(e)=>{
+    if(e) e.preventDefault();
+    shootDir(dir);
+    if(holdTimer) clearInterval(holdTimer);
+    // keep firing while held; actual rate is capped by the weapon's shootCd
+    holdTimer=setInterval(()=>shootDir(dir), 40);
+  };
+  const stop=()=>{ if(holdTimer){ clearInterval(holdTimer); holdTimer=null; } };
+  b.addEventListener('touchstart',start,{passive:false});
+  b.addEventListener('touchend',stop);
+  b.addEventListener('touchcancel',stop);
+  b.addEventListener('mousedown',start);
+  window.addEventListener('mouseup',stop);
+});
+
+// tilt
+function handleTilt(e){
+  if(!useTilt) return;
+  // gamma = left/right (-90..90), beta = front/back
+  let gx = (e.gamma||0)/22;
+  let gy = ((e.beta||0)-35)/22;   // 35deg = comfortable holding angle
+  input.x = Math.max(-1,Math.min(1,gx));
+  input.y = Math.max(-1,Math.min(1,gy));
+}
+
+// swipe = dash
+let touchStart=null;
+canvas.addEventListener('touchstart',e=>{ const t=e.touches[0]; touchStart={x:t.clientX,y:t.clientY,t:Date.now()}; },{passive:true});
+canvas.addEventListener('touchend',e=>{
+  if(!touchStart) return;
+  const t=e.changedTouches[0];
+  const dx=t.clientX-touchStart.x, dy=t.clientY-touchStart.y;
+  const dist=Math.hypot(dx,dy), dt=Date.now()-touchStart.t;
+  if(dist>30 && dt<400){ doDash(dx/dist, dy/dist); }
+  touchStart=null;
+},{passive:true});
+
+// keyboard (for testing on computer)
+const keys={};
+addEventListener('keydown',e=>{keys[e.key]=true; if(e.key===' ')swing(); if(e.key==='f'||e.key==='F')shoot(); if(e.key==='e'||e.key==='E')useAbility(); if(e.key==='j'||e.key==='J')jump(); if(e.key==='q'||e.key==='Q'){cycleWeapon();refreshWeaponPicker();}});
+addEventListener('keyup',e=>{keys[e.key]=false;});
+function readKeys(){
+  if(useTilt) return;
+  let kx=0,ky=0;
+  if(keys['ArrowLeft']||keys['a'])kx=-1;
+  if(keys['ArrowRight']||keys['d'])kx=1;
+  if(keys['ArrowUp']||keys['w'])ky=-1;
+  if(keys['ArrowDown']||keys['s'])ky=1;
+  if(kx||ky){ input.x=kx; input.y=ky; keyboardMoving=true; }
+  else if(keyboardMoving){ input.x=0; input.y=0; keyboardMoving=false; }
+  // when neither keys nor keyboardMoving, leave input alone so the joystick controls it
+}
+let keyboardMoving=false;
+
+let atkHeld=false;   // holding ATTACK powers the Gravity Gauntlet's pull
+document.getElementById('atkBtn').addEventListener('touchstart',e=>{e.preventDefault();swing();atkHeld=true;});
+document.getElementById('atkBtn').addEventListener('touchend',()=>{atkHeld=false;});
+document.getElementById('atkBtn').addEventListener('touchcancel',()=>{atkHeld=false;});
+document.getElementById('atkBtn').addEventListener('mousedown',()=>{swing();atkHeld=true;});
+window.addEventListener('mouseup',()=>{atkHeld=false;});
+document.getElementById('abilityBtn').addEventListener('touchstart',e=>{e.preventDefault();useAbility();});
+document.getElementById('abilityBtn').addEventListener('mousedown',()=>useAbility());
+document.getElementById('jumpBtn').addEventListener('touchstart',e=>{e.preventDefault();jump();});
+document.getElementById('jumpBtn').addEventListener('mousedown',()=>jump());
+
+// weapon picker (top-left): shows each earned weapon's look; tap to switch
+function refreshWeaponPicker(){
+  const wp=document.getElementById('weaponPicker');
+  const owned=ownedWeapons();
+  if(owned.length===0){ wp.style.display='none'; return; }
+  wp.style.display='flex';
+  wp.innerHTML='';
+  for(const w of owned){
+    const slot=document.createElement('div');
+    slot.className='wslot'+(w===currentWeapon?' sel':'');
+    const fused=mergedInto(w);
+    if(fused.length){
+      // merged weapons show all their fused colors as a gradient
+      const cols=[WEAPONS[w].color, ...fused.map(f=>WEAPONS[f].color)];
+      slot.style.background='linear-gradient(135deg, '+cols.join(',')+')';
+    } else {
+      slot.style.background=WEAPONS[w].color;
+    }
+    slot.textContent=WEAPONS[w].label;
+    slot.addEventListener('click',()=>{ currentWeapon=w; setBanner(WEAPONS[w].name+' equipped',0.9); refreshWeaponPicker(); });
+    wp.appendChild(slot);
+  }
+}
+
+// ---------- start buttons ----------
+const overlay=document.getElementById('overlay');
+// ---------- overlay PANEL switching ----------
+function showPanel(name){
+  document.getElementById('homePanel').style.display = name==='home' ? 'block':'none';
+  document.getElementById('endPanel').style.display   = name==='end'  ? 'block':'none';
+  document.getElementById('shopPanel').style.display   = name==='shop' ? 'block':'none';
+  document.getElementById('rewardPanel').style.display = name==='reward' ? 'block':'none';
+  overlay.style.display='flex';
+  updateCoinDisplays();
+  if(name==='shop') renderShop();
+  if(name==='home') renderDiffRow();
+}
+
+function beginGame(){
+  overlay.style.display='none';
+  // joystick shows unless the player chose tilt
+  document.getElementById('ctrls').style.display = useTilt ? 'none':'block';
+  document.getElementById('atkBtn').style.display='flex';
+  document.getElementById('shootPad').style.display='block';
+  document.getElementById('abilityBtn').style.display = (player.hasShield||player.hasMolten) ? 'flex':'none';
+  document.getElementById('jumpBtn').style.display='flex';
+  document.getElementById('soundBtn').style.display='block';
+  refreshWeaponPicker();
+  document.getElementById('leaveBtn').style.display='block';
+  // start audio (must be triggered by a user gesture — this click counts)
+  initAudio();
+  if(AC && AC.state==='suspended') AC.resume();
+  if(boss) startMusic(boss.type); else startMusic('menu');
+  if(!started){ started=true; requestAnimationFrame(loop); }
+}
+document.getElementById('startBtn').addEventListener('click',()=>{
+  if(paused){ paused=false; last=performance.now(); beginGame(); if(boss) startMusic(boss.type); return; }
+  useTilt=false;
+  if(!boss && gameState!=='win'){ startStage(0); }
+  beginGame();
+});
+document.getElementById('tiltBtn').addEventListener('click',async()=>{  try{
+    if(typeof DeviceOrientationEvent!=='undefined' && DeviceOrientationEvent.requestPermission){
+      const res=await DeviceOrientationEvent.requestPermission();
+      if(res==='granted'){ useTilt=true; window.addEventListener('deviceorientation',handleTilt); }
+      else { useTilt=false; }
+    } else {
+      useTilt=true; window.addEventListener('deviceorientation',handleTilt);
+    }
+  }catch(err){ useTilt=false; }
+  if(!boss && gameState!=='win'){ startStage(0); }
+  beginGame();
+});
+
+// SHOP buttons (from home screen or end screen)
+document.getElementById('shopBtnHome').addEventListener('click',()=>showPanel('shop'));
+document.getElementById('shopBtnEnd').addEventListener('click',()=>showPanel('shop'));
+document.getElementById('shopBackBtn').addEventListener('click',()=>{
+  showPanel(gameState==='win' ? 'end' : 'home');
+});
+
+// END SCREEN buttons: shown after beating every boss
+function showEndScreen(){
+  document.getElementById('endTitle').textContent = player.ultimate ? 'MOST POWERFUL IN THE UNIVERSE! 🏆' : 'YOU WIN! 🏆';
+  document.getElementById('endText').innerHTML =
+    'You defeated every guardian!<br>Score: <b>'+score+'</b> &nbsp; Best: <b>'+bestScore+'</b><br>Total coins: <b>🪙'+player.coins+'</b>';
+  showPanel('end');
+  document.getElementById('atkBtn').style.display='none';
+  document.getElementById('shootPad').style.display='none';
+  document.getElementById('abilityBtn').style.display='none';
+  document.getElementById('jumpBtn').style.display='none';
+  document.getElementById('weaponPicker').style.display='none';
+  document.getElementById('soundBtn').style.display='none';
+  document.getElementById('leaveBtn').style.display='none';
+  document.getElementById('ctrls').style.display='none';
+}
+document.getElementById('continueBtn').addEventListener('click',()=>{
+  // KEEP PLAYING: new loop, bosses get stronger, you keep everything
+  gameLoop++; runKills=0;
+  setBanner('LOOP '+(gameLoop+1)+' — BOSSES ARE STRONGER!',2.0);
+  startStage(0);
+  beginGame();
+});
+document.getElementById('homeBtn').addEventListener('click',()=>{
+  // STOP: go back to the home screen. Progress (weapons/coins/upgrades) is kept;
+  // starting a new game from home starts a fresh run at stage 0.
+  gameLoop=0; runKills=0; stageIndex=0; boss=null;
+  universe='normal'; altStageIndex=0;
+  gameState='fight';
+  showPanel('home');
+});
+
+// LEAVE button: pause and return to the home screen (does NOT reset your progress)
+document.getElementById('leaveBtn').addEventListener('click',()=>{
+  document.getElementById('atkBtn').style.display='none';
+  document.getElementById('shootPad').style.display='none';
+  document.getElementById('abilityBtn').style.display='none';
+  document.getElementById('jumpBtn').style.display='none';
+  document.getElementById('weaponPicker').style.display='none';
+  document.getElementById('soundBtn').style.display='none';
+  document.getElementById('leaveBtn').style.display='none';
+  document.getElementById('ctrls').style.display='none';
+  paused=true;
+  stopMusic();
+  document.getElementById('startBtn').textContent='RESUME';
+  showPanel('home');
+});
+
+// ============================================================
+//  GAME
+// ============================================================
+let started=false;
+let paused=false;
+
+// palette
+const COL = {
+  water:'#3a8bd6', fire:'#ff6a28', earth:'#a9714b', wind:'#c8ffe0', lightning:'#ffe23a', ice:'#9fd8ff', poison:'#7ed321', shadow:'#8a6fd0',
+  cosmic:'#ff8ad8', chrono:'#7ff0e0', gravity:'#9a70ff', void:'#c8c0f8',
+  player:'#ffe08a', playerDark:'#c99a3a', hp:'#ff4040', hpbg:'#402020',
+  floor:'#241a38', floor2:'#2c2144', wall:'#3a2c58', danger:'#ff3030'
+};
+
+// pixel-art helper: draw a scaled block
+function px(x,y,w,h,c){ ctx.fillStyle=c; ctx.fillRect(x|0,y|0,w|0,h|0); }
+
+// draw a jagged lightning bolt from the top of the arena down to (tx,ty)
+function drawBolt(tx,ty,color){
+  ctx.strokeStyle=color; ctx.lineWidth=2;
+  ctx.beginPath();
+  let x=tx+rand(-4,4), y=0;
+  ctx.moveTo(x,y);
+  while(y<ty){
+    y+=rand(8,16);
+    x=tx+rand(-8,8);
+    ctx.lineTo(x, Math.min(y,ty));
+  }
+  ctx.lineTo(tx,ty);
+  ctx.stroke();
+  px(tx-3,ty-3,6,6,'#fff');
+}
+
+// lighten/darken a hex color by amt (-255..255) for pixel shading
+function shadeColor(hex, amt){
+  let h=hex.replace('#','');
+  if(h.length===3) h=h.split('').map(x=>x+x).join('');
+  let r=parseInt(h.substr(0,2),16), g=parseInt(h.substr(2,2),16), b=parseInt(h.substr(4,2),16);
+  r=Math.max(0,Math.min(255,r+amt)); g=Math.max(0,Math.min(255,g+amt)); b=Math.max(0,Math.min(255,b+amt));
+  return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+
+// player
+const player = { x:VW/2, y:VH-40, r:6, speed:1.5, hp:160, maxhp:160,
+                 dashCd:0, invuln:0, shootCd:0, frozen:0, burn:0, burnTick:0, poison:0, poisonTick:0, facing:{x:0,y:-1},
+                 hasAxe:false, hasGun:false, hasShield:false, hasMolten:false, hasGauntlet:false,
+                 shieldTime:0, shieldCd:0, moltenCd:0,
+                 weapons:{water:false,fire:false,earth:false,wind:false,lightning:false},
+                 defeated:[], jumpT:0, jumpCd:0, ultimate:false, aim:{x:0,y:-1},
+                 coins:0, shopUpgrades:{dmg:0, hp:0, speed:0, jump:0}, merges:{} };
+
+// game state: 4 boss stages, obby dash-strip between them
+const STAGES = ['water','fire','earth','lightning','ice','poison','wind'];  // WIND is the final boss
+// ⭐ SECRET VOID UNIVERSE: caught on the LEFT side of the Water guardian's FIRST
+// tidal wave? You get swept into another universe with its own three bosses.
+const ALT_STAGES = ['cosmic','chrono','shadow','gravity','void'];   // the VOID guardian is its finale
+let universe = 'normal';       // 'normal' | 'void'
+let altStageIndex = 0;
+
+// ---------- DIFFICULTY ----------
+// Pick at the start. Harder = tougher bosses that hit harder, but MUCH better rewards.
+const DIFFICULTIES = [
+  { id:'easy',      name:'EASY',      color:'#4ac04a', hp:0.70, dmg:0.70, coins:0.75, score:0.5 },
+  { id:'normal',    name:'NORMAL',    color:'#39a0f0', hp:1.00, dmg:1.00, coins:1.0,  score:1.0 },
+  { id:'hard',      name:'HARD',      color:'#f0a020', hp:1.35, dmg:1.25, coins:1.5,  score:1.5 },
+  { id:'expert',    name:'EXPERT',    color:'#e04040', hp:1.70, dmg:1.55, coins:2.0,  score:2.0 },
+  { id:'nightmare', name:'NIGHTMARE', color:'#a040e0', hp:2.10, dmg:1.90, coins:3.0,  score:3.0 },
+];
+let difficulty = 1;   // index into DIFFICULTIES (NORMAL by default)
+function diffCur(){ return DIFFICULTIES[difficulty]; }
+function renderDiffRow(){
+  const row=document.getElementById('diffRow');
+  if(!row) return;
+  row.innerHTML='';
+  DIFFICULTIES.forEach((d,i)=>{
+    const b=document.createElement('button');
+    b.className='diffbtn'+(i===difficulty?' sel':'');
+    b.textContent=d.name;
+    b.style.background = i===difficulty ? d.color : '#2a2440';
+    b.style.color = i===difficulty ? '#000' : '#aab';
+    b.addEventListener('click',()=>{ difficulty=i; renderDiffRow(); });
+    row.appendChild(b);
+  });
+}
+renderDiffRow();   // show the picker on first load
+let stageIndex = 0;
+let boss = null;
+let particles = [];
+let projectiles = [];
+let hazards = [];      // meteor markers, rings, waves
+let banner = { text:'', t:0 };
+let gameState = 'fight'; // 'fight' | 'transition' | 'win' | 'dead'
+let flashRed = 0;
+let earnedWeapons = [];
+// ===== SCORE / REPLAY =====
+let score = 0;        // points this session
+let bestScore = 0;    // highest score (this session — resets if you close the page)
+let gameLoop = 0;     // how many times you've beaten the game (bosses get stronger each loop)
+let runKills = 0;     // bosses beaten this run
+let lastCoinsEarned = 0;
+let pendingRunComplete = false;
+
+function reportGameOver(reason){
+  try{
+    window.parent.postMessage({ type:'elemental-game-over', score, kills:runKills, level:stageIndex+1, coins:player.coins, reason }, '*');
+  }catch(e){}
+}
+
+function makeBoss(type){
+  // Bosses a bit more powerful. Wind (final) and Earth are toughest.
+  // Each time you beat the whole game (loop), they get +25% stronger.
+  const hpByType = { water:700, fire:700, earth:820, lightning:780, ice:760, poison:780, shadow:800, wind:840, cosmic:760, chrono:800, gravity:850, void:920 };
+  const hp = Math.floor((hpByType[type] || 700) * (1 + 0.25*gameLoop) * diffCur().hp);
+  return {
+    type, x:VW/2, y:70, r:14,
+    hp:hp, maxhp:hp,
+    moveT:Math.random()*2, tx:VW/2, ty:70,
+    specialCd:3.0, specialTelegraph:0, phase:'idle',
+    basicCd:1.1,
+    guard:0,
+    pick:0,             // which of this boss's THREE abilities was chosen
+    pillars:[]
+  };
+}
+
+function startStage(i){
+  stageIndex=i;
+  boss=makeBoss(STAGES[i]);
+  projectiles=[]; hazards=[]; particles=[]; playerShots=[]; moltenPools=[];
+  player.shieldTime=0; player.shieldCd=0; player.moltenCd=0;
+  player.x=VW/2; player.y=VH-40; player.invuln=1.0; player.burn=0; player.frozen=0; player.poison=0;
+  gameState='fight';
+  setBanner('GUARDIAN OF '+STAGES[i].toUpperCase(), 2.0);
+  startMusic(STAGES[i]);   // each boss has its own music
+}
+
+// ⭐ THE VOID UNIVERSE
+function enterVoidUniverse(){
+  universe='void';
+  altStageIndex=0;
+  // portal burst
+  for(let k=0;k<24;k++) particles.push({x:player.x,y:player.y,vx:rand(-80,80),vy:rand(-80,80),life:0.6,c:(k%2===0)?'#ff8ad8':'#9a70ff'});
+  sfxWin();
+  startAltStage(0);
+  setBanner('🌀 SWEPT INTO ANOTHER UNIVERSE!', 3.0);
+}
+function startAltStage(i){
+  altStageIndex=i;
+  boss=makeBoss(ALT_STAGES[i]);
+  projectiles=[]; hazards=[]; particles=particles||[]; playerShots=[]; moltenPools=[];
+  player.shieldTime=0; player.shieldCd=0; player.moltenCd=0;
+  player.x=VW/2; player.y=VH-40; player.invuln=1.2; player.burn=0; player.frozen=0; player.poison=0;
+  gameState='fight';
+  setBanner('VOID GUARDIAN: '+ALT_STAGES[i].toUpperCase(), 2.0);
+  startMusic(ALT_STAGES[i]);
+}
+
+function setBanner(t,dur){ banner.text=t; banner.t=dur; }
+
+// ---------- WEAPONS ----------
+// Each earned weapon has its own element effect applied to the boss on hit.
+const WEAPONS = {
+  water: { name:'Water Axe',   color:'#3a8bd6', label:'AXE',
+           effect:(b)=>{ b.frozenT=1.4; } },                       // slows the boss
+  fire:  { name:'Fire Blade',  color:'#ff6a28', label:'FIRE',
+           effect:(b)=>{ b.dotT=2.0; b.dotTick=b.dotTick||0; } },  // burns boss over time
+  earth: { name:'Earth Shield', color:'#a9714b', label:'SHLD',
+           effect:(b)=>{ b.stunT=0.6; },                            // briefly stuns boss on hit
+           passive:'block' },                                       // ALSO: passively blocks incoming hits sometimes
+  wind:  { name:'Wind Edge',   color:'#c8ffe0', label:'WIND',
+           effect:(b)=>{ /* fastest, no debuff but bonus handled in dmg */ } },
+  lightning: { name:'Storm Rod', color:'#ffe23a', label:'BOLT',
+           effect:(b)=>{ b.stunT=0.4; b.dotT=1.0; b.dotTick=b.dotTick||0; } }, // shock: brief stun + zap
+  ice:   { name:'Frost Spear', color:'#9fd8ff', label:'ICE',
+           effect:(b)=>{ b.frozenT=2.2; } },                       // deep freeze: strongest slow
+  poison:{ name:'Venom Dagger', color:'#7ed321', label:'VENOM',
+           effect:(b)=>{ b.dotT=3.0; b.dotTick=b.dotTick||0; } },  // longest damage-over-time
+  shadow:{ name:'Shadow Reaper', color:'#8a6fd0', label:'REAP',
+           effect:(b)=>{ b.stunT=0.3; player.hp=Math.min(player.maxhp, player.hp+2); } }, // lifesteal: heal 2 per hit
+  // ⭐ VOID UNIVERSE weapons — only earnable in the secret universe
+  cosmic:{ name:'Nova Blaster', color:'#ff8ad8', label:'NOVA',
+           effect:(b)=>{ b.dotT=1.5; b.dotTick=b.dotTick||0; b.frozenT=0.8; } },  // starburn + brief chill
+  chrono:{ name:'Chrono Blade', color:'#7ff0e0', label:'TIME',
+           effect:(b)=>{ b.frozenT=3.0; } },                        // time-slow: the longest slow in any universe
+  gravity:{ name:'Gravity Maul', color:'#9a70ff', label:'GRAV',
+           effect:(b)=>{ b.stunT=1.0; } },                          // crushing weight: the longest stun
+  void:  { name:'Void Scythe', color:'#c8c0f8', label:'VOID',
+           effect:(b)=>{ b.stunT=0.5; b.frozenT=1.5; } },           // nullify: stun + slow together
+};
+const WEAPON_ORDER = ['water','fire','earth','wind','lightning','ice','poison','shadow','cosmic','chrono','gravity','void'];
+
+// ---------- BOSS WEAKNESSES ----------
+// Every guardian fears one element. Attack with a weapon covering that element
+// (directly, through a merge, or a fusion) and you deal HUGE bonus damage.
+const BOSS_WEAKNESS = {
+  water:'lightning',   // electricity in water
+  fire:'water',        // douse the flames
+  earth:'wind',        // erosion
+  lightning:'earth',   // grounded
+  ice:'fire',          // melt it
+  poison:'fire',       // burn away the toxins
+  shadow:'lightning',  // light pierces the dark
+  wind:'ice',          // freeze the gusts
+  cosmic:'shadow',     // the void swallows starlight
+  chrono:'ice',        // freeze time itself
+  gravity:'wind',      // lift defies the crush
+  void:'cosmic',       // starlight fills the emptiness
+};
+const WEAKNESS_BONUS = 1.6;   // 60% extra damage when you exploit a weakness
+let currentWeapon = null;   // set to first earned weapon when you get one
+
+// ---------- SECRET FUSION WEAPONS ----------
+// Sometimes — you never know when — merging two weapons creates a TOTALLY NEW weapon!
+// Each recipe is a pair of elements. The new weapon applies BOTH parents' effects
+// AND hits harder than a normal merge.
+const FUSION_RECIPES = {
+  'fire+water':      { id:'steam',   name:'Steam Scythe',    color:'#bfe8f0', label:'STEAM' },
+  'earth+water':     { id:'mud',     name:'Mud Maul',        color:'#6b5a3e', label:'MUD' },
+  'water+wind':      { id:'tempest', name:'Tempest Blade',   color:'#7fc4d8', label:'TMPST' },
+  'lightning+water': { id:'storm',   name:'Stormcaller',     color:'#7fa8ff', label:'STORM' },
+  'earth+fire':      { id:'magma',   name:'Magma Hammer',    color:'#ff4400', label:'MAGMA' },
+  'fire+wind':       { id:'inferno', name:'Inferno Edge',    color:'#ffaa33', label:'INFRN' },
+  'fire+lightning':  { id:'plasma',  name:'Plasma Saber',    color:'#ff66ff', label:'PLSMA' },
+  'earth+wind':      { id:'sand',    name:'Sandstorm Flail', color:'#d8c48a', label:'SAND' },
+  'earth+lightning': { id:'magnet',  name:'Magnet Core',     color:'#8888aa', label:'MGNT' },
+  'lightning+wind':  { id:'thunderhead', name:'Thunderhead', color:'#e8ffa0', label:'THNDR' },
+  'fire+ice':        { id:'meltdown', name:'Meltdown Pike',  color:'#ff9fb0', label:'MELT' },
+  'ice+water':       { id:'glacier',  name:'Glacier Edge',   color:'#d8f4ff', label:'GLCR' },
+  'ice+lightning':   { id:'cryovolt', name:'Cryovolt Lance', color:'#c0e8ff', label:'CRYO' },
+  'earth+ice':       { id:'permafrost', name:'Permafrost Maul', color:'#a8c8c0', label:'PERM' },
+  'ice+wind':        { id:'whiteout', name:'Whiteout Fang',  color:'#f0ffff', label:'WHITE' },
+  'fire+poison':     { id:'corrosion', name:'Corrosion Blade', color:'#b8d840', label:'CRSN' },
+  'poison+water':    { id:'plague',    name:'Plague Tide',     color:'#4a9a60', label:'PLGE' },
+  'earth+poison':    { id:'sporeroot', name:'Sporeroot Maul',  color:'#6a8a40', label:'SPORE' },
+  'lightning+shadow':{ id:'nightbolt', name:'Nightbolt',       color:'#b090ff', label:'NIGHT' },
+  'ice+shadow':      { id:'umbra',     name:'Umbra Fang',      color:'#a0a8d8', label:'UMBRA' },
+  'shadow+wind':     { id:'wraith',    name:'Wraith Edge',     color:'#c0b0e0', label:'WRTH' },
+};
+// register each fusion weapon as a real weapon
+for(const key in FUSION_RECIPES){
+  const rec=FUSION_RECIPES[key];
+  const parents=key.split('+');
+  WEAPONS[rec.id]={ name:rec.name, color:rec.color, label:rec.label, fusion:true, parents:parents,
+    effect:(b)=>{ for(const p of parents){ if(WEAPONS[p]) WEAPONS[p].effect(b); } } };
+  WEAPON_ORDER.push(rec.id);
+}
+
+// ⭐ LEGENDARY TRIPLE FUSION: get Wind + Fire + Earth Shield combined into ONE weapon
+// (through merging) and it transforms into the STORM GATLING — an insanely fast
+// rapid-fire weapon. Hold the shoot button and it hits very very very fast.
+WEAPONS['gatling'] = { name:'Storm Gatling', color:'#ffb060', label:'GATL',
+  fusion:true, rapidFire:true, parents:['wind','fire','earth'],
+  effect:(b)=>{ if(WEAPONS.fire) WEAPONS.fire.effect(b); if(WEAPONS.earth) WEAPONS.earth.effect(b); } };
+WEAPON_ORDER.push('gatling');
+
+// ⭐ MORE LEGENDARY RECIPES — these pair merges are GUARANTEED transformations:
+// Gravity Maul + Void Scythe  =  SINGULARITY  (every hit drags the boss toward you)
+// Chrono Blade + Nova Blaster =  STASIS NOVA  (freezes the boss for 10 whole seconds)
+const LEGENDARY_PAIRS = {
+  'gravity+void':  { id:'singularity' },
+  'chrono+cosmic': { id:'stasisnova' },
+};
+WEAPONS['singularity'] = { name:'Singularity', color:'#6a5a9a', label:'SNGL',
+  fusion:true, parents:['gravity','void'],
+  effect:(b)=>{
+    b.stunT=1.0; b.frozenT=1.5;
+    // every single hit drags the boss toward you, like a pocket black hole
+    const dx=player.x-b.x, dy=player.y-b.y, d=Math.hypot(dx,dy)||1;
+    if(d>26){ b.x+=(dx/d)*10; b.y+=(dy/d)*10; }
+    for(let k=0;k<3;k++) particles.push({x:b.x+rand(-8,8),y:b.y+rand(-8,8),vx:dx/d*40,vy:dy/d*40,life:0.2,c:'#6a5a9a'});
+  } };
+WEAPON_ORDER.push('singularity');
+WEAPONS['stasisnova'] = { name:'Stasis Nova', color:'#aef0ff', label:'STSIS',
+  fusion:true, parents:['chrono','cosmic'],
+  effect:(b)=>{ b.frozenT=10.0; b.dotT=1.5; b.dotTick=b.dotTick||0; } };  // TEN-SECOND freeze + starburn
+WEAPON_ORDER.push('stasisnova');
+
+// all the elements a weapon covers: itself/its parents + everything fused into it
+function weaponElements(w){
+  const out=new Set();
+  const add=(x)=>{
+    const info=WEAPONS[x]||{};
+    if(info.parents){ info.parents.forEach(p=>out.add(p)); }
+    else out.add(x);
+  };
+  add(w);
+  for(const f of mergedInto(w)) add(f);
+  return out;
+}
+
+function ownedWeapons(){ return WEAPON_ORDER.filter(w=>player.weapons[w]); }
+function cycleWeapon(){
+  const owned=ownedWeapons();
+  if(owned.length===0) return;
+  let idx=owned.indexOf(currentWeapon);
+  currentWeapon = owned[(idx+1)%owned.length];
+  setBanner(WEAPONS[currentWeapon].name+' equipped',0.9);
+}
+
+// ---------- SHOP ----------
+// Coins earned per boss can buy weapons directly (if you haven't earned them
+// yet by beating that boss) and permanent stat upgrades.
+const SHOP_ITEMS = [
+  { id:'dmg', kind:'stat', stat:'dmg', cost:100, max:5, name:'Sharpen Weapons', desc:'+8% damage per level' },
+  { id:'hp',  kind:'stat', stat:'hp',  cost:100, max:5, name:'Extra Vitality',  desc:'+20 max HP per level' },
+  { id:'speed', kind:'stat', stat:'speed', cost:100, max:3, name:'Swift Boots', desc:'+10% move speed per level' },
+  { id:'jump', kind:'stat', stat:'jump', cost:120, max:3, name:'Leg Strength',
+    desc:'Jump higher. At max level, jump clears Earth\'s pillar walls!' },
+];
+function shopItemCost(item){
+  return item.cost * (player.shopUpgrades[item.stat]+1);
+}
+function buyShopItem(id){
+  const item=SHOP_ITEMS.find(s=>s.id===id);
+  if(!item) return;
+  const lvl=player.shopUpgrades[item.stat];
+  if(lvl>=item.max) return;
+  const cost=shopItemCost(item);
+  if(player.coins<cost) return;
+  player.coins-=cost;
+  player.shopUpgrades[item.stat]++;
+  if(item.stat==='hp'){ player.maxhp+=20; player.hp=Math.min(player.maxhp, player.hp+20); }
+  renderShop();
+  updateCoinDisplays();
+}
+function currentDmgMult(){ return 1 + player.shopUpgrades.dmg*0.08; }
+function currentSpeedMult(){ return 1 + player.shopUpgrades.speed*0.10; }
+function jumpClearsPillars(){ return player.shopUpgrades.jump >= 3; }   // max level jump
+
+function updateCoinDisplays(){
+  const c1=document.getElementById('coinCount'), c2=document.getElementById('coinCount2');
+  if(c1) c1.textContent=player.coins;
+  if(c2) c2.textContent=player.coins;
+}
+function renderShop(){
+  const list=document.getElementById('shopList');
+  if(!list) return;
+  list.innerHTML='';
+  for(const item of SHOP_ITEMS){
+    const row=document.createElement('div'); row.className='shopItem';
+    const left=document.createElement('div');
+    let lvlTxt='';
+    if(item.kind==='stat'){ lvlTxt=' (Lv '+player.shopUpgrades[item.stat]+'/'+item.max+')'; }
+    left.innerHTML='<div class="si-name">'+item.name+lvlTxt+'</div><div class="si-desc">'+item.desc+'</div>';
+    const btn=document.createElement('button');
+    let maxed=false;
+    if(item.kind==='stat'){ maxed=player.shopUpgrades[item.stat]>=item.max; }
+    const cost=shopItemCost(item);
+    if(maxed){ btn.textContent='MAX'; btn.disabled=true; }
+    else {
+      btn.textContent='🪙'+cost;
+      btn.disabled = player.coins<cost;
+      btn.addEventListener('click',()=>buyShopItem(item.id));
+    }
+    row.appendChild(left); row.appendChild(btn);
+    list.appendChild(row);
+  }
+}
+
+// ---------- BOSS REWARDS + WEAPON MERGING ----------
+// The abilities granted alongside each elemental weapon.
+const ABILITY_GRANT = {
+  water: ()=>{ player.hasAxe=true; },
+  fire:  ()=>{ player.hasMolten=true; },
+  earth: ()=>{ player.hasShield=true; },
+  wind:  ()=>{ player.hasGun=true; },
+  lightning: ()=>{ /* Storm Rod has no separate active ability */ },
+  ice:  ()=>{ /* Frost Spear has no separate active ability */ },
+  poison: ()=>{ /* Venom Dagger has no separate active ability */ },
+  shadow: ()=>{ /* Shadow Reaper has no separate active ability */ },
+  cosmic: ()=>{}, chrono: ()=>{},
+  gravity: ()=>{ player.hasGauntlet=true; setBanner('🕳 GRAVITY GAUNTLET! HOLD SWING TO PULL THE BOSS!',3.0); },
+  void: ()=>{},
+};
+
+// MERGES: merges[base] = list of other weapon types fused INTO base.
+// Equipping a merged weapon applies its own effect + all fused effects at once.
+let mergeBase = null;   // selected base weapon during the merge screen
+function mergedInto(base){ return player.merges[base] || []; }
+
+function openMergePick(gotType, coinsEarned){
+  gameState='transition';
+  // hide game controls
+  document.getElementById('atkBtn').style.display='none';
+  document.getElementById('shootPad').style.display='none';
+  document.getElementById('abilityBtn').style.display='none';
+  document.getElementById('jumpBtn').style.display='none';
+  document.getElementById('weaponPicker').style.display='none';
+  document.getElementById('ctrls').style.display='none';
+  // need at least 2 owned weapons for a merge to be possible
+  if(ownedWeapons().length < 2){
+    setBanner('GOT '+WEAPONS[gotType].name.toUpperCase()+'! +'+coinsEarned+' COINS',1.5);
+    finishRewardPick();
+    return;
+  }
+  mergeBase = null;
+  document.getElementById('rewardTitle').textContent =
+    'GOT '+WEAPONS[gotType].name.toUpperCase()+'! +'+coinsEarned+' COINS';
+  document.getElementById('rewardText').textContent =
+    'MERGE two weapons? Pick a BASE, then a weapon to fuse into it — the base uses BOTH abilities. Legend says some pairs can become something entirely new...';
+  renderMergeList();
+  showPanel('reward');
+}
+
+function renderMergeList(){
+  const list=document.getElementById('rewardList');
+  list.innerHTML='';
+  for(const type of ownedWeapons()){
+    const w=WEAPONS[type];
+    const row=document.createElement('div'); row.className='rewardItem';
+    if(type===mergeBase) row.style.outline='3px solid #fff';
+    const swatch=document.createElement('div'); swatch.className='ri-swatch';
+    // show merged colors as a gradient on the swatch
+    const fused=mergedInto(type);
+    if(fused.length){
+      const cols=[w.color, ...fused.map(f=>WEAPONS[f].color)];
+      swatch.style.background='linear-gradient(135deg, '+cols.join(',')+')';
+    } else {
+      swatch.style.background=w.color;
+    }
+    const textWrap=document.createElement('div');
+    const fusedTxt = fused.length ? ' (+'+fused.map(f=>WEAPONS[f].label).join('+')+')' : '';
+    let desc;
+    if(!mergeBase) desc='Tap to set as the BASE weapon';
+    else if(type===mergeBase) desc='BASE — now tap the weapon to fuse into it';
+    else if(fused.includes(type) || mergedInto(mergeBase).includes(type)) desc='Already fused into this base';
+    else desc='Tap to FUSE into '+WEAPONS[mergeBase].label;
+    textWrap.innerHTML='<div class="ri-name">'+w.name+fusedTxt+'</div><div class="ri-desc">'+desc+'</div>';
+    row.appendChild(swatch); row.appendChild(textWrap);
+    row.addEventListener('click',()=>mergeTap(type));
+    list.appendChild(row);
+  }
+  // SKIP button
+  const skip=document.createElement('div'); skip.className='rewardItem';
+  skip.innerHTML='<div class="ri-name" style="width:100%;text-align:center">SKIP — CONTINUE ▶</div>';
+  skip.addEventListener('click',()=>{ finishRewardPick(); });
+  list.appendChild(skip);
+}
+
+function mergeTap(type){
+  if(!mergeBase){
+    mergeBase=type;
+    renderMergeList();
+    return;
+  }
+  if(type===mergeBase){ mergeBase=null; renderMergeList(); return; } // tap base again to unselect
+
+  const key=[mergeBase,type].sort().join('+');
+
+  // ⭐ LEGENDARY PAIRS: these specific combos ALWAYS transform
+  const leg=LEGENDARY_PAIRS[key];
+  if(leg && !player.weapons[leg.id]){
+    player.weapons[leg.id]=true;
+    currentWeapon=leg.id;
+    setBanner('⭐ LEGENDARY: '+WEAPONS[leg.id].name.toUpperCase()+'! ⭐',3.0);
+    sfxWin();
+    finishRewardPick();
+    return;
+  }
+
+  // ✨ SECRET CHANCE: sometimes the two weapons combine into a TOTALLY NEW weapon.
+  // You never know when it will happen!
+  const rec=FUSION_RECIPES[key];
+  if(rec && !player.weapons[rec.id] && Math.random()<0.35){
+    player.weapons[rec.id]=true;
+    currentWeapon=rec.id;
+    setBanner('✨ NEW WEAPON CREATED: '+rec.name.toUpperCase()+'! ✨',2.5);
+    sfxWin();
+    finishRewardPick();
+    return;
+  }
+
+  // normal merge: fuse `type` into `mergeBase`
+  if(!player.merges[mergeBase]) player.merges[mergeBase]=[];
+  if(!player.merges[mergeBase].includes(type)) player.merges[mergeBase].push(type);
+
+  // ⭐ LEGENDARY CHECK: does this weapon now combine WIND + FIRE + EARTH SHIELD?
+  // If so it transforms into the STORM GATLING — guaranteed.
+  const els = weaponElements(mergeBase);
+  if(els.has('wind') && els.has('fire') && els.has('earth') && !player.weapons.gatling){
+    player.weapons.gatling=true;
+    currentWeapon='gatling';
+    setBanner('⭐ LEGENDARY: STORM GATLING! HOLD SHOOT! ⭐',3.0);
+    sfxWin();
+    finishRewardPick();
+    return;
+  }
+
+  setBanner(WEAPONS[type].label+' FUSED INTO '+WEAPONS[mergeBase].label+'!',1.5);
+  currentWeapon=mergeBase;
+  finishRewardPick();
+}
+
+function finishRewardPick(){
+  // ⭐ VOID UNIVERSE: advance through its 3 bosses, then return home
+  if(universe==='void'){
+    if(altStageIndex>=ALT_STAGES.length){
+      universe='normal';
+      setBanner('🌀 RETURNED TO YOUR UNIVERSE — STRONGER!', 3.0);
+      startStage(stageIndex);   // back to the Water guardian, keeping everything you earned
+      beginGame();
+    } else {
+      startAltStage(altStageIndex);
+      beginGame();
+    }
+    return;
+  }
+  if(pendingRunComplete){
+    pendingRunComplete=false;
+    score += Math.round(300 * diffCur().score);
+    player.coins += Math.round(100 * diffCur().coins);
+    if(score>bestScore) bestScore=score;
+    gameState='win';
+    reportGameOver('win');
+    stopMusic(); sfxWin();
+    showEndScreen();
+  } else {
+    gameState='transition';
+    startStage(stageIndex+1);
+    beginGame();
+  }
+}
+
+
+
+// central boss-damage function: respects Earth's guard + applies weapon element
+function damageBoss(n, applyEffect){
+  if(!boss) return;
+  if(boss.guard>0){
+    // shielded: show a clang, no damage
+    for(let i=0;i<4;i++) particles.push({x:boss.x+rand(-10,10),y:boss.y+rand(-10,10),vx:rand(-30,30),vy:rand(-30,30),life:0.2,c:'#ccc'});
+    return;
+  }
+  let dmg=n;
+  const wInfo = currentWeapon ? (WEAPONS[currentWeapon]||{}) : {};
+  const els = currentWeapon ? weaponElements(currentWeapon) : new Set();
+  // wind bonus applies if wind is the weapon, fused into it, or a fusion parent
+  if(els.has('wind')) dmg*=1.15;
+  // fusion weapons hit harder — the reward for the lucky combine
+  if(wInfo.fusion) dmg*=1.3;
+  // ⚡ WEAKNESS HIT: this boss fears one element — cover it and deal huge bonus damage
+  const weak = BOSS_WEAKNESS[boss.type];
+  if(weak && els.has(weak)){
+    dmg *= WEAKNESS_BONUS;
+    // dramatic burst in the weakness element's color
+    for(let k=0;k<6;k++) particles.push({x:boss.x+rand(-12,12),y:boss.y+rand(-12,12),vx:rand(-50,50),vy:rand(-50,50),life:0.35,c:COL[weak]});
+    particles.push({x:boss.x,y:boss.y-18,vx:0,vy:-25,life:0.4,c:'#fff'});
+  }
+  dmg *= currentDmgMult();               // shop upgrade: Sharpen Weapons
+  boss.hp-=dmg; flashRed=0.08;
+  if(applyEffect && currentWeapon && WEAPONS[currentWeapon]){
+    WEAPONS[currentWeapon].effect(boss);                        // base weapon's effect
+    for(const fused of mergedInto(currentWeapon)){              // + every fused weapon's effect
+      if(WEAPONS[fused]) WEAPONS[fused].effect(boss);
+    }
+  }
+}
+
+// ---------- actions ----------
+function doDash(dx,dy){
+  if(player.dashCd>0) return;
+  // trapped inside the Earth pillar ring? No escape — dash is sealed off too.
+  if(boss && boss.pillars && boss.pillars.length>=6){
+    let cx=0, cy=0;
+    for(const p of boss.pillars){ cx+=p.x; cy+=p.y; }
+    cx/=boss.pillars.length; cy/=boss.pillars.length;
+    if(Math.hypot(player.x-cx, player.y-cy) < 22){
+      setBanner('🪨 TRAPPED!',0.6);
+      return;
+    }
+  }
+  player.dashCd=0.8; player.invuln=0.25;
+  player.x += dx*26; player.y += dy*26;
+  for(let i=0;i<8;i++) particles.push({x:player.x,y:player.y,vx:-dx*20+rand(-10,10),vy:-dy*20+rand(-10,10),life:0.3,c:'#fff'});
+}
+function jump(){
+  // quick stylish hop (brief pop; visual scale handled in render)
+  if(player.jumpCd>0) return;
+  player.jumpT=0.35; player.jumpCd=0.5;
+  for(let i=0;i<5;i++) particles.push({x:player.x,y:player.y+5,vx:rand(-15,15),vy:rand(5,15),life:0.2,c:'#ccd'});
+}
+function swing(){
+  if(gameState!=='fight'||!boss) return;
+  const reach = player.hasAxe ? 16 : 12;
+  const dmg   = player.hasAxe ? 38 : 24;
+  const fx=player.aim.x, fy=player.aim.y; // swing in aim direction
+  const hx=player.x+fx*reach, hy=player.y+fy*reach;
+  for(let i=0;i<6;i++) particles.push({x:hx,y:hy,vx:rand(-20,20),vy:rand(-20,20),life:0.25,c:'#fff'});
+  const d=Math.hypot(boss.x-hx,boss.y-hy);
+  if(d < boss.r+ (player.hasAxe?13:9)){
+    damageBoss(dmg, true);
+    flashRed=0.1;
+    for(let i=0;i<10;i++) particles.push({x:boss.x,y:boss.y,vx:rand(-40,40),vy:rand(-40,40),life:0.4,c:COL[boss.type]});
+  }
+  sfxSwing();
+}
+function rand(a,b){ return a+Math.random()*(b-a); }
+
+// player-summoned molten pools (Fire reward) — hurt the boss, weaker than boss's
+let moltenPools = [];
+
+// ABILITY button: uses whichever active ability you've unlocked.
+// Priority: Shield (Earth) if ready, else Molten Summon (Fire) if ready.
+function useAbility(){
+  if(gameState!=='fight') return;
+  // Earth Shield: block damage for 2.5s, 8s cooldown
+  if(player.hasShield && player.shieldCd<=0){
+    player.shieldTime=2.5; player.shieldCd=8;
+    setBanner('🛡 SHIELD UP!',1.0);
+    return;
+  }
+  // Fire Molten Summon: drop a burning pool on the boss, 6s cooldown
+  if(player.hasMolten && player.moltenCd<=0 && boss){
+    player.moltenCd=6;
+    moltenPools.push({x:boss.x, y:boss.y, r:20, t:3.5, tick:0});
+    setBanner('🌋 MOLTEN SUMMON!',1.0);
+    return;
+  }
+}
+
+// player projectiles (ranged attack)
+let playerShots = [];
+function shootDir(dir){
+  if(gameState!=='fight'||!boss) return;
+  if(player.shootCd>0) return;
+  const wInfo = currentWeapon ? (WEAPONS[currentWeapon]||{}) : {};
+  // STORM GATLING: insanely fast fire rate (~20 shots/sec). Others: gun 0.14s, base 0.3s.
+  if(wInfo.rapidFire){ player.shootCd = 0.05; }
+  else { player.shootCd = player.hasGun ? 0.14 : 0.3; }
+  const dmg = wInfo.rapidFire ? 10 : (player.hasGun ? 20 : 16);
+  let fx=0, fy=-1;
+  if(dir==='up'){ fx=0; fy=-1; }
+  else if(dir==='down'){ fx=0; fy=1; }
+  else if(dir==='left'){ fx=-1; fy=0; }
+  else if(dir==='right'){ fx=1; fy=0; }
+  player.aim={x:fx,y:fy};
+  playerShots.push({x:player.x+fx*8, y:player.y+fy*8, vx:fx*180, vy:fy*180, r:2, dmg:dmg});
+  for(let i=0;i<3;i++) particles.push({x:player.x+fx*8,y:player.y+fy*8,vx:fx*30+rand(-8,8),vy:fy*30+rand(-8,8),life:0.15,c:'#fff'});
+  sfxShoot();
+}
+// default SHOOT (used by keyboard 'f') fires in last aim direction, default up
+function shoot(){ shootDir(player.aim ? aimToDir(player.aim) : 'up'); }
+function aimToDir(a){
+  if(Math.abs(a.x)>Math.abs(a.y)) return a.x<0?'left':'right';
+  return a.y<0?'up':'down';
+}
+
+// ---------- boss specials ----------
+function triggerSpecial(){
+  const t=boss.type;
+  boss.phase = t;
+  if(t==='water'){
+    // WATER'S ONLY ABILITY: Cold Tidal Wave (waves are counted — the FIRST hides a secret)
+    boss.waveCount=(boss.waveCount||0)+1;
+    boss.pick = 0;
+    setBanner('🌊 COLD TIDAL WAVE!',1.3); boss.specialTelegraph=1.5;
+  } else if(t==='fire'){
+    boss.pick = Math.floor(rand(0,3));
+    if(boss.pick===0){ setBanner('🔥 BURNING METAL!',1.3); boss.specialTelegraph=1.0; }        // main ability
+    else if(boss.pick===1){ setBanner('🔥 FIREBALL BARRAGE!',1.3); boss.specialTelegraph=0.9; }
+    else { setBanner('🔥 FLAME RING!',1.3); boss.specialTelegraph=1.0; }
+  } else if(t==='earth'){
+    // weighted so PILLAR TRAP (its main ability) comes up about half the time
+    const r=rand(0,1);
+    boss.pick = r<0.5 ? 0 : (r<0.75 ? 1 : 2);
+    if(boss.pick===0){ setBanner('🪨 PILLAR TRAP!',1.2); boss.specialTelegraph=0.9; }           // main ability
+    else if(boss.pick===1){ setBanner('⛰ STONE SPIKES!',1.2); boss.specialTelegraph=1.1; }
+    else { setBanner('🛡 EARTH GUARD!',1.2); boss.specialTelegraph=0.8; }
+  } else if(t==='lightning'){
+    boss.pick = Math.floor(rand(0,3));
+    if(boss.pick===0){ setBanner('⚡ CHAIN BOLT!',1.2); boss.specialTelegraph=1.1; }            // main ability
+    else if(boss.pick===1){ setBanner('⚡ STATIC FIELD!',1.2); boss.specialTelegraph=1.0; }
+    else { setBanner('⚡ THUNDER STRIKE!',1.2); boss.specialTelegraph=1.3; }
+  } else if(t==='ice'){
+    boss.pick = Math.floor(rand(0,3));
+    if(boss.pick===0){ setBanner('❄ FROST NOVA!',1.3); boss.specialTelegraph=1.2; }            // main ability
+    else if(boss.pick===1){ setBanner('❄ ICICLE STORM!',1.3); boss.specialTelegraph=1.1; }
+    else { setBanner('❄ GLACIAL WALL!',1.3); boss.specialTelegraph=1.4; }
+  } else if(t==='poison'){
+    boss.pick = Math.floor(rand(0,3));
+    if(boss.pick===0){ setBanner('☠ VENOM POOLS!',1.3); boss.specialTelegraph=1.0; }           // main ability
+    else if(boss.pick===1){ setBanner('☠ TOXIC SPIT!',1.3); boss.specialTelegraph=0.9; }
+    else { setBanner('☠ GAS CLOUD!',1.3); boss.specialTelegraph=1.1; }
+  } else if(t==='shadow'){
+    boss.pick = Math.floor(rand(0,3));
+    if(boss.pick===0){ setBanner('🌑 BLACKOUT!',1.3); boss.specialTelegraph=1.2; }             // main ability
+    else if(boss.pick===1){ setBanner('🌑 VOID GRASP!',1.3); boss.specialTelegraph=1.3; }
+    else { setBanner('🌑 PHANTOM BARRAGE!',1.3); boss.specialTelegraph=1.0; }
+  } else if(t==='cosmic'){
+    boss.pick = Math.floor(rand(0,3));
+    if(boss.pick===0){ setBanner('✨ METEOR SHOWER!',1.3); boss.specialTelegraph=1.1; }
+    else if(boss.pick===1){ setBanner('✨ NOVA RING!',1.3); boss.specialTelegraph=1.0; }
+    else { setBanner('✨ STARFIRE!',1.3); boss.specialTelegraph=0.9; }
+  } else if(t==='chrono'){
+    boss.pick = Math.floor(rand(0,3));
+    if(boss.pick===0){ setBanner('⏳ TIME STRIKE!',1.3); boss.specialTelegraph=1.3; }
+    else if(boss.pick===1){ setBanner('⏳ ECHO RING!',1.3); boss.specialTelegraph=1.0; }
+    else { setBanner('⏳ BLINK BARRAGE!',1.3); boss.specialTelegraph=0.8; }
+  } else if(t==='void'){
+    boss.pick = Math.floor(rand(0,3));
+    if(boss.pick===0){ setBanner('⬛ VOID RIFT!',1.4); boss.specialTelegraph=1.1; }
+    else if(boss.pick===1){ setBanner('⬛ OBLIVION BEAMS!',1.4); boss.specialTelegraph=1.0; }
+    else { setBanner('⬛ EVENT HORIZON!',1.4); boss.specialTelegraph=1.2; }
+  } else if(t==='gravity'){
+    boss.pick = Math.floor(rand(0,3));
+    if(boss.pick===0){ setBanner('🕳 GRAVITY WELL!',1.3); boss.specialTelegraph=1.0; }
+    else if(boss.pick===1){ setBanner('🕳 CRUSH SPIKES!',1.3); boss.specialTelegraph=1.1; }
+    else { setBanner('🕳 METEOR SLAM!',1.3); boss.specialTelegraph=1.3; }
+  } else if(t==='wind'){
+    boss.pick = Math.floor(rand(0,2));   // Wind has TWO abilities (Wind Wall removed)
+    if(boss.pick===0){ setBanner('🌪 CYCLONE!',1.3); boss.specialTelegraph=1.0; }               // main ability
+    else { setBanner('🌪 GUST BARRAGE!',1.3); boss.specialTelegraph=0.9; }
+  }
+}
+
+function updateBoss(dt){
+  if(!boss) return;
+
+  // boss debuff timers (from your elemental weapons)
+  if(boss.guard>0) boss.guard-=dt;
+  if(boss.frozenT>0) boss.frozenT-=dt;   // Water Axe slow
+  if(boss.stunT>0) boss.stunT-=dt;       // Earth Shield weapon stun
+  if(boss.dotT>0){                        // Fire Blade burn
+    boss.dotT-=dt; boss.dotTick=(boss.dotTick||0)-dt;
+    if(boss.dotTick<=0){ boss.dotTick=0.4; if(boss.guard<=0){ boss.hp-=4; } }
+  }
+  if(boss.selfTrapped>0) boss.selfTrapped-=dt;   // Earth boss trapped in its own pillar ring
+  if(boss.gripT>0) boss.gripT-=dt;               // held by the Gravity Gauntlet
+  const slowed = boss.frozenT>0 ? 0.4 : 1;
+  const stunned = boss.stunT>0;
+  const selfTrapped = boss.selfTrapped>0;
+  const gripped = boss.gripT>0;
+
+  // wander toward a target point (frozen while pillar-trapped or gauntlet-gripped)
+  if(!stunned && !selfTrapped && !gripped){
+    boss.moveT-=dt;
+    if(boss.moveT<=0){ boss.moveT=rand(1.2,2.4); boss.tx=rand(30,VW-30); boss.ty=rand(30,120); }
+    boss.x += (boss.tx-boss.x)*Math.min(1,dt*1.8*slowed);
+    boss.y += (boss.ty-boss.y)*Math.min(1,dt*1.8*slowed);
+  }
+
+  // active pillar trap: keep shooting through the pillars at the player
+  if(boss.pillars && boss.pillars.length){
+    for(const p of boss.pillars) p.t-=dt;
+    boss.pillars = boss.pillars.filter(p=>p.t>0);
+    if(boss.pillars.length){
+      boss.pillarShootCd=(boss.pillarShootCd||0)-dt;
+      if(boss.pillarShootCd<=0 && !stunned){
+        boss.pillarShootCd=0.7;
+        const ang=Math.atan2(player.y-boss.y,player.x-boss.x);
+        projectiles.push({x:boss.x,y:boss.y,vx:Math.cos(ang)*85,vy:Math.sin(ang)*85,r:3,c:COL.earth,dmg:8,pierce:true});
+      }
+    }
+  }
+
+  // basic attack (faster projectiles, fires a small spread)
+  boss.basicCd-=dt;
+  if(boss.basicCd<=0 && boss.phase==='idle' && !stunned){
+    boss.basicCd=rand(0.9,1.5);
+    const ang=Math.atan2(player.y-boss.y,player.x-boss.x);
+    for(const off of [-0.18,0,0.18]){
+      const a=ang+off;
+      projectiles.push({x:boss.x,y:boss.y,vx:Math.cos(a)*95,vy:Math.sin(a)*95,r:3,c:COL[boss.type],dmg:11});
+    }
+  }
+
+  // special timer
+  boss.specialCd-=dt;
+  if(boss.specialCd<=0 && boss.phase==='idle' && !stunned){
+    boss.specialCd=rand(3.5,5);
+    triggerSpecial();
+  }
+
+  // resolve telegraphed specials
+  if(boss.specialTelegraph>0){
+    boss.specialTelegraph-=dt;
+    if(boss.specialTelegraph<=0){ resolveSpecial(); boss.phase='idle'; }
+  }
+}
+
+function resolveSpecial(){
+  const t=boss.phase;
+  if(t==='water'){
+    if(boss.pick===0){
+      // COLD TIDAL WAVE: wall sweeps the arena, one safe gap
+      const fromTop = Math.random()<0.5;
+      hazards.push({kind:'tidal', y: fromTop? -20 : VH+20, dir: fromTop?1:-1,
+                    gapX:rand(40,VW-40), gapW:46, hit:false, t:6,
+                    waveNum:boss.waveCount||1, fromWater:true});
+    } else if(boss.pick===1){
+      // RIPPLE RING: expanding freezing ring — get to the edge
+      hazards.push({kind:'static', x:boss.x, y:boss.y, r:2, max:76, t:0.9, hit:false,
+                    color:COL.water, dmg:11, freezes:true});
+    } else {
+      // BUBBLE BURST: a wide spray of water shots
+      for(let i=0;i<7;i++){
+        const ang=Math.atan2(player.y-boss.y,player.x-boss.x)+rand(-0.7,0.7);
+        projectiles.push({x:boss.x,y:boss.y,vx:Math.cos(ang)*85,vy:Math.sin(ang)*85,r:3,c:COL.water,dmg:9});
+      }
+    }
+  } else if(t==='fire'){
+    if(boss.pick===0){
+      // BURNING METAL: hot patches that cool over time; touching = burn DOT
+      for(let i=0;i<7;i++){
+        hazards.push({kind:'metal', x:rand(24,VW-24), y:rand(40,VH-24), r:16, heat:1, t:99});
+      }
+    } else if(boss.pick===1){
+      // FIREBALL BARRAGE: fast aimed fireballs
+      for(let i=0;i<6;i++){
+        const ang=Math.atan2(player.y-boss.y,player.x-boss.x)+rand(-0.35,0.35);
+        projectiles.push({x:boss.x,y:boss.y,vx:Math.cos(ang)*105,vy:Math.sin(ang)*105,r:4,c:COL.fire,dmg:11});
+      }
+    } else {
+      // FLAME RING: expanding ring of fire — get to the edge
+      hazards.push({kind:'static', x:boss.x, y:boss.y, r:2, max:76, t:0.9, hit:false,
+                    color:COL.fire, dmg:12, burns:true});
+    }
+  } else if(t==='earth'){
+    if(boss.pick===0){
+      // PILLAR TRAP (Earth's MAIN ability): a FULL RING of pillars seals you in.
+      // The boss ALSO traps itself inside its own ring of pillars (can't move out either).
+      const cx=player.x, cy=player.y, R=24, N=8;
+      boss.pillars=[];
+      for(let k=0;k<N;k++){
+        const a=k*(Math.PI*2/N);
+        boss.pillars.push({x:cx+Math.cos(a)*R, y:cy+Math.sin(a)*R, t:4.5});
+      }
+      boss.selfTrapped=4.5;   // boss can't move away while its own trap is up
+      // barrage fired through the pillars at the trapped player
+      for(let i=0;i<5;i++){
+        const ang=Math.atan2(cy-boss.y,cx-boss.x)+rand(-0.3,0.3);
+        projectiles.push({x:boss.x,y:boss.y,vx:Math.cos(ang)*85,vy:Math.sin(ang)*85,r:3,c:COL.earth,dmg:10,pierce:true});
+      }
+    } else if(boss.pick===1){
+      // STONE SPIKES
+      for(let i=0;i<6;i++){
+        hazards.push({kind:'spike', x:rand(20,VW-20), y:rand(50,VH-30), r:12, t:2.2, up:0, hit:false});
+      }
+    } else {
+      boss.guard = 3.5;   // EARTH GUARD: can't be damaged
+    }
+  } else if(t==='lightning'){
+    if(boss.pick===0){
+      for(let i=0;i<6;i++){
+        hazards.push({kind:'bolt', x:rand(24,VW-24), y:rand(40,VH-24), r:15, t:1.0, struck:false});
+      }
+    } else if(boss.pick===1){
+      hazards.push({kind:'static', x:boss.x, y:boss.y, r:2, max:76, t:0.9, hit:false,
+                    color:COL.lightning, dmg:11});
+    } else {
+      hazards.push({kind:'thunder', x:player.x, y:player.y, r:16, lock:1.2, t:1.6, struck:false});
+    }
+  } else if(t==='ice'){
+    if(boss.pick===0){
+      // FROST NOVA (main): expanding freezing ring — get to the edge
+      hazards.push({kind:'static', x:boss.x, y:boss.y, r:2, max:76, t:0.9, hit:false,
+                    color:COL.ice, dmg:11, freezes:true});
+    } else if(boss.pick===1){
+      // ICICLE STORM: marked spots get struck by falling icicles
+      for(let i=0;i<6;i++){
+        hazards.push({kind:'bolt', x:rand(24,VW-24), y:rand(40,VH-24), r:15, t:1.0, struck:false, color:COL.ice, freezes:true});
+      }
+    } else {
+      // GLACIAL WALL: a sweeping wall of ice with one safe gap (freezes on hit)
+      const fromTop = Math.random()<0.5;
+      hazards.push({kind:'tidal', y: fromTop? -20 : VH+20, dir: fromTop?1:-1,
+                    gapX:rand(40,VW-40), gapW:48, hit:false, t:6,
+                    c1:'#5a9ec8', c2:COL.ice});
+    }
+  } else if(t==='poison'){
+    if(boss.pick===0){
+      // VENOM POOLS (main): toxic puddles — standing in one poisons you (damage over time)
+      for(let i=0;i<6;i++){
+        hazards.push({kind:'venom', x:rand(24,VW-24), y:rand(40,VH-24), r:15, t:6});
+      }
+    } else if(boss.pick===1){
+      // TOXIC SPIT: a spread of venom globs that poison on hit
+      for(let i=0;i<6;i++){
+        const ang=Math.atan2(player.y-boss.y,player.x-boss.x)+rand(-0.5,0.5);
+        projectiles.push({x:boss.x,y:boss.y,vx:Math.cos(ang)*90,vy:Math.sin(ang)*90,r:3,c:COL.poison,dmg:8,poisons:true});
+      }
+    } else {
+      // GAS CLOUD: expanding poison ring — get to the edge
+      hazards.push({kind:'static', x:boss.x, y:boss.y, r:2, max:76, t:0.9, hit:false,
+                    color:COL.poison, dmg:9, poisons:true});
+    }
+  } else if(t==='shadow'){
+    if(boss.pick===0){
+      // BLACKOUT (main): darkness swallows the arena — you can only see right around you
+      hazards.push({kind:'blackout', t:3.5});
+    } else if(boss.pick===1){
+      // VOID GRASP: a dark hand locks onto you, then strikes
+      hazards.push({kind:'thunder', x:player.x, y:player.y, r:17, lock:1.3, t:1.8, struck:false, color:COL.shadow});
+    } else {
+      // PHANTOM BARRAGE: shadow bolts fly in from the edges of the arena
+      for(let i=0;i<7;i++){
+        const side=Math.floor(rand(0,4));
+        let sx,sy;
+        if(side===0){ sx=rand(0,VW); sy=-8; } else if(side===1){ sx=rand(0,VW); sy=VH+8; }
+        else if(side===2){ sx=-8; sy=rand(0,VH); } else { sx=VW+8; sy=rand(0,VH); }
+        const ang=Math.atan2(player.y-sy,player.x-sx);
+        projectiles.push({x:sx,y:sy,vx:Math.cos(ang)*80,vy:Math.sin(ang)*80,r:3,c:COL.shadow,dmg:10});
+      }
+    }
+  } else if(t==='cosmic'){
+    if(boss.pick===0){
+      // METEOR SHOWER: marked spots struck by falling stars
+      for(let i=0;i<6;i++){
+        hazards.push({kind:'bolt', x:rand(24,VW-24), y:rand(40,VH-24), r:15, t:1.0, struck:false, color:COL.cosmic});
+      }
+    } else if(boss.pick===1){
+      // NOVA RING: expanding starlight ring
+      hazards.push({kind:'static', x:boss.x, y:boss.y, r:2, max:80, t:0.9, hit:false,
+                    color:COL.cosmic, dmg:12, burns:true});
+    } else {
+      // STARFIRE: fast spread of star bolts
+      for(let i=0;i<7;i++){
+        const ang=Math.atan2(player.y-boss.y,player.x-boss.x)+rand(-0.45,0.45);
+        projectiles.push({x:boss.x,y:boss.y,vx:Math.cos(ang)*110,vy:Math.sin(ang)*110,r:3,c:COL.cosmic,dmg:10});
+      }
+    }
+  } else if(t==='chrono'){
+    if(boss.pick===0){
+      // TIME STRIKE: a temporal lock tracks you, then snaps
+      hazards.push({kind:'thunder', x:player.x, y:player.y, r:17, lock:1.4, t:1.9, struck:false, color:COL.chrono});
+    } else if(boss.pick===1){
+      // ECHO RING: expanding time ripple — freezes you in place if caught
+      hazards.push({kind:'static', x:boss.x, y:boss.y, r:2, max:78, t:0.9, hit:false,
+                    color:COL.chrono, dmg:10, freezes:true});
+    } else {
+      // BLINK BARRAGE: the boss teleports, then unleashes a burst
+      boss.x=rand(30,VW-30); boss.y=rand(30,110);
+      for(let k=0;k<10;k++) particles.push({x:boss.x,y:boss.y,vx:rand(-50,50),vy:rand(-50,50),life:0.4,c:COL.chrono});
+      for(let i=0;i<8;i++){
+        const ang=(i/8)*Math.PI*2;
+        projectiles.push({x:boss.x,y:boss.y,vx:Math.cos(ang)*85,vy:Math.sin(ang)*85,r:3,c:COL.chrono,dmg:9});
+      }
+    }
+  } else if(t==='void'){
+    if(boss.pick===0){
+      // VOID RIFT: TWO expanding null rings, one after the other
+      hazards.push({kind:'static', x:boss.x, y:boss.y, r:2, max:82, t:0.9, hit:false,
+                    color:COL.void, dmg:12, freezes:true});
+      hazards.push({kind:'static', x:player.x, y:player.y, r:2, max:60, t:0.9, hit:false,
+                    color:'#8a80c8', dmg:10});
+    } else if(boss.pick===1){
+      // OBLIVION BEAMS: bolts erupt from the void at marked spots AND darkness falls
+      for(let i=0;i<5;i++){
+        hazards.push({kind:'bolt', x:rand(24,VW-24), y:rand(40,VH-24), r:15, t:1.0, struck:false, color:COL.void});
+      }
+      hazards.push({kind:'blackout', t:2.0});
+    } else {
+      // EVENT HORIZON: an inescapable pull + a barrage while you're dragged in
+      hazards.push({kind:'cyclone',x:boss.x,y:boss.y,t:2.6,color:COL.void});
+      for(let i=0;i<6;i++){
+        const ang=(i/6)*Math.PI*2;
+        projectiles.push({x:boss.x,y:boss.y,vx:Math.cos(ang)*70,vy:Math.sin(ang)*70,r:3,c:COL.void,dmg:10});
+      }
+    }
+  } else if(t==='gravity'){
+    if(boss.pick===0){
+      // GRAVITY WELL: crushing pull toward the boss (like a black hole)
+      hazards.push({kind:'cyclone',x:boss.x,y:boss.y,t:2.4,color:COL.gravity});
+    } else if(boss.pick===1){
+      // CRUSH SPIKES: heavy stone spikes slam up
+      for(let i=0;i<7;i++){
+        hazards.push({kind:'spike', x:rand(20,VW-20), y:rand(50,VH-30), r:12, t:2.2, up:0, hit:false});
+      }
+    } else {
+      // METEOR SLAM: a massive weight locks on and slams down
+      hazards.push({kind:'thunder', x:player.x, y:player.y, r:20, lock:1.5, t:2.0, struck:false, color:COL.gravity});
+    }
+  } else if(t==='wind'){
+    if(boss.pick===0){
+      hazards.push({kind:'cyclone',x:boss.x,y:boss.y,t:2.0});
+    } else {
+      // GUST BARRAGE: very fast wind blades
+      for(let i=0;i<6;i++){
+        const ang=Math.atan2(player.y-boss.y,player.x-boss.x)+rand(-0.4,0.4);
+        projectiles.push({x:boss.x,y:boss.y,vx:Math.cos(ang)*120,vy:Math.sin(ang)*120,r:3,c:COL.wind,dmg:9});
+      }
+    }
+  }
+  boss.phase='idle';
+}
+
+// ---------- hazard updates ----------
+function updateHazards(dt){
+  for(let i=hazards.length-1;i>=0;i--){
+    const h=hazards[i];
+    h.t-=dt;
+    if(h.kind==='spike'){
+      if(h.up<1) h.up=Math.min(1,h.up+dt*3);
+      if(h.up>0.5 && !h.hit && dist(player,h)<h.r && player.invuln<=0){ hurt(12); h.hit=true; }
+      if(h.t<=0) hazards.splice(i,1);
+    } else if(h.kind==='bolt'){
+      // marked tile gets struck when timer hits 0 (lightning bolt or falling icicle)
+      if(h.t<=0 && !h.struck){
+        h.struck=true;
+        if(dist(player,h)<h.r*0.6 && player.invuln<=0){ hurt(12); if(h.freezes) freeze(); }
+        for(let k=0;k<8;k++) particles.push({x:h.x,y:h.y-rand(0,20),vx:rand(-20,20),vy:rand(-40,10),life:0.3,c:h.color||COL.lightning});
+      }
+      if(h.t<=-0.25) hazards.splice(i,1);
+    } else if(h.kind==='static'){
+      // expanding elemental ring; caught inside = hit (edge/outside safe)
+      h.r += dt*120;
+      if(!h.hit && h.r>18){
+        if(dist(player,h) < h.r && dist(player,h) < 58 && player.invuln<=0){
+          hurt(h.dmg||11);
+          if(h.freezes) freeze();
+          if(h.burns) applyBurn();
+          if(h.poisons) applyPoison();
+        }
+        h.hit=true;
+      }
+      if(h.r>=h.max) hazards.splice(i,1);
+    } else if(h.kind==='thunder'){
+      // tracks the player while lock>0, then locks and strikes
+      if(h.lock>0){ h.lock-=dt; h.x += (player.x-h.x)*Math.min(1,dt*4); h.y += (player.y-h.y)*Math.min(1,dt*4); }
+      if(h.t<=0 && !h.struck){
+        h.struck=true;
+        if(dist(player,h)<h.r*0.6 && player.invuln<=0){ hurt(16); }
+        for(let k=0;k<12;k++) particles.push({x:h.x,y:h.y-rand(0,30),vx:rand(-25,25),vy:rand(-50,10),life:0.35,c:COL.lightning});
+      }
+      if(h.t<=-0.25) hazards.splice(i,1);
+    } else if(h.kind==='tidal'){
+      // giant wave sweeps across the arena in h.dir direction
+      h.y += h.dir * 55 * dt;
+      // damage if player is in the wave band but NOT in the safe gap
+      const band = 16;
+      if(Math.abs(player.y - h.y) < band){
+        const inGap = Math.abs(player.x - h.gapX) < h.gapW/2;
+        if(!inGap && player.invuln<=0){
+          hurt(10); if(!h.windy) freeze();
+          // shove the player along with the wave
+          player.y += h.dir * 40 * dt;
+          // ⭐ SECRET: caught on the LEFT side of the Water guardian's FIRST wave?
+          // The wave drags you into ANOTHER UNIVERSE.
+          if(universe==='normal' && h.fromWater && h.waveNum===1 && player.x < VW/2 && gameState==='fight'){
+            enterVoidUniverse();
+            return;
+          }
+        }
+      }
+      // gone once it fully crosses
+      if((h.dir>0 && h.y>VH+25) || (h.dir<0 && h.y<-25)) hazards.splice(i,1);
+    } else if(h.kind==='venom'){
+      // toxic puddle: standing in it poisons you; fades away after its time
+      if(dist(player,h) < h.r && player.invuln<=0){
+        applyPoison();
+      }
+      if(h.t<=0) hazards.splice(i,1);
+    } else if(h.kind==='blackout'){
+      // darkness — handled visually in render; just expires here
+      if(h.t<=0) hazards.splice(i,1);
+    } else if(h.kind==='metal'){
+      // cools over time: heat 1 -> 0. Dangerous while heat > 0.35.
+      h.heat -= dt*0.10;   // ~6.5s to cool
+      if(h.heat>0.35){
+        if(dist(player,h) < h.r && player.invuln<=0){
+          applyBurn();
+        }
+      }
+      if(h.heat<=0) hazards.splice(i,1);
+    } else if(h.kind==='wave'){
+      h.r += dt*150;
+      if(!h.hit && h.r>16){
+        if(dist(player,h) < 50 && player.invuln<=0){ hurt(12); }
+        h.hit=true;
+      }
+      if(h.r>=h.max) hazards.splice(i,1);
+    } else if(h.kind==='cyclone'){
+      const dx=h.x-player.x, dy=h.y-player.y, d=Math.hypot(dx,dy)||1;
+      if(d<90){ player.x += (dx/d)*22*dt; player.y += (dy/d)*22*dt; }
+      if(d<14 && player.invuln<=0){ hurt(14*dt); }
+      if(h.t<=0) hazards.splice(i,1);
+    }
+  }
+}
+
+function freeze(){ if(player.shieldTime>0) return; player.frozen=0.8; }
+function applyBurn(){
+  if(player.shieldTime>0) return;   // shield blocks burn
+  // refresh/stack a burn that ticks over time (more total damage than one hit)
+  player.burn = 3.0;          // seconds of burning
+  player.burnTick = player.burnTick || 0;
+}
+function applyPoison(){
+  if(player.shieldTime>0) return;   // shield blocks poison
+  player.poison = 3.5;        // seconds of poison
+  player.poisonTick = player.poisonTick || 0;
+}
+function dist(a,b){ return Math.hypot(a.x-b.x,a.y-b.y); }
+function hurt(n){
+  if(player.invuln>0) return;
+  n = Math.max(1, Math.round(n * diffCur().dmg));   // difficulty scales boss damage
+  if(player.shieldTime>0){ flashRed=0.05; return; }  // active Earth Shield ability blocks it
+  // Earth Shield passive block: works if earth is the weapon, fused in, or a fusion parent
+  const wI = currentWeapon ? (WEAPONS[currentWeapon]||{}) : {};
+  const els = [currentWeapon, ...(wI.parents||[]), ...(currentWeapon?mergedInto(currentWeapon):[])];
+  if(els.includes('earth') && Math.random()<0.2){
+    flashRed=0.05; player.invuln=0.3;
+    for(let k=0;k<4;k++) particles.push({x:player.x+rand(-6,6),y:player.y+rand(-6,6),vx:rand(-20,20),vy:rand(-20,20),life:0.2,c:'#c8a060'});
+    return;
+  }
+  player.hp-=n; player.invuln=0.6; flashRed=0.15; sfxHurt();
+  if(player.hp<=0){ player.hp=0; if(gameState!=='dead'){ gameState='dead'; setBanner('YOU FELL — TAP TO RETRY',99); reportGameOver('dead'); } }
+}
+
+// ---------- main loop ----------
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,(now-last)/1000); last=now;
+  if(!paused){ update(dt); }
+  render();
+  requestAnimationFrame(loop);
+}
+
+function update(dt){
+  if(banner.t>0) banner.t-=dt;
+  if(flashRed>0) flashRed-=dt;
+  readKeys();
+
+  if(gameState==='dead'){ return; }
+  if(gameState==='win'){ return; }
+
+  // timers
+  if(player.dashCd>0) player.dashCd-=dt;
+  if(player.shootCd>0) player.shootCd-=dt;
+  if(player.invuln>0) player.invuln-=dt;
+  if(player.frozen>0){ player.frozen-=dt; }
+  if(player.shieldCd>0) player.shieldCd-=dt;
+  if(player.shieldTime>0) player.shieldTime-=dt;
+  if(player.moltenCd>0) player.moltenCd-=dt;
+  if(player.jumpT>0) player.jumpT-=dt;
+  if(player.jumpCd>0) player.jumpCd-=dt;
+
+  // burning: ticks damage every 0.5s while active (ignores invuln)
+  if(player.burn>0){
+    player.burn-=dt;
+    player.burnTick-=dt;
+    if(player.burnTick<=0){
+      player.burnTick=0.5;
+      player.hp-=6; flashRed=0.12;
+      for(let k=0;k<4;k++) particles.push({x:player.x+rand(-4,4),y:player.y+rand(-4,4),vx:rand(-15,15),vy:rand(-25,-5),life:0.4,c:COL.fire});
+      if(player.hp<=0){ player.hp=0; if(gameState!=='dead'){ gameState='dead'; setBanner('YOU FELL — TAP TO RETRY',99); reportGameOver('dead'); } }
+    }
+  }
+
+  // poison: slower ticks but lasts longer
+  if(player.poison>0){
+    player.poison-=dt;
+    player.poisonTick-=dt;
+    if(player.poisonTick<=0){
+      player.poisonTick=0.6;
+      player.hp-=5; flashRed=0.10;
+      for(let k=0;k<4;k++) particles.push({x:player.x+rand(-4,4),y:player.y+rand(-4,4),vx:rand(-12,12),vy:rand(-22,-4),life:0.4,c:COL.poison});
+      if(player.hp<=0){ player.hp=0; if(gameState!=='dead'){ gameState='dead'; setBanner('YOU FELL — TAP TO RETRY',99); reportGameOver('dead'); } }
+    }
+  }
+
+  // movement
+  let mvx=input.x, mvy=input.y;
+  const mag=Math.hypot(mvx,mvy);
+  if(mag>1){ mvx/=mag; mvy/=mag; }
+  if(player.frozen>0){ mvx*=0.15; mvy*=0.15; }
+  if(mag>0.15){ player.facing={x:mvx/(mag||1),y:mvy/(mag||1)}; }
+  player.x += mvx*player.speed*currentSpeedMult()*60*dt;
+  player.y += mvy*player.speed*currentSpeedMult()*60*dt;
+  // clamp to arena
+  player.x=Math.max(8,Math.min(VW-8,player.x));
+  player.y=Math.max(8,Math.min(VH-8,player.y));
+
+  // 🕳 GRAVITY GAUNTLET: hold ATTACK (or spacebar) to drag the boss toward you
+  if(player.hasGauntlet && boss && (atkHeld || keys[' ']) && gameState==='fight'){
+    const gdx=player.x-boss.x, gdy=player.y-boss.y, gd=Math.hypot(gdx,gdy)||1;
+    boss.gripT=0.12;                     // gripped: its own movement is frozen
+    if(gd>26){
+      boss.x += (gdx/gd)*65*dt;
+      boss.y += (gdy/gd)*65*dt;
+      boss.tx=boss.x; boss.ty=boss.y;
+      // purple energy streaming from the boss to your hand
+      if(Math.floor(performance.now()/60)%2===0){
+        const pt=Math.random();
+        particles.push({x:boss.x+gdx*pt, y:boss.y+gdy*pt, vx:gdx/gd*30, vy:gdy/gd*30, life:0.15, c:COL.gravity});
+      }
+    }
+  }
+
+  // stone pillars (Earth trap) block the player — UNLESS your jump is upgraded
+  // to max level and you're currently mid-jump, in which case you hop clean over them.
+  const clearingPillars = player.jumpT>0 && jumpClearsPillars();
+  if(boss && boss.pillars && !clearingPillars){
+    for(const p of boss.pillars){
+      const dx=player.x-p.x, dy=player.y-p.y, d=Math.hypot(dx,dy)||1;
+      const minD=player.r+7;
+      if(d<minD){ player.x=p.x+(dx/d)*minD; player.y=p.y+(dy/d)*minD; }
+    }
+  }
+
+  updateBoss(dt);
+  updateHazards(dt);
+
+  // projectiles
+  for(let i=projectiles.length-1;i>=0;i--){
+    const p=projectiles[i];
+    p.x+=p.vx*dt; p.y+=p.vy*dt;
+    if(dist(p,player)<player.r+p.r && player.invuln<=0){ hurt(p.dmg); if(p.poisons) applyPoison(); projectiles.splice(i,1); continue; }
+    if(p.x<-10||p.x>VW+10||p.y<-10||p.y>VH+10) projectiles.splice(i,1);
+  }
+
+  // player ranged shots
+  for(let i=playerShots.length-1;i>=0;i--){
+    const s=playerShots[i];    s.x+=s.vx*dt; s.y+=s.vy*dt;
+    // pillars block YOUR shots (you can't shoot out of the trap)
+    let blocked=false;
+    if(boss && boss.pillars){
+      for(const p of boss.pillars){ if(dist(s,p)<7+s.r){ blocked=true; break; } }
+    }
+    if(blocked){
+      for(let k=0;k<3;k++) particles.push({x:s.x,y:s.y,vx:rand(-20,20),vy:rand(-20,20),life:0.2,c:'#aaa'});
+      playerShots.splice(i,1); continue;
+    }
+    if(boss && dist(s,boss)<boss.r+s.r){
+      damageBoss(s.dmg, true); flashRed=0.08;
+      for(let k=0;k<5;k++) particles.push({x:s.x,y:s.y,vx:rand(-30,30),vy:rand(-30,30),life:0.3,c:COL[boss.type]});
+      playerShots.splice(i,1); continue;
+    }
+    if(s.x<-10||s.x>VW+10||s.y<-10||s.y>VH+10) playerShots.splice(i,1);
+  }
+
+  // player molten pools (Fire reward): tick damage to the boss, weaker than boss's
+  for(let i=moltenPools.length-1;i>=0;i--){
+    const mp=moltenPools[i];
+    mp.t-=dt; mp.tick-=dt;
+    if(boss && dist(mp,boss)<mp.r+boss.r && mp.tick<=0){
+      mp.tick=0.4;
+      damageBoss(5, false);           // weaker than the boss's molten metal
+      for(let k=0;k<3;k++) particles.push({x:mp.x+rand(-mp.r,mp.r),y:mp.y+rand(-8,8),vx:rand(-15,15),vy:rand(-25,-5),life:0.4,c:COL.fire});
+    }
+    if(mp.t<=0) moltenPools.splice(i,1);
+  }
+
+  // particles
+  for(let i=particles.length-1;i>=0;i--){
+    const q=particles[i]; q.x+=q.vx*dt; q.y+=q.vy*dt; q.life-=dt;
+    if(q.life<=0) particles.splice(i,1);
+  }
+
+  // boss defeated?
+  if(boss && boss.hp<=0){
+    const type=boss.type;
+
+    // ⭐ VOID UNIVERSE boss defeated: grant its exclusive weapon, then next void boss
+    if(universe==='void'){
+      score += Math.round(150 * diffCur().score);
+      if(score>bestScore) bestScore=score;
+      const voidCoins = Math.round(40 * diffCur().coins);
+      player.coins += voidCoins;
+      player.weapons[type]=true;
+      if(!currentWeapon) currentWeapon=type;
+      if(ABILITY_GRANT[type]) ABILITY_GRANT[type]();
+      if(!player.defeated.includes(type)) player.defeated.push(type);
+      player.maxhp+=15; player.hp=player.maxhp;
+      boss=null;
+      altStageIndex++;
+      openMergePick(type, voidCoins);
+      return;
+    }
+
+    // SCORE + COINS: earn both per boss, worth more each loop AND on harder difficulties
+    score += Math.round((100 + gameLoop*50) * diffCur().score);
+    if(score>bestScore) bestScore=score;
+    const coinsEarned = Math.round((25 + gameLoop*10) * diffCur().coins);
+    player.coins += coinsEarned;
+    lastCoinsEarned = coinsEarned;
+    // body color: record this boss so a quarter of you turns its color
+    if(!player.defeated.includes(type)) player.defeated.push(type);
+    // becoming the most powerful happens ONCE, when you've beaten every MAIN guardian
+    const mainDefeated = player.defeated.filter(t=>STAGES.includes(t)).length;
+    if(mainDefeated>=STAGES.length && !player.ultimate){
+      player.ultimate=true;
+      player.maxhp+=100;
+    }
+    player.maxhp+=20; player.hp=player.maxhp;
+    boss=null;
+    runKills++;
+    pendingRunComplete = (runKills>=STAGES.length);
+    // You get the DEFEATED BOSS'S weapon (no choosing) + its matching ability
+    player.weapons[type]=true;
+    if(!currentWeapon) currentWeapon=type;
+    if(ABILITY_GRANT[type]) ABILITY_GRANT[type]();
+    // Then: option to MERGE two owned weapons together
+    openMergePick(type, coinsEarned);
+  }
+}
+
+// tap to advance / retry (win no longer auto-continues on tap — it opens the end screen)
+canvas.addEventListener('click',()=>{
+  if(gameState==='transition'){ startStage(stageIndex+1); }
+  else if(gameState==='dead'){ player.hp=player.maxhp; startStage(stageIndex); }
+});
+canvas.addEventListener('touchend',()=>{
+  if(gameState==='transition'){ startStage(stageIndex+1); }
+  else if(gameState==='dead'){ player.hp=player.maxhp; startStage(stageIndex); }
+},{passive:true});
+
+// ---------- render ----------
+// ---------- THEMED ARENA BACKDROPS ----------
+// Every boss arena has its own scenery along the top of the screen,
+// with light animation so the world feels alive.
+function drawArenaBackdrop(type){
+  const t = performance.now();
+  ctx.globalAlpha=0.9;
+  if(type==='cosmic'||type==='chrono'||type==='gravity'||type==='void'){
+    // ⭐ VOID UNIVERSE: deep-space starfield with drifting planets
+    ctx.globalAlpha=0.35; px(0,0,VW,VH,'#0a0618'); ctx.globalAlpha=0.9;
+    for(let k=0;k<14;k++){
+      if(Math.floor(t/500+k)%4!==0) px((k*37+11)%VW,(k*23)%VH,1,1,'#e0d8ff');
+    }
+    if(type==='cosmic'){
+      // ringed planet + shooting star
+      px(24,8,14,14,'#c060a0'); px(27,11,8,8,'#e090c8'); px(16,13,30,3,'#f0c8e880');
+      px(18,14,26,1,'#ffd8f0');
+      const shx=(t/8)%(VW+60)-30;
+      px(shx,6,8,2,'#fff'); px(shx+8,6,4,2,'#ffb0e0');
+    } else if(type==='chrono'){
+      // giant hourglass + slow-orbiting moons
+      px(100,2,20,3,'#7ff0e0'); px(104,5,12,4,'#4aa89c'); px(107,9,6,3,'#7ff0e0');
+      px(104,12,12,4,'#4aa89c'); px(100,16,20,3,'#7ff0e0');
+      const oa=t/900;
+      px(110+Math.cos(oa)*40, 10+Math.sin(oa)*7, 4,4,'#b0fff4');
+      px(110+Math.cos(oa+3.14)*40, 10+Math.sin(oa+3.14)*7, 3,3,'#70c8c0');
+    } else if(type==='gravity'){
+      // black hole with swirling accretion ring
+      px(102,4,16,16,'#000');
+      const sa=t/300;
+      for(let k=0;k<8;k++){
+        const a=sa+k*0.785;
+        px(110+Math.cos(a)*13, 12+Math.sin(a)*9, 3,2,(k%2===0)?COL.gravity:'#c8b0ff');
+      }
+    } else {
+      // VOID: a jagged tear in reality itself, pulsing white
+      const pulse=(Math.floor(t/400)%2===0);
+      px(95,2,30,3,pulse?'#fff':'#c8c0f8');
+      px(103,5,16,3,pulse?'#c8c0f8':'#8a80c8');
+      px(108,8,8,3,'#8a80c8');
+      px(99,-1,20,2,'#fff');
+      // reality fragments drifting away from the tear
+      for(let k=0;k<4;k++){
+        const fx=110+Math.cos(t/500+k*1.6)*(20+k*8), fy=6+Math.sin(t/500+k*1.6)*10;
+        px(fx,fy,2,2,'#e8e4ff');
+      }
+    }
+    ctx.globalAlpha=1;
+    return;
+  }
+  if(type==='fire'){
+    // VOLCANO in the back, with glowing crater and rising embers
+    px(60,2,100,4,'#3a1408');            // dark ridge line
+    // volcano body (stepped pyramid)
+    px(85,-2,50,10,'#4a2010');
+    px(95,-6,30,10,'#5a2814');
+    px(103,-10,14,10,'#6a3018');
+    // glowing crater + lava streaks down the slopes
+    const glow=(Math.floor(t/300)%2===0)?'#ff8a30':'#ff5a10';
+    px(106,-8,8,4,glow);
+    px(104,0,3,8,'#ff5a10'); px(115,2,3,7,'#ff7a20');
+    // rising ember pixels
+    for(let k=0;k<4;k++){
+      const ex=100+((k*37)%22), ey=8-((t/60+k*45)%26);
+      if(ey>-4) px(ex,ey,2,2,(k%2===0)?'#ffb040':'#ff6a28');
+    }
+    // small lava pools at the arena edges
+    px(4,26,14,6,'#5a2010'); px(6,27,10,4,glow);
+    px(VW-20,20,14,6,'#5a2010'); px(VW-18,21,10,4,'#ff7a20');
+  } else if(type==='water'){
+    // rolling ocean waves along the top + drifting bubbles
+    for(let x=0;x<VW;x+=16){
+      const wy=4+Math.sin((x+t/12)/14)*2;
+      px(x,wy,16,5,'#2a6fb0');
+      px(x+((Math.floor(t/140)+x)%8),wy,5,2,'#9fd0f0');   // foam
+    }
+    px(0,9,VW,3,'#1e5488');
+    // bubbles drifting upward
+    for(let k=0;k<5;k++){
+      const bxp=(k*47+((t/40)|0)*(k%2?1:-1))%VW, byp=30-((t/50+k*33)%34);
+      if(byp>0) px((bxp+VW)%VW,byp,2,2,'#bfe4ff');
+    }
+    // little island with palm at one side
+    px(10,14,18,5,'#c8b070'); px(16,6,3,8,'#7a5030'); px(12,3,11,4,'#3a8a40');
+  } else if(type==='earth'){
+    // rocky mountain range + boulders
+    px(0,4,60,6,'#5a4630'); px(10,-2,34,8,'#6a5238'); px(20,-6,14,6,'#7a6244');
+    px(150,2,70,8,'#5a4630'); px(165,-4,36,8,'#6a5238'); px(178,-8,12,6,'#7a6244');
+    // snow caps
+    px(24,-6,6,2,'#e8e4d8'); px(181,-8,6,2,'#e8e4d8');
+    // scattered boulders near the walls
+    px(6,40,10,7,'#6a5a44'); px(8,38,6,3,'#7a6a50');
+    px(VW-16,52,9,6,'#6a5a44'); px(VW-14,50,5,3,'#7a6a50');
+  } else if(type==='lightning'){
+    // storm clouds + occasional distant flash
+    for(let k=0;k<4;k++){
+      const cx=(k*60+((t/90)|0))%(VW+40)-20;
+      px(cx,2,34,7,'#3a3a52');
+      px(cx+4,-1,24,5,'#484866');
+    }
+    if(Math.floor(t/900)%4===0 && Math.floor(t/90)%3===0){
+      const lx=30+(Math.floor(t/900)*77)%160;
+      drawBolt(lx,10,COL.lightning);
+    }
+  } else if(type==='ice'){
+    // glacier peaks + falling snow
+    px(0,2,50,8,'#b8dcf0'); px(8,-4,26,8,'#d0ecf8'); px(14,-8,12,6,'#e8f8ff');
+    px(160,0,60,9,'#b8dcf0'); px(172,-5,30,8,'#d0ecf8'); px(180,-9,12,6,'#e8f8ff');
+    // drifting snowflakes
+    for(let k=0;k<7;k++){
+      const sx=(k*33+Math.sin((t/700)+k)*10+VW)%VW;
+      const sy=(t/55+k*41)%64;
+      px(sx,sy,2,2,'#f0faff');
+    }
+  } else if(type==='poison'){
+    // gnarled swamp trees + bubbling bog
+    px(20,10,4,14,'#3a4a20'); px(14,6,16,6,'#4a6a24'); px(18,2,8,5,'#568030');
+    px(180,12,4,12,'#3a4a20'); px(174,8,16,5,'#4a6a24');
+    // bog pools with popping bubbles
+    px(60,6,40,7,'#2a4416'); px(64,7,32,4,'#3a6020');
+    if(Math.floor(t/250)%3===0) px(70+((t/250)|0)%20,6,3,3,'#8fd14f');
+    px(130,18,26,6,'#2a4416'); px(133,19,20,3,'#3a6020');
+    // drifting toxic haze
+    ctx.globalAlpha=0.25;
+    px(((t/70)|0)%VW,14,30,4,COL.poison);
+    ctx.globalAlpha=0.9;
+  } else if(type==='shadow'){
+    // void sky: ruined dark arches + twinkling void stars
+    px(30,-2,8,18,'#241a3a'); px(52,-2,8,18,'#241a3a'); px(30,-4,30,5,'#2e2248');
+    px(160,-2,8,14,'#241a3a'); px(182,-2,8,14,'#241a3a'); px(160,-4,30,5,'#2e2248');
+    for(let k=0;k<8;k++){
+      if(Math.floor(t/400+k)%3!==0){
+        px((k*29+7)%VW,(k*13)%30,1,1,(k%2===0)?'#b0a0e0':'#7a6ab0');
+      }
+    }
+  } else if(type==='wind'){
+    // open sky: drifting clouds + circling leaves
+    for(let k=0;k<3;k++){
+      const cx=(k*80+((t/50)|0))%(VW+50)-25;
+      px(cx,4+k*7,36,6,'#e8f4ec'); px(cx+6,1+k*7,24,4,'#f4faf6');
+    }
+    for(let k=0;k<4;k++){
+      const lx=(k*57+((t/30)|0)*2)%VW;
+      const ly=20+Math.sin((t/300)+k*2)*8;
+      px(lx,ly,2,2,'#9fd0a8');
+    }
+  }
+  ctx.globalAlpha=1;
+}
+
+function render(){
+  // floor tiles (checkerboard pixel look)
+  for(let y=0;y<VH;y+=20){
+    for(let x=0;x<VW;x+=20){
+      px(x,y,20,20, ((x/20+y/20)%2===0)?COL.floor:COL.floor2);
+    }
+  }
+  // arena tint by element
+  if(boss){
+    ctx.globalAlpha=0.08; px(0,0,VW,VH,COL[boss.type]); ctx.globalAlpha=1;
+  }
+  // themed scenery for each boss's arena
+  if(boss) drawArenaBackdrop(boss.type);
+
+  // hazards
+  for(const h of hazards){
+    if(h.kind==='tidal'){
+      // giant sweeping wall (water tidal wave or wind wall) with a safe gap
+      const bandY = h.y;
+      ctx.fillStyle = h.c1 || '#2a6fb0';
+      ctx.fillRect(0, bandY-16, VW, 32);
+      ctx.fillStyle = h.c2 || COL.water;
+      ctx.fillRect(0, bandY-16, VW, 10);
+      // white foam pixels
+      for(let fx=0; fx<VW; fx+=8){ px(fx+((Math.floor(performance.now()/80)+fx)%8), bandY-16, 4,4,'#cfeafff0'); }
+      // carve the safe gap
+      ctx.clearRect(h.gapX-h.gapW/2, bandY-18, h.gapW, 36);
+      // re-draw floor inside the gap so it looks like an opening
+      for(let gy=bandY-18; gy<bandY+18; gy+=6){
+        for(let gx=h.gapX-h.gapW/2; gx<h.gapX+h.gapW/2; gx+=6){
+          px(gx,gy,6,6, (Math.floor(gx/20+gy/20)%2===0)?COL.floor:COL.floor2);
+        }
+      }
+    } else if(h.kind==='metal'){
+      // burning metal patch: bright when hot, fades to grey as it cools/dries
+      const hot = Math.max(0,h.heat);
+      const r = h.r;
+      // base metal
+      px(h.x-r, h.y-r*0.7, r*2, r*1.4, '#555');
+      // glowing overlay by heat
+      if(hot>0.05){
+        ctx.globalAlpha = hot;
+        const glow = hot>0.6 ? '#ff5a1e' : (hot>0.35 ? '#ff9030' : '#c86030');
+        px(h.x-r+2, h.y-r*0.7+2, r*2-4, r*1.4-4, glow);
+        ctx.globalAlpha=1;
+        // little heat flecks while dangerous
+        if(hot>0.35 && Math.floor(performance.now()/120)%2===0){
+          px(h.x+rand(-r,r), h.y+rand(-r*0.6,r*0.6), 2,2,'#ffd070');
+        }
+      }
+    } else if(h.kind==='spike'){
+      // stone spike rising from the ground
+      const rise=h.up*10;
+      px(h.x-6, h.y-rise, 12, 6+rise, '#7a5c3a');
+      px(h.x-4, h.y-rise-2, 8, 4, '#9a7550');
+      // pointed top
+      px(h.x-2, h.y-rise-5, 4, 4, '#b58a60');
+    } else if(h.kind==='wave'){
+      ctx.strokeStyle=COL.earth; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.arc(h.x,h.y,h.r,0,7); ctx.stroke();
+    } else if(h.kind==='cyclone'){
+      ctx.strokeStyle=h.color||COL.wind; ctx.lineWidth=2;
+      for(let k=1;k<=3;k++){ ctx.beginPath(); ctx.arc(h.x,h.y,k*10*(1.2-Math.sin(h.t*6)*0.1),0,7); ctx.stroke(); }
+    } else if(h.kind==='bolt'){
+      if(!h.struck){
+        // warning circle blinking faster as it nears
+        const bc = h.color||COL.lightning;
+        const blink=(Math.floor(h.t*12)%2===0);
+        ctx.strokeStyle=blink?bc:'#667'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(h.x,h.y,h.r*0.6,0,7); ctx.stroke();
+        px(h.x-1,h.y-1,2,2,bc);
+      } else {
+        // jagged strike flash (lightning bolt or icicle)
+        drawBolt(h.x,h.y,h.color||COL.lightning);
+      }
+    } else if(h.kind==='static'){
+      ctx.strokeStyle=h.color||COL.lightning; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(h.x,h.y,h.r,0,7); ctx.stroke();
+      // crackle flecks on the ring
+      for(let k=0;k<6;k++){ const a=rand(0,6.28); px(h.x+Math.cos(a)*h.r, h.y+Math.sin(a)*h.r, 2,2,'#fff'); }
+    } else if(h.kind==='thunder'){
+      const tc = h.color||COL.lightning;
+      if(!h.struck){
+        const blink=(Math.floor(h.t*12)%2===0);
+        ctx.strokeStyle=blink?'#fff':tc; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(h.x,h.y,h.r*0.6,0,7); ctx.stroke();
+        ctx.beginPath(); ctx.arc(h.x,h.y,h.r*0.35,0,7); ctx.stroke();
+      } else {
+        drawBolt(h.x,h.y, h.color?tc:'#fff');
+      }
+    } else if(h.kind==='venom'){
+      // bubbling toxic puddle
+      const a=Math.max(0.35, Math.min(1, h.t/6));
+      ctx.globalAlpha=a;
+      px(h.x-h.r, h.y-h.r*0.6, h.r*2, h.r*1.2, '#3a6a1a');
+      px(h.x-h.r+3, h.y-h.r*0.6+3, h.r*2-6, h.r*1.2-6, COL.poison);
+      ctx.globalAlpha=1;
+      if(Math.floor(performance.now()/150)%2===0) px(h.x+rand(-h.r,h.r), h.y+rand(-6,6), 2,2,'#d0ff90');
+    }
+  }
+
+  // stone pillars (Earth trap)
+  if(boss && boss.pillars){
+    for(const p of boss.pillars){
+      px(p.x-7, p.y-9, 14, 18, '#000');
+      px(p.x-5, p.y-7, 10, 14, '#7a5c3a');
+      px(p.x-3, p.y-5, 6, 4, '#9a7550');
+    }
+  }
+
+  // player molten pools (Fire reward)
+  for(const mp of moltenPools){
+    const a=Math.max(0.2,Math.min(1,mp.t/3.5));
+    ctx.globalAlpha=a;
+    px(mp.x-mp.r, mp.y-mp.r*0.6, mp.r*2, mp.r*1.2, '#ff7020');
+    px(mp.x-mp.r+3, mp.y-mp.r*0.6+3, mp.r*2-6, mp.r*1.2-6, '#ffb040');
+    ctx.globalAlpha=1;
+    if(Math.floor(performance.now()/120)%2===0) px(mp.x+rand(-mp.r,mp.r), mp.y+rand(-6,6), 2,2,'#ffe090');
+  }
+
+  // telegraph glow under boss during windup
+  if(boss && boss.specialTelegraph>0){
+    ctx.globalAlpha=0.4+0.3*Math.sin(performance.now()/60);
+    ctx.strokeStyle=COL.danger; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(boss.x,boss.y,boss.r+6,0,7); ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+
+  // boss (original blocky square creature)
+  if(boss){
+    let c=COL[boss.type];
+    if(boss.frozenT>0) c='#6fb0e0';        // slowed tint
+    const bx=boss.x, by=boss.y;
+    px(bx-14,by-14,28,28,'#000');
+    px(bx-12,by-12,24,24,c);
+    px(bx-8,by-8,5,5,'#000');   // eyes
+    px(bx+3,by-8,5,5,'#000');
+    px(bx-6,by+4,12,3,'#000');  // mouth
+    // burning DOT flecks
+    if(boss.dotT>0 && Math.floor(performance.now()/100)%2===0) px(bx+rand(-10,10),by+rand(-10,10),2,2,COL.fire);
+    // EARTH GUARD shield bubble (can't be damaged)
+    if(boss.guard>0){
+      ctx.globalAlpha=0.5+0.3*Math.sin(performance.now()/70);
+      ctx.strokeStyle='#c8a060'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.arc(bx,by,20,0,7); ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+    // boss hp bar
+    px(bx-16,by-24,32,4,COL.hpbg);
+    px(bx-16,by-24,32*Math.max(0,boss.hp/boss.maxhp),4,COL.hp);
+    // WEAKNESS hint: a blinking square in the feared element's color next to the HP bar
+    const wk = BOSS_WEAKNESS[boss.type];
+    if(wk && Math.floor(performance.now()/350)%2===0){
+      px(bx+19,by-25,6,6,'#000');
+      px(bx+20,by-24,4,4,COL[wk]);
+    }
+  }
+
+  // projectiles
+  for(const p of projectiles){ px(p.x-p.r,p.y-p.r,p.r*2,p.r*2,'#000'); px(p.x-p.r+1,p.y-p.r+1,p.r*2-2,p.r*2-2,p.c); }
+
+  // player ranged shots
+  for(const s of playerShots){ px(s.x-2,s.y-2,4,4,'#000'); px(s.x-1,s.y-1,2,2,'#fff'); }
+
+  // particles
+  for(const q of particles){ ctx.globalAlpha=Math.max(0,q.life*3); px(q.x-1,q.y-1,2,2,q.c); ctx.globalAlpha=1; }
+
+  // player (pixel hero, blinks when invuln)
+  if(!(player.invuln>0 && Math.floor(performance.now()/80)%2===0)){
+    // jump makes a hop: body grows slightly + a shadow below. Higher jump level = higher hop.
+    const jumpLvl = player.shopUpgrades.jump||0;
+    const hopHeight = 6 + jumpLvl*4;   // level 3 (max) hops noticeably higher, clears pillars
+    const hop = player.jumpT>0 ? Math.sin((1-player.jumpT/0.35)*Math.PI) : 0;
+    const size = 10 + hop*3;
+    const yoff = -hop*hopHeight;
+    const bx=player.x, by=player.y+yoff;
+    // shadow when hopping
+    if(hop>0.05){ ctx.globalAlpha=0.3; px(player.x-5, player.y+5, 10,3,'#000'); ctx.globalAlpha=1; }
+
+    // Shadow guardian defeated: a dark aura trails beneath you at all times
+    if(player.defeated && player.defeated.includes('shadow')){
+      ctx.globalAlpha=0.45;
+      px(player.x-7, player.y+5, 14, 4, COL.shadow);
+      ctx.globalAlpha=1;
+    }
+    // outline (turns icy blue once you've defeated the Ice guardian)
+    const outlineCol = player.defeated && player.defeated.includes('ice') ? COL.ice : '#000';
+    px(bx-size/2-1, by-size/2-1, size+2, size+2, outlineCol);
+
+    if(player.ultimate){
+      // MOST POWERFUL IN THE UNIVERSE: shimmering rainbow of all elements
+      const cols=[COL.water,COL.fire,COL.earth,COL.wind];
+      const half=size/2;
+      px(bx-half, by-half, size/2, size/2, cols[0]);
+      px(bx,      by-half, size/2, size/2, cols[1]);
+      px(bx-half, by,      size/2, size/2, cols[2]);
+      px(bx,      by,      size/2, size/2, cols[3]);
+      // golden aura
+      ctx.globalAlpha=0.4+0.3*Math.sin(performance.now()/90);
+      ctx.strokeStyle='#ffd700'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(player.x,player.y+yoff,size,0,7); ctx.stroke();
+      ctx.globalAlpha=1;
+    } else {
+      // base body
+      let pc = COL.player;
+      if(player.frozen>0) pc = COL.water;
+      if(player.burn>0) pc = (Math.floor(performance.now()/100)%2===0) ? '#ff6a28' : '#ffb050';
+      if(player.poison>0) pc = (Math.floor(performance.now()/120)%2===0) ? COL.poison : '#a8e860';
+      px(bx-size/2, by-size/2, size, size, pc);
+      // each defeated boss (except lightning & ice, which get their own spots) paints a quarter
+      const quads=[ [ -1,-1 ], [ 0,-1 ], [ -1,0 ], [ 0,0 ] ]; // TL,TR,BL,BR
+      const quadDefeated = player.defeated.filter(t=>t!=='lightning' && t!=='ice' && t!=='poison' && t!=='shadow');
+      quadDefeated.forEach((type,idx)=>{
+        if(idx>3) return;
+        const q=quads[idx]; const half=size/2;
+        px(bx+q[0]*half, by+q[1]*half, half, half, COL[type]);
+      });
+      // Lightning: a small square nestled in the CENTER, between all the other quarters
+      if(player.defeated.includes('lightning')){
+        const cs=Math.max(2, size*0.3);
+        px(bx-cs/2, by-cs/2, cs, cs, COL.lightning);
+      }
+    }
+    // small angry eyebrows (short, slanted inward)
+    px(bx-4, by-5, 3,1, '#000'); px(bx-4, by-4, 1,1,'#000');
+    px(bx+2, by-5, 3,1, '#000'); px(bx+3, by-4, 1,1,'#000');
+    // eyes (turn venom-green once you've defeated the Poison guardian)
+    const eyeCol = player.defeated && player.defeated.includes('poison') ? COL.poison : '#000';
+    px(bx-4, by-3, 3,3,eyeCol);
+    px(bx+1, by-3, 3,3,eyeCol);
+    // aim marker (points where you'll shoot)
+    px(bx-1+player.aim.x*7, by-1+player.aim.y*7, 3,3,'#fff');
+  }
+
+  // Earth Shield bubble
+  if(player.shieldTime>0){
+    ctx.globalAlpha=0.5+0.3*Math.sin(performance.now()/80);
+    ctx.strokeStyle='#7fd8a0'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(player.x,player.y,11,0,7); ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+
+  // BLACKOUT (Shadow boss): darkness covers everything except a window around you
+  for(const h of hazards){
+    if(h.kind==='blackout'){
+      const win=34;   // half-size of your visibility window
+      ctx.fillStyle='rgba(4,2,10,0.88)';
+      ctx.fillRect(0,0,VW, Math.max(0,player.y-win));                    // top
+      ctx.fillRect(0,player.y+win,VW, VH-(player.y+win));                // bottom
+      ctx.fillRect(0,Math.max(0,player.y-win), Math.max(0,player.x-win), win*2);   // left
+      ctx.fillRect(player.x+win,Math.max(0,player.y-win), VW-(player.x+win), win*2); // right
+      break;
+    }
+  }
+
+  // red damage flash
+  if(flashRed>0){ ctx.globalAlpha=flashRed*2; px(0,0,VW,VH,'#f00'); ctx.globalAlpha=1; }
+
+  // HUD: player hp bar
+  px(8,8,80,8,'#000'); px(9,9,78,6,COL.hpbg);
+  px(9,9,78*Math.max(0,player.hp/player.maxhp),6,COL.hp);
+  ctx.fillStyle='#fff'; ctx.font='7px "Courier New"'; ctx.fillText('HP',10,7);
+
+  // HUD: score + best (top center)
+  ctx.fillStyle='#fff'; ctx.font='bold 8px "Courier New"'; ctx.textAlign='center';
+  ctx.fillText('SCORE '+score+'   BEST '+bestScore, VW/2, 14);
+  if(gameLoop>0) ctx.fillText('LOOP '+(gameLoop+1), VW/2, 24);
+  if(difficulty!==1){ ctx.fillStyle=diffCur().color; ctx.fillText(diffCur().name, VW/2, gameLoop>0?31:24); ctx.fillStyle='#fff'; }
+  ctx.textAlign='left';
+
+  // stage pips
+  for(let i=0;i<STAGES.length;i++){
+    const done = i<stageIndex || (gameState==='win');
+    const active = (i===stageIndex && gameState==='fight');
+    let col='#334';
+    if(done) col=COL[STAGES[i]];
+    else if(active) col='#889';
+    px(VW-12-(i*12),8,8,8,col);
+  }
+
+  // banner text
+  if(banner.t>0){
+    ctx.fillStyle='rgba(0,0,0,0.75)'; ctx.fillRect(0,VH/2-16,VW,26);
+    ctx.fillStyle='#fff'; ctx.font='bold 10px "Courier New"'; ctx.textAlign='center';
+    ctx.fillText(banner.text,VW/2,VH/2); ctx.textAlign='left';
+  }
+
+  // update ABILITY button label + ready/cooling state
+  if(player.hasShield || player.hasMolten){
+    const ab=document.getElementById('abilityBtn');
+    if(player.hasShield){
+      const ready = player.shieldCd<=0;
+      ab.textContent = player.shieldTime>0 ? 'SHIELD' : (ready?'SHIELD':Math.ceil(player.shieldCd)+'s');
+      ab.className = 'abilitybtn '+(ready?'ready':'cooling');
+    } else if(player.hasMolten){
+      const ready = player.moltenCd<=0;
+      ab.textContent = ready?'MOLTEN':Math.ceil(player.moltenCd)+'s';
+      ab.className = 'abilitybtn '+(ready?'ready':'cooling');
+    }
+  }
+}
+
+// kick off first stage lazily once play pressed
+const _bg=beginGame;
+beginGame=function(){ _bg(); if(!boss && gameState!=='win'){ startStage(0);} };
+
+// Keep the game safe when you tap away / switch apps:
+// freeze time so nothing happens while hidden, and don't lose progress.
+let wasPausedBeforeHide=false;
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){
+    wasPausedBeforeHide=paused;
+    paused=true;                 // freeze while away
+    stopMusic();                 // silence while away
+  } else {
+    last=performance.now();      // reset clock so no huge time-jump
+    if(!wasPausedBeforeHide && overlay.style.display==='none'){
+      paused=false;
+      if(AC && AC.state==='suspended') AC.resume();
+      if(soundOn && gameState==='fight' && boss) startMusic(boss.type);
+    }
+  }
+});
+window.addEventListener('blur',()=>{ last=performance.now(); });
+</script>
+</body>
+</html>
