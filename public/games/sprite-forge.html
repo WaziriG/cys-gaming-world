@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sprite Forge</title>
+<style>
+  :root{
+    --ink:#1a1626; --panel:#2b2440; --panel2:#37305a;
+    --line:#4a4270; --hi:#ffcf4a; --hi2:#ff6b9d; --txt:#e8e4f5; --muted:#9b93c4;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;min-height:100%;}
+  body{
+    background:var(--ink);color:var(--txt);
+    font-family:ui-monospace,'SF Mono',Menlo,monospace;
+    display:flex;flex-direction:column;height:100vh;
+    touch-action:none;user-select:none;-webkit-user-select:none;
+  }
+  header{
+    display:flex;align-items:center;gap:10px;padding:10px 14px;
+    border-bottom:2px solid var(--line);background:var(--panel);
+  }
+  header h1{
+    font-size:16px;margin:0;letter-spacing:2px;font-weight:800;
+    color:var(--hi);text-shadow:2px 2px 0 #00000055;
+  }
+  header .dot{width:10px;height:10px;background:var(--hi2);box-shadow:0 0 0 3px #ff6b9d33;}
+  .wrap{flex:1;display:flex;min-height:0;}
+  .tools{
+    width:64px;background:var(--panel);border-right:2px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 0;overflow-y:auto;
+  }
+  .tool{
+    width:46px;height:46px;border:2px solid var(--line);background:var(--panel2);
+    color:var(--txt);font-size:20px;border-radius:8px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .tool.on{border-color:var(--hi);background:#4a3d1a;color:var(--hi);}
+  .tool:active{transform:scale(.92);}
+  .stage{
+    flex:1;display:flex;align-items:center;justify-content:center;
+    background:
+      linear-gradient(45deg,#221d33 25%,transparent 25%,transparent 75%,#221d33 75%,#221d33),
+      linear-gradient(45deg,#221d33 25%,#2a2440 25%,#2a2440 75%,#221d33 75%,#221d33);
+    background-size:24px 24px;background-position:0 0,12px 12px;
+    padding:12px;min-width:0;overflow:auto;
+  }
+  #pad{
+    background:transparent;image-rendering:pixelated;touch-action:none;
+    border:2px solid var(--line);box-shadow:0 8px 0 #00000044;cursor:crosshair;
+    width:var(--padsize,384px);height:var(--padsize,384px);flex:none;
+  }
+  .side{
+    width:132px;background:var(--panel);border-left:2px solid var(--line);
+    padding:10px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;
+  }
+  .lbl{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+  .swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+  .sw{aspect-ratio:1;border:2px solid #00000055;border-radius:5px;cursor:pointer;}
+  .sw.on{border-color:var(--hi);box-shadow:0 0 0 2px var(--hi);}
+  .sw.clear{background:
+    linear-gradient(45deg,#666 25%,transparent 25%,transparent 75%,#666 75%),
+    linear-gradient(45deg,#666 25%,#fff 25%,#fff 75%,#666 75%);
+    background-size:10px 10px;background-position:0 0,5px 5px;background-color:#fff;}
+  input[type=color]{width:100%;height:34px;border:2px solid var(--line);border-radius:6px;background:none;padding:2px;}
+  .row{display:flex;gap:6px;align-items:center;}
+  .brush{flex:1;text-align:center;font-size:13px;background:var(--panel2);border:2px solid var(--line);border-radius:6px;padding:6px;}
+  .btn{
+    width:100%;padding:9px;border:2px solid var(--line);background:var(--panel2);
+    color:var(--txt);border-radius:7px;font-size:12px;font-family:inherit;cursor:pointer;letter-spacing:.5px;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn.go{background:var(--hi);color:#1a1626;border-color:var(--hi);font-weight:800;}
+  .btn.warn{border-color:var(--hi2);color:var(--hi2);}
+  .gridtoggle{font-size:11px;}
+  /* floating saves button */
+  #savesFab{
+    position:fixed;right:16px;bottom:16px;z-index:40;
+    width:60px;height:60px;border-radius:50%;border:3px solid var(--hi);
+    background:var(--panel2);color:var(--hi);font-size:11px;font-weight:800;
+    font-family:inherit;letter-spacing:.5px;cursor:pointer;
+    box-shadow:0 6px 0 #00000055;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;line-height:1.1;
+  }
+  #savesFab:active{transform:translateY(2px);box-shadow:0 4px 0 #00000055;}
+  #savesFab .count{font-size:14px;color:var(--txt);}
+  /* saves overlay */
+  #saves{
+    position:fixed;inset:0;z-index:50;background:#14101fee;
+    display:none;flex-direction:column;
+  }
+  #saves.open{display:flex;}
+  #saves header{background:var(--panel);border-bottom:2px solid var(--line);}
+  #saves h2{font-size:15px;color:var(--hi);margin:0;letter-spacing:2px;}
+  .savesGrid{
+    flex:1;overflow-y:auto;padding:16px;display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:14px;align-content:start;
+  }
+  .scard{
+    background:var(--panel);border:2px solid var(--line);border-radius:10px;
+    padding:8px;display:flex;flex-direction:column;gap:6px;
+  }
+  .scard img{
+    width:100%;aspect-ratio:1;image-rendering:pixelated;border-radius:6px;
+    background:
+      linear-gradient(45deg,#333 25%,transparent 25%,transparent 75%,#333 75%),
+      linear-gradient(45deg,#333 25%,#555 25%,#555 75%,#333 75%);
+    background-size:14px 14px;background-position:0 0,7px 7px;cursor:pointer;
+  }
+  .scard .srow{display:flex;gap:5px;}
+  .scard .sbtn{
+    flex:1;font-size:10px;padding:5px 0;text-align:center;border-radius:5px;
+    border:1px solid var(--line);background:var(--panel2);color:var(--txt);
+    text-decoration:none;cursor:pointer;font-family:inherit;
+  }
+  .scard .sbtn.edit{border-color:var(--hi);color:var(--hi);}
+  .scard .sbtn.del{border-color:var(--hi2);color:var(--hi2);}
+  .scard .sbtn.copy{border-color:#4ad991;color:#4ad991;}
+  .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:40px;font-size:13px;}
+  /* code preview panel */
+  #codePanel{
+    position:fixed;left:0;right:0;bottom:0;z-index:60;
+    background:#0e0b17;border-top:3px solid var(--hi);
+    transform:translateY(100%);transition:transform .25s ease;
+    max-height:45vh;display:flex;flex-direction:column;
+    box-shadow:0 -8px 24px #00000088;
+  }
+  #codePanel.open{transform:translateY(0);}
+  #codePanel .cpHead{
+    display:flex;align-items:center;gap:8px;padding:8px 12px;
+    background:var(--panel);border-bottom:1px solid var(--line);
+  }
+  #codePanel .cpHead b{color:var(--hi);font-size:12px;letter-spacing:1px;flex:1;}
+  #codePanel .cpBtn{
+    font-size:11px;padding:6px 12px;border-radius:6px;border:1px solid var(--line);
+    background:var(--panel2);color:var(--txt);font-family:inherit;cursor:pointer;
+  }
+  #codePanel .cpBtn.go{border-color:#4ad991;color:#4ad991;}
+  #codeText{
+    flex:1;overflow:auto;margin:0;padding:12px;font-size:11px;line-height:1.5;
+    color:#c9e5d4;white-space:pre-wrap;word-break:break-all;
+    font-family:ui-monospace,Menlo,monospace;
+  }
+
+  @media(max-width:640px){
+    .tools{width:52px;} .tool{width:40px;height:40px;font-size:17px;}
+    .side{width:112px;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <span class="dot"></span>
+  <h1>SPRITE FORGE</h1>
+  <span style="font-size:11px;color:var(--muted);margin-left:auto;">pixel grid · transparent PNG</span>
+</header>
+
+<div class="wrap">
+  <div class="tools">
+    <button class="tool on" data-tool="pen" title="Pen">✏️</button>
+    <button class="tool" data-tool="eraser" title="Eraser">🧽</button>
+    <button class="tool" data-tool="fill" title="Fill">🪣</button>
+    <button class="tool" data-tool="pick" title="Eyedropper">💧</button>
+    <button class="tool" data-tool="line" title="Line">📏</button>
+    <button class="tool" data-tool="rect" title="Box">▢</button>
+  </div>
+
+  <div class="stage">
+    <canvas id="pad" width="32" height="32"></canvas>
+  </div>
+
+  <div class="side">
+    <div class="lbl">Color</div>
+    <input type="color" id="picker" value="#ff6b9d">
+    <div class="swatches" id="swatches"></div>
+
+    <div class="lbl">Zoom</div>
+    <div class="row">
+      <button class="btn" id="zOut" style="width:34px;">−</button>
+      <div class="brush" id="zVal">Fit</div>
+      <button class="btn" id="zIn" style="width:34px;">+</button>
+    </div>
+
+    <div class="lbl">Brush</div>
+    <div class="row">
+      <button class="btn" id="bMinus" style="width:34px;">−</button>
+      <div class="brush" id="bSize">4 px</div>
+      <button class="btn" id="bPlus" style="width:34px;">+</button>
+    </div>
+
+    <div class="lbl">Canvas</div>
+    <select id="resSel" class="btn" style="text-align:center;">
+      <option value="16">16 × 16</option>
+      <option value="32" selected>32 × 32</option>
+      <option value="48">48 × 48</option>
+      <option value="64">64 × 64</option>
+    </select>
+
+    <button class="btn gridtoggle" id="gridBtn">Grid: off</button>
+    <button class="btn" id="undo">↶ Undo</button>
+    <button class="btn warn" id="clear">Clear</button>
+
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px;">
+      <button class="btn go" id="save">⬇ Save PNG</button>
+      <button class="btn" id="openTab">↗ Open image</button>
+      <button class="btn" id="new">New Sprite</button>
+    </div>
+  </div>
+</div>
+
+<button id="savesFab"><span class="count" id="fabCount">0</span>Saves</button>
+
+<div id="saves">
+  <header style="display:flex;align-items:center;gap:10px;padding:12px 16px;">
+    <h2>MY SAVES</h2>
+    <button class="btn" id="savesClose" style="width:auto;margin-left:auto;padding:8px 16px;">✕ Close</button>
+  </header>
+  <div class="savesGrid" id="savesGrid"></div>
+</div>
+
+<div id="codePanel">
+  <div class="cpHead">
+    <b>YOUR SPRITE CODE</b>
+    <button class="cpBtn go" id="cpCopy">📋 Copy again</button>
+    <button class="cpBtn" id="cpClose">✕</button>
+  </div>
+  <pre id="codeText"></pre>
+</div>
+
+<script>
+const cv = document.getElementById('pad');
+const ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+let SIZE = 32;          // low-res grid: each cell = 1 pixel you draw
+cv.width = SIZE; cv.height = SIZE; ctx.imageSmoothingEnabled = false;
+const EXPORT = 256;     // saved PNG is scaled up to 256 (crisp, pixelated)
+
+let tool = 'pen';
+let color = '#ff6b9d';
+let brush = 1;
+let drawing = false;
+let start = null;        // for line/rect
+let snapshot = null;     // canvas image during line/rect preview
+const history = [];      // undo stack
+
+// --- palette ---
+const palette = ['clear','#000000','#ffffff','#ff6b9d','#ffcf4a','#4ad991',
+  '#4aa3ff','#b06bff','#ff8c42','#8b5a2b','#c0c0c0','#2b2440'];
+const swWrap = document.getElementById('swatches');
+palette.forEach((c,i)=>{
+  const s = document.createElement('div');
+  s.className = 'sw' + (c==='#ff6b9d'?' on':'') + (c==='clear'?' clear':'');
+  if(c!=='clear') s.style.background = c;
+  s.dataset.color = c;
+  s.onclick = ()=>{
+    document.querySelectorAll('.sw').forEach(x=>x.classList.remove('on'));
+    s.classList.add('on');
+    if(c==='clear'){ tool='eraser'; setTool('eraser'); }
+    else { color=c; document.getElementById('picker').value=c; if(tool==='eraser'){tool='pen';setTool('pen');} }
+  };
+  swWrap.appendChild(s);
+});
+
+document.getElementById('picker').oninput = e=>{
+  color = e.target.value;
+  document.querySelectorAll('.sw').forEach(x=>x.classList.remove('on'));
+  if(tool==='eraser'){tool='pen';setTool('pen');}
+};
+
+// --- tools ---
+function setTool(t){
+  tool = t;
+  document.querySelectorAll('.tool').forEach(b=>b.classList.toggle('on', b.dataset.tool===t));
+}
+document.querySelectorAll('.tool').forEach(b=> b.onclick = ()=> setTool(b.dataset.tool));
+
+// --- brush size ---
+const bSize = document.getElementById('bSize');
+bSize.textContent = brush+' px';
+document.getElementById('bPlus').onclick = ()=>{ brush=Math.min(8,brush+1); bSize.textContent=brush+' px'; };
+document.getElementById('bMinus').onclick = ()=>{ brush=Math.max(1,brush-1); bSize.textContent=brush+' px'; };
+
+// --- zoom ---
+let zoom = 0; // 0 = fit-to-stage; otherwise pixels-per-cell
+const zVal = document.getElementById('zVal');
+function fitSize(){
+  const stage = cv.parentElement;
+  const avail = Math.min(stage.clientWidth, stage.clientHeight) - 28;
+  return Math.max(64, avail);
+}
+function applyZoom(){
+  const px = zoom===0 ? fitSize() : zoom*SIZE;
+  cv.style.setProperty('--padsize', px+'px');
+  zVal.textContent = zoom===0 ? 'Fit' : zoom+'×';
+  applyGrid();
+}
+document.getElementById('zIn').onclick = ()=>{
+  if(zoom===0) zoom = Math.max(2, Math.round(fitSize()/SIZE));
+  zoom = Math.min(40, zoom+2); applyZoom();
+};
+document.getElementById('zOut').onclick = ()=>{
+  if(zoom===0) return;
+  zoom -= 2; if(zoom<2) zoom=0; applyZoom();
+};
+let grid = true;
+const gridBtn = document.getElementById('gridBtn');
+function applyGrid(){
+  gridBtn.textContent='Grid: '+(grid?'on':'off');
+  const cell = cv.clientWidth / SIZE;
+  cv.style.backgroundImage = grid ?
+    'linear-gradient(#ffffff2e 1px,transparent 1px),linear-gradient(90deg,#ffffff2e 1px,transparent 1px)' : 'none';
+  cv.style.backgroundSize = grid ? cell+'px '+cell+'px' : 'auto';
+}
+gridBtn.onclick = ()=>{ grid=!grid; applyGrid(); };
+applyZoom();
+window.addEventListener('resize', ()=>{ applyZoom(); });
+
+// resolution selector
+document.getElementById('resSel').onchange = e=>{
+  const n = +e.target.value;
+  if(!confirm('Switch to '+n+'×'+n+'? This clears the canvas.')) { e.target.value=SIZE; return; }
+  SIZE = n; cv.width=n; cv.height=n; ctx.imageSmoothingEnabled=false;
+  history.length=0; brush=1; bSize.textContent='1 px'; zoom=0; applyZoom();
+};
+
+// --- history ---
+function pushHistory(){ if(history.length>30) history.shift(); history.push(ctx.getImageData(0,0,SIZE,SIZE)); }
+document.getElementById('undo').onclick = ()=>{ if(history.length){ ctx.putImageData(history.pop(),0,0); } };
+
+// --- coordinate mapping ---
+function pos(e){
+  const r = cv.getBoundingClientRect();
+  const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]) || e;
+  let x = Math.floor((t.clientX - r.left) / r.width * SIZE);
+  let y = Math.floor((t.clientY - r.top) / r.height * SIZE);
+  x = Math.max(0, Math.min(SIZE-1, x));
+  y = Math.max(0, Math.min(SIZE-1, y));
+  return { x, y };
+}
+function stamp(x,y){
+  const b = Math.max(1, brush);
+  const off = Math.floor((b-1)/2);
+  const px = x - off, py = y - off;
+  if(tool==='eraser'){ ctx.clearRect(px,py,b,b); }
+  else { ctx.fillStyle=color; ctx.fillRect(px,py,b,b); }
+}
+function drawLine(x0,y0,x1,y1){
+  const dx=Math.abs(x1-x0),dy=Math.abs(y1-y0),sx=x0<x1?1:-1,sy=y0<y1?1:-1;
+  let err=dx-dy,x=x0,y=y0;
+  while(true){ stamp(x,y); if(x===x1&&y===y1)break; const e2=2*err; if(e2>-dy){err-=dy;x+=sx;} if(e2<dx){err+=dx;y+=sy;} }
+}
+
+// --- flood fill ---
+function fill(sx,sy){
+  const img = ctx.getImageData(0,0,SIZE,SIZE), d=img.data;
+  const idx=(x,y)=>(y*SIZE+x)*4;
+  const t=idx(sx,sy);
+  const hex=color.replace('#',''); 
+  const fr=parseInt(hex.substr(0,2),16),fg=parseInt(hex.substr(2,2),16),fb=parseInt(hex.substr(4,2),16);
+  const tr=d[t],tg=d[t+1],tb=d[t+2],ta=d[t+3];
+  if(tr===fr&&tg===fg&&tb===fb&&ta===255) return;
+  const stack=[[sx,sy]];
+  while(stack.length){
+    const [x,y]=stack.pop(); if(x<0||y<0||x>=SIZE||y>=SIZE)continue;
+    const i=idx(x,y);
+    if(d[i]===tr&&d[i+1]===tg&&d[i+2]===tb&&d[i+3]===ta){
+      d[i]=fr;d[i+1]=fg;d[i+2]=fb;d[i+3]=255;
+      stack.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);
+    }
+  }
+  ctx.putImageData(img,0,0);
+}
+function pick(x,y){
+  const p=ctx.getImageData(x,y,1,1).data;
+  if(p[3]===0)return;
+  color='#'+[p[0],p[1],p[2]].map(v=>v.toString(16).padStart(2,'0')).join('');
+  document.getElementById('picker').value=color;
+  if(tool==='pick') setTool('pen');
+}
+
+// --- pointer flow ---
+function down(e){
+  e.preventDefault();
+  const p=pos(e); pushHistory();
+  if(tool==='fill'){ fill(p.x,p.y); return; }
+  if(tool==='pick'){ pick(p.x,p.y); return; }
+  drawing=true; start=p;
+  if(tool==='line'||tool==='rect'){ snapshot=ctx.getImageData(0,0,SIZE,SIZE); }
+  else { stamp(p.x,p.y); }
+}
+function move(e){
+  if(!drawing)return; e.preventDefault();
+  const p=pos(e);
+  if(tool==='line'){ ctx.putImageData(snapshot,0,0); drawLine(start.x,start.y,p.x,p.y); }
+  else if(tool==='rect'){ ctx.putImageData(snapshot,0,0);
+    drawLine(start.x,start.y,p.x,start.y); drawLine(p.x,start.y,p.x,p.y);
+    drawLine(p.x,p.y,start.x,p.y); drawLine(start.x,p.y,start.x,start.y); }
+  else { drawLine(start.x,start.y,p.x,p.y); start=p; }
+}
+function up(){ drawing=false; snapshot=null; }
+
+cv.addEventListener('mousedown',down); cv.addEventListener('mousemove',move);
+window.addEventListener('mouseup',up);
+cv.addEventListener('touchstart',down,{passive:false});
+cv.addEventListener('touchmove',move,{passive:false});
+window.addEventListener('touchend',up);
+
+// --- saves system ---
+// Each save keeps: display PNG (256), a thumbnail, the native grid size,
+// and the raw pixel data so it can be reloaded and edited further.
+const saves = [];
+
+function renderPNG(){
+  const out=document.createElement('canvas'); out.width=EXPORT; out.height=EXPORT;
+  const o=out.getContext('2d'); o.imageSmoothingEnabled=false;
+  o.drawImage(cv,0,0,EXPORT,EXPORT);
+  return out.toDataURL('image/png');
+}
+
+function currentSprite(){
+  // capture the small editable canvas as its own PNG at native size
+  const raw=document.createElement('canvas'); raw.width=SIZE; raw.height=SIZE;
+  raw.getContext('2d').drawImage(cv,0,0);
+  return { size:SIZE, raw:raw.toDataURL('image/png'), png:renderPNG(), id:Date.now() };
+}
+
+function saveCurrent(){
+  const s = currentSprite();
+  saves.unshift(s);
+  updateFab();
+  renderSaves();
+  return s;
+}
+
+function updateFab(){ document.getElementById('fabCount').textContent = saves.length; }
+
+function loadSprite(s){
+  // switch canvas to that sprite's resolution and paint it back, fully editable
+  SIZE = s.size; cv.width=SIZE; cv.height=SIZE; ctx.imageSmoothingEnabled=false;
+  history.length=0;
+  const img=new Image();
+  img.onload=()=>{ ctx.clearRect(0,0,SIZE,SIZE); ctx.drawImage(img,0,0); };
+  img.src=s.raw;
+  // sync UI
+  const sel=document.getElementById('resSel'); if(sel) sel.value=String(SIZE);
+  zoom=0; applyZoom();
+  closeSaves();
+}
+
+function renderSaves(){
+  const grid=document.getElementById('savesGrid');
+  grid.innerHTML='';
+  if(!saves.length){ grid.innerHTML='<div class="empty">No saves yet. Draw something, tap Save PNG, and it shows up here.</div>'; return; }
+  saves.forEach(s=>{
+    const card=document.createElement('div'); card.className='scard';
+    const img=document.createElement('img'); img.src=s.png; img.title='Tap to edit';
+    img.onclick=()=>loadSprite(s);
+    const row=document.createElement('div'); row.className='srow';
+    const edit=document.createElement('button'); edit.className='sbtn edit'; edit.textContent='✎ Edit';
+    edit.onclick=()=>loadSprite(s);
+    const dl=document.createElement('a'); dl.className='sbtn'; dl.textContent='⬇ Get';
+    dl.href=s.png; dl.download='sprite-'+s.id+'.png';
+    const del=document.createElement('button'); del.className='sbtn del'; del.textContent='🗑';
+    del.onclick=()=>{ const i=saves.indexOf(s); if(i>-1){saves.splice(i,1); updateFab(); renderSaves();} };
+    row.appendChild(edit); row.appendChild(dl); row.appendChild(del);
+    const row2=document.createElement('div'); row2.className='srow';
+    const code=document.createElement('button'); code.className='sbtn copy'; code.textContent='📋 Copy game code';
+    code.onclick=()=>copySpriteCode(s, code);
+    row2.appendChild(code);
+    card.appendChild(img); card.appendChild(row); card.appendChild(row2);
+    grid.appendChild(card);
+  });
+}
+
+function spriteCodeSnippet(s, name){
+  name = name || 'monster';
+  return `// --- ${name} sprite (from Sprite Forge) ---
+const ${name}Img = new Image();
+${name}Img.src = "${s.png}";
+
+// In your game's draw loop, keep pixels crisp:
+// ctx.imageSmoothingEnabled = false;
+// Draw it wherever you want (change x, y, and size):
+// ctx.drawImage(${name}Img, x, y, 64, 64);`;
+}
+
+function showCodePanel(snippet){
+  document.getElementById('codeText').textContent = snippet;
+  document.getElementById('codePanel').classList.add('open');
+  window._lastSnippet = snippet;
+}
+document.getElementById('cpClose').onclick = ()=> document.getElementById('codePanel').classList.remove('open');
+document.getElementById('cpCopy').onclick = ()=>{
+  const btn=document.getElementById('cpCopy'); const text=window._lastSnippet||'';
+  const done=()=>{ const t=btn.textContent; btn.textContent='✓ Copied!'; setTimeout(()=>btn.textContent=t,1500); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+  } else { fallbackCopy(text,done); }
+};
+
+function copySpriteCode(s, btn){
+  const name = (prompt('Name this sprite for your code (letters only):','monster')||'monster')
+    .replace(/[^a-zA-Z0-9]/g,'') || 'monster';
+  const snippet = spriteCodeSnippet(s, name);
+  const done=()=>{ const t=btn.textContent; btn.textContent='✓ Copied!'; setTimeout(()=>btn.textContent=t,1500); };
+  showCodePanel(snippet);
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(snippet).then(done).catch(()=>fallbackCopy(snippet,done));
+  } else { fallbackCopy(snippet,done); }
+}
+function fallbackCopy(text, done){
+  const ta=document.createElement('textarea'); ta.value=text;
+  ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try{ document.execCommand('copy'); done(); }
+  catch(e){ prompt('Copy this code:', text); }
+  ta.remove();
+}
+
+function openSaves(){ renderSaves(); document.getElementById('saves').classList.add('open'); }
+function closeSaves(){ document.getElementById('saves').classList.remove('open'); }
+document.getElementById('savesFab').onclick=openSaves;
+document.getElementById('savesClose').onclick=closeSaves;
+
+// Save PNG: store it in Saves AND trigger a download for desktop
+document.getElementById('save').onclick = ()=>{
+  const s=saveCurrent();
+  const a=document.createElement('a'); a.download='sprite-'+s.id+'.png'; a.href=s.png;
+  document.body.appendChild(a); a.click(); a.remove();
+};
+document.getElementById('openTab').onclick = ()=>{
+  const w = window.open('');
+  if(w){ w.document.write('<title>Long-press to save</title><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;height:100vh"><img style="image-rendering:pixelated;width:80vmin;height:80vmin" src="'+renderPNG()+'"></body>'); }
+};
+document.getElementById('clear').onclick = ()=>{ pushHistory(); ctx.clearRect(0,0,SIZE,SIZE); };
+document.getElementById('new').onclick = ()=>{ pushHistory(); ctx.clearRect(0,0,SIZE,SIZE); };
+updateFab();
+</script>
+</body>
+</html>

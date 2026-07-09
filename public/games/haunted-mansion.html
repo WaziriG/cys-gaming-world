@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Haunted Mansion</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; background:#0a0708; overflow:hidden; font-family:'Courier New',monospace; }
+  #wrap { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+  canvas { image-rendering:pixelated; image-rendering:crisp-edges; background:#000;
+           max-width:100vw; max-height:100vh; touch-action:none; }
+  #overlay { position:fixed; inset:0; display:flex; flex-direction:column; align-items:center;
+             justify-content:center; background:rgba(5,3,4,0.94); color:#c9a86a; text-align:center;
+             padding:24px; z-index:10; }
+  #overlay h1 { font-size:clamp(28px,8vw,54px); letter-spacing:4px; color:#8b1a1a;
+                text-shadow:0 0 18px #4a0000; margin-bottom:14px; }
+  #overlay p { max-width:520px; font-size:clamp(13px,3.4vw,16px); line-height:1.7; color:#9a8a6a;
+               margin-bottom:10px; }
+  #overlay .hint { color:#5a4a3a; font-size:12px; margin-top:8px; }
+  button { margin-top:22px; padding:14px 34px; background:#2a0d0d; color:#c9a86a;
+           border:1px solid #6b2020; font-family:inherit; font-size:16px; letter-spacing:2px;
+           cursor:pointer; text-transform:uppercase; }
+  button:active { background:#4a1515; }
+  #touch { position:fixed; inset:0; z-index:5; display:none; pointer-events:none; }
+  .pad { position:absolute; bottom:28px; pointer-events:auto; user-select:none; }
+  .dpad { left:20px; width:150px; height:150px; }
+  .dbtn { position:absolute; width:50px; height:50px; background:rgba(40,20,20,0.55);
+          border:1px solid rgba(140,60,60,0.6); border-radius:8px; color:#c9a86a;
+          display:flex; align-items:center; justify-content:center; font-size:22px; }
+  .dbtn:active { background:rgba(90,40,40,0.8); }
+  #up{top:0;left:50px}#down{bottom:0;left:50px}#left{top:50px;left:0}#right{top:50px;right:0}
+  .act { right:20px; display:flex; flex-direction:column; gap:12px; align-items:flex-end; }
+  .abtn { width:74px; height:74px; border-radius:50%; background:rgba(60,20,20,0.6);
+          border:1px solid rgba(160,60,60,0.7); color:#c9a86a; font-size:13px; letter-spacing:1px;
+          display:flex; align-items:center; justify-content:center; }
+  .abtn:active { background:rgba(120,40,40,0.85); }
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="c" width="256" height="256"></canvas></div>
+
+<div id="touch">
+  <div class="pad dpad">
+    <div class="dbtn" id="up">▲</div>
+    <div class="dbtn" id="down">▼</div>
+    <div class="dbtn" id="left">◀</div>
+    <div class="dbtn" id="right">▶</div>
+  </div>
+  <div class="pad act">
+    <div class="abtn" id="bHide">HIDE</div>
+    <div class="abtn" id="bUse">USE</div>
+    <div class="abtn" id="bAtk">HIT</div>
+  </div>
+</div>
+
+<div id="overlay">
+  <h1>HAUNTED MANSION</h1>
+  <p>Two rooms stand between you and the way out. Neither wants you to leave.</p>
+  <p><b>Room 1</b> — Search the drawers for a key. When the light flickers three times, get into the closet or the thing in the dark will take you.</p>
+  <p><b>Room 2</b> — Pull books from the shelf. Good ones give key fragments; bad ones loose a spider. Find all three fragments to move on.</p>
+  <p><b>Room 3</b> — Smash the three cursed mirrors. Each one releases a shadow that hunts you. Break them all, then leave.</p>
+  <p><b>Room 4</b> — The monster wakes and chases. Throw all three levers to open the exit while staying alive. Get caught and it's over.</p>
+  <p class="hint">Desktop: Arrows/WASD move · E use · Space attack · H hide<br>Mobile: on-screen controls</p>
+  <button id="startBtn">ENTER</button>
+</div>
+
+<script>
+const cv=document.getElementById('c'),x=cv.getContext('2d');
+x.imageSmoothingEnabled=false;
+const W=256,H=256;
+
+// ---------- input ----------
+const keys={};
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;
+  if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(e.key.toLowerCase()))e.preventDefault();});
+addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
+const touch={up:0,down:0,left:0,right:0,use:0,atk:0,hide:0};
+function bind(id,k){const el=document.getElementById(id);
+  const on=e=>{e.preventDefault();touch[k]=1;};const off=e=>{e.preventDefault();touch[k]=0;};
+  el.addEventListener('touchstart',on);el.addEventListener('touchend',off);
+  el.addEventListener('touchcancel',off);el.addEventListener('mousedown',on);
+  el.addEventListener('mouseup',off);el.addEventListener('mouseleave',off);}
+bind('up','up');bind('down','down');bind('left','left');bind('right','right');
+bind('bUse','use');bind('bAtk','atk');bind('bHide','hide');
+if('ontouchstart' in window){document.getElementById('touch').style.display='block';}
+
+// edge-trigger helpers
+let prevUse=0,prevAtk=0,prevHide=0;
+function pressed(kk,tk,prevRef){
+  const now=(keys[kk[0]]||keys[kk[1]]||touch[tk])?1:0;
+  const p=now && !prevRef.v; prevRef.v=now; return p;
+}
+const useRef={v:0},atkRef={v:0},hideRef={v:0};
+function usePress(){return pressed(['e','e'],'use',useRef);}
+function atkPress(){return pressed([' ','f'],'atk',atkRef);}
+function hidePress(){return pressed(['h','h'],'hide',hideRef);}
+
+function moveVec(){
+  let dx=0,dy=0;
+  if(keys['arrowleft']||keys['a']||touch.left)dx-=1;
+  if(keys['arrowright']||keys['d']||touch.right)dx+=1;
+  if(keys['arrowup']||keys['w']||touch.up)dy-=1;
+  if(keys['arrowdown']||keys['s']||touch.down)dy+=1;
+  if(dx&&dy){dx*=0.707;dy*=0.707;}
+  return {dx,dy};
+}
+
+// ---------- mirror-shadow sprite (from Sprite Forge) ----------
+const shadowSprite=new Image();
+let shadowReady=false;
+shadowSprite.onload=function(){
+  try{
+    const off=document.createElement('canvas');
+    off.width=shadowSprite.width; off.height=shadowSprite.height;
+    const octx=off.getContext('2d');
+    octx.drawImage(shadowSprite,0,0);
+    const id=octx.getImageData(0,0,off.width,off.height);
+    const d=id.data;
+    for(let i=0;i<d.length;i+=4){
+      // knock out the baked black background -> transparent
+      if(d[i]<24 && d[i+1]<24 && d[i+2]<24){ d[i+3]=0; }
+    }
+    octx.putImageData(id,0,0);
+    shadowSprite._canvas=off;
+    shadowReady=true;
+  }catch(e){ shadowReady=false; }
+};
+shadowSprite.onerror=function(){ shadowReady=false; };
+shadowSprite.src="data:image/png;base64,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";
+
+// ---------- game state ----------
+// weapon stats: reach (px), dmg per hit, pierce (hits multiple enemies)
+const WEAPONS={
+  fists:   {reach:16, dmg:12, pierce:false, label:'FISTS'},
+  knife:   {reach:24, dmg:45, pierce:false, label:'KNIFE'},
+  axe:     {reach:28, dmg:70, pierce:true,  label:'AXE'},
+  pistol:  {reach:70, dmg:60, pierce:false, label:'PISTOL'},
+  shotgun: {reach:60, dmg:95, pierce:true,  label:'SHOTGUN'},
+  crossbow:{reach:90, dmg:80, pierce:false, label:'CROSSBOW'},
+  torch:   {reach:22, dmg:38, pierce:true,  label:'TORCH'}
+};
+const WEAPON_POOL=['knife','pistol','axe','shotgun','crossbow','torch'];
+function rollWeapon(){ return WEAPON_POOL[(Math.random()*WEAPON_POOL.length)|0]; }
+function wstat(){ return WEAPONS[G.weapon]||WEAPONS.fists; }
+
+const G={
+  state:'menu', room:1,
+  hp:100, maxhp:100, armor:0, weapon:null, // null | weapon key
+  hasKey:false, fragments:0,
+  totem:false, reviveFlash:0,
+  msg:'', msgT:0,
+};
+function say(t,dur=140){G.msg=t;G.msgT=dur;}
+
+const player={x:128,y:170,r:6,face:1};
+
+// ---------- Room 1 ----------
+const R1={
+  shelf:{x:40,y:60,w:44,h:34, drawers:[0,0,0], keyDrawer:0, opened:[0,0,0]},
+  closet:{x:96,y:52,w:34,h:52, open:false},
+  door:{x:210,y:70,w:30,h:46, locked:true},
+  hiding:false,
+  flickerTimer:0, flickerActive:false, flickers:0, litLevel:1,
+  monster:{active:false, x:-40, y:150, dir:1, speed:2.2},
+  attackWindow:0, warned:false,
+  nextEventIn:0, armorFound:false
+};
+function initR1(){
+  R1.shelf.keyDrawer=(Math.random()*3)|0;
+  R1.shelf.opened=[0,0,0];
+  R1.closet.open=false; R1.hiding=false; R1.door.locked=true;
+  R1.flickerActive=false; R1.flickers=0; R1.litLevel=1;
+  R1.monster.active=false; R1.monster.x=-40; R1.attackWindow=0; R1.warned=false;
+  R1.nextEventIn=280+Math.random()*260; R1.armorFound=false;
+  player.x=128;player.y=180;
+}
+
+// ---------- Room 2 ----------
+const R2={
+  bookshelf:{x:38,y:56,w:48,h:60, cooldown:0},
+  placeShelf:{x:150,y:56,w:60,h:60},
+  door:{x:214,y:150,w:30,h:46},
+  holding:null, // null | 'good' | 'bad' | 'weapon'
+  spiders:[],
+  spawnGuard:0
+};
+function initR2(){
+  R2.holding=null; R2.spiders=[]; R2.bookshelf.cooldown=0; R2.spawnGuard=0;
+  player.x=110;player.y=190;
+}
+
+// ---------- Room 3: Mirror Room ----------
+const R3={
+  mirrors:[
+    {x:32,y:56,w:30,h:60,broken:false,hp:30},
+    {x:113,y:56,w:30,h:60,broken:false,hp:30},
+    {x:194,y:56,w:30,h:60,broken:false,hp:30}
+  ],
+  clones:[],
+  door:{x:110,y:H-30,w:34,h:24},
+  brokenCount:0,
+  atkFlash:0
+};
+function initR3(){
+  R3.mirrors.forEach(m=>{m.broken=false;m.hp=30;});
+  R3.clones=[]; R3.brokenCount=0; R3.atkFlash=0;
+  player.x=128;player.y=150;
+}
+
+// ---------- Room 4: The Chase ----------
+const R4={
+  levers:[
+    {x:30,y:60,w:16,h:22,on:false},
+    {x:210,y:60,w:16,h:22,on:false},
+    {x:120,y:200,w:16,h:22,on:false}
+  ],
+  door:{x:210,y:150,w:30,h:46,open:false},
+  monster:{x:128,y:60,speed:1.35},
+  leversOn:0,
+  grace:90
+};
+function initR4(){
+  R4.levers.forEach(l=>l.on=false);
+  R4.leversOn=0; R4.door.open=false;
+  R4.monster.x=128; R4.monster.y=60; R4.monster.speed=1.35;
+  R4.grace=90;
+  player.x=128;player.y=150;
+}
+
+function near(a,bx,by,bw,bh,pad=10){
+  const cx=Math.max(bx,Math.min(a.x,bx+bw));
+  const cy=Math.max(by,Math.min(a.y,by+bh));
+  return Math.hypot(a.x-cx,a.y-cy)<a.r+pad;
+}
+function damage(d){
+  const blocked=Math.min(d, G.armor);
+  G.armor-=blocked; d-=blocked;
+  G.hp-=d;
+  if(G.hp<=0){
+    if(G.totem){ revive(); return; }
+    G.hp=0; G.state='dead';
+  }
+}
+function revive(){
+  G.totem=false;
+  G.hp=G.maxhp;
+  G.reviveFlash=40;
+  say('THE TOTEM SHATTERS \u2014 you are pulled back from death!',150);
+  // clear the immediate threat so revive isn't instant death again
+  if(G.room===1){
+    R1.monster.active=false; R1.monster.x=-40;
+    R1.flickerActive=false; R1.litLevel=1; R1.flickers=0;
+    R1.nextEventIn=300+Math.random()*200;
+    player.x=R1.closet.x+R1.closet.w/2; player.y=R1.closet.y+R1.closet.h+10;
+  } else if(G.room===2){
+    R2.spiders=[];
+  } else if(G.room===3){
+    // push the shadows back off the player
+    for(const c of R3.clones){ c.x=Math.max(20,Math.min(W-20,c.x + (c.x<player.x?-60:60))); c.cd=60; }
+  } else if(G.room===4){
+    R4.grace=120; R4.monster.x=128; R4.monster.y=60;
+    player.x=128; player.y=150;
+  }
+}
+
+// ---------- update ----------
+function update(){
+  if(G.state!=='play')return;
+  if(G.msgT>0)G.msgT--;
+  const mv=moveVec();
+  if(mv.dx)player.face=mv.dx>0?1:-1;
+
+  if(G.room===1)updateR1(mv);
+  else if(G.room===2)updateR2(mv);
+  else if(G.room===3)updateR3(mv);
+  else updateR4(mv);
+}
+
+function updateR1(mv){
+  const speed = R1.hiding?0:1.7;
+  if(!R1.hiding){ player.x+=mv.dx*speed; player.y+=mv.dy*speed; }
+  player.x=Math.max(12,Math.min(W-12,player.x));
+  player.y=Math.max(40,Math.min(H-14,player.y));
+
+  // flicker event cycle
+  if(!R1.flickerActive && !R1.monster.active){
+    R1.nextEventIn--;
+    if(R1.nextEventIn<=0){ R1.flickerActive=true; R1.flickers=0; R1.flickerTimer=0; R1.warned=false; }
+  }
+  if(R1.flickerActive){
+    R1.flickerTimer++;
+    // three distinct flickers
+    const cyc=R1.flickerTimer%26;
+    R1.litLevel = (cyc<8)?0.25:1;
+    if(cyc===0 && R1.flickerTimer>0)R1.flickers++;
+    if(!R1.warned){ say('THE LIGHT — GET TO THE CLOSET',80); R1.warned=true; }
+    if(R1.flickers>=3){
+      R1.flickerActive=false; R1.litLevel=1;
+      // monster charges
+      R1.monster.active=true;
+      R1.monster.x=(Math.random()<0.5)?-30:W+30;
+      R1.monster.dir=R1.monster.x<0?1:-1;
+      R1.monster.y=150; R1.attackWindow=150;
+      // if you're not hidden the instant it appears, you die
+      if(!R1.hiding)damage(100);
+    }
+  }
+
+  // monster run back and forth
+  if(R1.monster.active){
+    R1.monster.x+=R1.monster.dir*R1.monster.speed;
+    if(R1.monster.x>W+30){R1.monster.dir=-1;}
+    if(R1.monster.x<-30){R1.monster.dir=1;}
+    R1.attackWindow--;
+    // not in the closet while it runs = instant death
+    if(!R1.hiding)damage(100);
+    if(R1.attackWindow<=0){
+      R1.monster.active=false; R1.monster.x=-40;
+      R1.nextEventIn=300+Math.random()*280;
+      if(R1.hiding)say('It moved on. For now.',90);
+    }
+  }
+
+  // USE — drawers, closet enter, door
+  if(usePress()){
+    // toggle hide if at closet
+    if(near(player,R1.closet.x,R1.closet.y,R1.closet.w,R1.closet.h,8) && R1.closet.open){
+      R1.hiding=!R1.hiding;
+      say(R1.hiding?'Hidden. Stay quiet.':'You slip out.',60);
+    }
+    // open closet
+    else if(near(player,R1.closet.x,R1.closet.y,R1.closet.w,R1.closet.h,8) && !R1.closet.open){
+      R1.closet.open=true; say('Closet open. Press USE again to hide.',80);
+    }
+    // drawers
+    else if(near(player,R1.shelf.x,R1.shelf.y,R1.shelf.w,R1.shelf.h,10)){
+      const dw=Math.max(0,Math.min(2,Math.floor((player.x-R1.shelf.x)/(R1.shelf.w/3))));
+      if(!R1.shelf.opened[dw]){
+        R1.shelf.opened[dw]=1;
+        if(dw===R1.shelf.keyDrawer){ G.hasKey=true; say('A rusted KEY. The door...',110); }
+        else {
+          const r=Math.random();
+          if(r<0.07 && !G.totem){
+            G.totem=true; say('A TOTEM! It will pull you back from death, once.',150);
+          } else if(r<0.34 && !G.weapon){
+            const w=rollWeapon(); G.weapon=w; say('Hidden in the drawer — a '+WEAPONS[w].label+'!',110);
+          } else if(r<0.62 && !R1.armorFound){
+            R1.armorFound=true; G.armor=Math.min(60,G.armor+40);
+            say('Old ARMOR plate! +40 protection',110);
+          } else { say('Dust and cobwebs.',70); }
+        }
+      }
+    }
+    // door
+    else if(near(player,R1.door.x,R1.door.y,R1.door.w,R1.door.h,10)){
+      if(G.hasKey){ G.room=2; G.hasKey=false; initR2(); say('Room 2. Something skitters...',120); }
+      else say('Locked. Find the key.',70);
+    }
+  }
+
+  // hide dedicated button
+  if(hidePress() && near(player,R1.closet.x,R1.closet.y,R1.closet.w,R1.closet.h,10)){
+    if(!R1.closet.open)R1.closet.open=true;
+    else { R1.hiding=!R1.hiding; say(R1.hiding?'Hidden.':'Out.',60); }
+  }
+}
+
+function updateR2(mv){
+  player.x+=mv.dx*1.7; player.y+=mv.dy*1.7;
+  player.x=Math.max(12,Math.min(W-12,player.x));
+  player.y=Math.max(40,Math.min(H-14,player.y));
+  if(R2.bookshelf.cooldown>0)R2.bookshelf.cooldown--;
+
+  // spiders
+  for(const s of R2.spiders){
+    if(s.dead)continue;
+    const a=Math.atan2(player.y-s.y,player.x-s.x);
+    s.x+=Math.cos(a)*s.speed; s.y+=Math.sin(a)*s.speed;
+    s.leg+=0.3;
+    if(Math.hypot(s.x-player.x,s.y-player.y)<player.r+5){
+      s.cd=(s.cd||0)-1;
+      if(s.cd<=0){ damage(8); s.cd=45; }
+    }
+  }
+  R2.spiders=R2.spiders.filter(s=>!s.dead);
+
+  // USE
+  if(usePress()){
+    // draw a book from bookshelf
+    if(near(player,R2.bookshelf.x,R2.bookshelf.y,R2.bookshelf.w,R2.bookshelf.h,10) && !R2.holding){
+      if(R2.bookshelf.cooldown<=0){
+        R2.bookshelf.cooldown=20;
+        const r=Math.random();
+        if(r<0.06 && !G.totem){ G.totem=true; say('A TOTEM! It will pull you back from death, once.',150); }
+        else if(r<0.34){ R2.holding='weapon'; say('A heavy tome... something inside.',90); }
+        else if(r<0.70){ R2.holding='good'; say('A GOOD book. Place it on the shelf.',90); }
+        else { R2.holding='bad'; say('This one feels wrong...',90); }
+      }
+    }
+    // place book on the placing shelf
+    else if(near(player,R2.placeShelf.x,R2.placeShelf.y,R2.placeShelf.w,R2.placeShelf.h,10) && R2.holding){
+      if(R2.holding==='good'){
+        G.fragments++; say('A KEY FRAGMENT! ('+G.fragments+'/3)',120);
+        if(G.fragments>=3)say('All fragments joined — the KEY!',140);
+      } else if(R2.holding==='bad'){
+        spawnSpider(); say('A SPIDER bursts out!',110);
+      } else if(R2.holding==='weapon'){
+        const w=rollWeapon();
+        G.weapon=w; say('A '+WEAPONS[w].label+' drops out!',120);
+      }
+      R2.holding=null;
+    }
+    // exit door
+    else if(near(player,R2.door.x,R2.door.y,R2.door.w,R2.door.h,10)){
+      if(G.fragments>=3){ G.room=3; initR3(); say('Room 3. The mirrors watch you.',120); }
+      else say('Need all 3 fragments.',80);
+    }
+  }
+
+  // attack
+  if(atkPress()){
+    const ws=wstat();
+    let hit=false;
+    for(const s of R2.spiders){
+      const inFront=(s.x-player.x)*player.face>=-6;
+      if(inFront && Math.hypot(s.x-player.x,s.y-player.y)<ws.reach+8){
+        s.hp-=ws.dmg; if(s.hp<=0)s.dead=true; hit=true;
+        if(!ws.pierce)break;
+      }
+    }
+    if(!G.weapon && !hit)say('Barely a scratch. Find a weapon.',50);
+  }
+}
+
+function spawnSpider(){
+  if(R2.spiders.length>6)return;
+  R2.spiders.push({x:R2.placeShelf.x+R2.placeShelf.w/2,y:R2.placeShelf.y+R2.placeShelf.h,
+    hp:24,speed:0.9+Math.random()*0.5,leg:0,dead:false,cd:0});
+}
+
+function updateR3(mv){
+  player.x+=mv.dx*1.7; player.y+=mv.dy*1.7;
+  player.x=Math.max(12,Math.min(W-12,player.x));
+  player.y=Math.max(40,Math.min(H-14,player.y));
+  if(R3.atkFlash>0)R3.atkFlash--;
+
+  // shadow clones hunt you
+  for(const c of R3.clones){
+    const a=Math.atan2(player.y-c.y,player.x-c.x);
+    c.x+=Math.cos(a)*c.speed; c.y+=Math.sin(a)*c.speed;
+    c.leg+=0.25;
+    if(Math.hypot(c.x-player.x,c.y-player.y)<player.r+6){
+      c.cd=(c.cd||0)-1; if(c.cd<=0){ damage(10); c.cd=40; }
+    }
+  }
+
+  // attack: break mirrors OR hit clones
+  if(atkPress()){
+    R3.atkFlash=8;
+    const ws=wstat();
+    const reach=ws.reach, dmg=ws.dmg;
+    // mirrors
+    for(const m of R3.mirrors){
+      if(m.broken)continue;
+      if(near(player,m.x,m.y,m.w,m.h,reach)){
+        m.hp-=dmg;
+        if(m.hp<=0){
+          m.broken=true; R3.brokenCount++;
+          // release a shadow-clone
+          R3.clones.push({x:m.x+m.w/2,y:m.y+m.h,speed:0.85+Math.random()*0.4,leg:0,cd:0});
+          say('Mirror shattered — a shadow steps out! ('+R3.brokenCount+'/3)',110);
+        } else say('The glass cracks...',50);
+      }
+    }
+    // clones (they can't die, but a hit knocks them back)
+    for(const c of R3.clones){
+      const inFront=(c.x-player.x)*player.face>=-6;
+      if(inFront && Math.hypot(c.x-player.x,c.y-player.y)<reach+8){
+        c.x-=player.face*14; c.y-=6;
+      }
+    }
+  }
+
+  // exit once all mirrors broken
+  if(usePress() && near(player,R3.door.x,R3.door.y,R3.door.w,R3.door.h,10)){
+    if(R3.brokenCount>=3){ G.room=4; initR4(); say('Room 4. It wakes. RUN.',130); }
+    else say('The door won\u2019t open. Break the mirrors.',80);
+  }
+}
+
+function updateR4(mv){
+  player.x+=mv.dx*1.9; player.y+=mv.dy*1.9;
+  player.x=Math.max(12,Math.min(W-12,player.x));
+  player.y=Math.max(40,Math.min(H-14,player.y));
+
+  // grace period before the chase begins
+  if(R4.grace>0){ R4.grace--; }
+  else {
+    const a=Math.atan2(player.y-R4.monster.y,player.x-R4.monster.x);
+    R4.monster.x+=Math.cos(a)*R4.monster.speed;
+    R4.monster.y+=Math.sin(a)*R4.monster.speed;
+    if(Math.hypot(R4.monster.x-player.x,R4.monster.y-player.y)<player.r+9){
+      damage(100); // caught = death
+    }
+  }
+
+  // flip levers
+  if(usePress()){
+    let did=false;
+    for(const l of R4.levers){
+      if(!l.on && near(player,l.x,l.y,l.w,l.h,10)){
+        l.on=true; R4.leversOn++; did=true;
+        R4.monster.speed+=0.25; // it gets angrier
+        if(R4.leversOn>=3){ R4.door.open=true; say('All levers thrown \u2014 the exit is open!',120); }
+        else say('Lever thrown! ('+R4.leversOn+'/3)',90);
+      }
+    }
+    // exit
+    if(!did && near(player,R4.door.x,R4.door.y,R4.door.w,R4.door.h,10)){
+      if(R4.door.open){ G.state='win'; }
+      else say('Locked. Throw all 3 levers.',80);
+    }
+  }
+}
+
+// ---------- draw ----------
+function px(cx,cy,w,h,col){x.fillStyle=col;x.fillRect(cx|0,cy|0,w,h);}
+
+function draw(){
+  x.clearRect(0,0,W,H);
+  if(G.state==='menu')return;
+  if(G.room===1)drawR1();
+  else if(G.room===2)drawR2();
+  else if(G.room===3)drawR3();
+  else drawR4();
+  drawPlayer();
+  drawHUD();
+}
+
+function drawWalls(floorCol,wallCol){
+  px(0,0,W,40,wallCol);
+  px(0,40,W,H-40,floorCol);
+  // floorboards
+  x.fillStyle='rgba(0,0,0,0.18)';
+  for(let i=52;i<H;i+=18)x.fillRect(0,i,W,2);
+  // wall trim
+  px(0,38,W,3,'#1c1210');
+}
+
+function drawR1(){
+  drawWalls('#2b2320','#171012');
+  const dim = R1.litLevel;
+  // shelf with 3 drawers
+  const s=R1.shelf;
+  px(s.x-2,s.y-2,s.w+4,s.h+4,'#3a2a1a');
+  px(s.x,s.y,s.w,s.h,'#5a3d22');
+  for(let i=0;i<3;i++){
+    const dx=s.x+i*(s.w/3);
+    px(dx+1,s.y+3,s.w/3-2,s.h-6, R1.shelf.opened[i]?'#241608':'#6e4a28');
+    px(dx+s.w/6-2,s.y+s.h/2-1,4,3,'#3a2410'); // handle
+  }
+  // closet
+  const c=R1.closet;
+  px(c.x-2,c.y-2,c.w+4,c.h+4,'#241a12');
+  if(c.open){ px(c.x,c.y,c.w,c.h,'#0a0604'); px(c.x+2,c.y+2,c.w-4,c.h-4,'#050302'); }
+  else { px(c.x,c.y,c.w,c.h,'#4a3320'); px(c.x+c.w/2-1,c.y+c.h/2,3,10,'#2a1c10'); }
+  // door
+  const d=R1.door;
+  px(d.x-2,d.y-2,d.w+4,d.h+4,'#1a1008');
+  px(d.x,d.y,d.w,d.h, G.hasKey?'#6b4a20':'#3a2814');
+  px(d.x+d.w-7,d.y+d.h/2,3,3,'#c9a86a'); // knob
+
+  // monster
+  if(R1.monster.active){
+    const m=R1.monster;
+    x.globalAlpha=0.9;
+    px(m.x-8,m.y-22,16,30,'#0a0a10');
+    px(m.x-6,m.y-18,4,4,'#c41010'); px(m.x+2,m.y-18,4,4,'#c41010');
+    // trailing smear
+    px(m.x-14*m.dir,m.y-14,10,20,'rgba(10,10,20,0.4)');
+    x.globalAlpha=1;
+  }
+
+  // darkness overlay during flicker
+  if(dim<1){ x.fillStyle='rgba(3,2,6,'+(1-dim)*0.82+')'; x.fillRect(0,0,W,H); }
+}
+
+function drawR2(){
+  drawWalls('#241f2a','#140f1a');
+  // source bookshelf
+  const b=R2.bookshelf;
+  px(b.x-2,b.y-2,b.w+4,b.h+4,'#2a1c14');
+  px(b.x,b.y,b.w,b.h,'#3a2818');
+  const bookCols=['#7a2020','#207a3a','#20407a','#7a6020','#5a2070'];
+  for(let r=0;r<4;r++)for(let i=0;i<5;i++){
+    px(b.x+3+i*8,b.y+4+r*14,6,11,bookCols[(i+r)%5]);
+  }
+  // placing shelf
+  const p=R2.placeShelf;
+  px(p.x-2,p.y-2,p.w+4,p.h+4,'#2a1c14');
+  px(p.x,p.y,p.w,p.h,'#241810');
+  for(let r=0;r<3;r++)px(p.x+2,p.y+8+r*18,p.w-4,3,'#3a2818');
+  // fragment slots shown
+  for(let i=0;i<3;i++){
+    px(p.x+8+i*18,p.y+p.h-14,10,10, i<G.fragments?'#c9a86a':'#1a120a');
+  }
+  // exit door
+  const d=R2.door;
+  px(d.x-2,d.y-2,d.w+4,d.h+4,'#1a1008');
+  px(d.x,d.y,d.w,d.h, G.fragments>=3?'#6b4a20':'#3a2814');
+  px(d.x+d.w-7,d.y+d.h/2,3,3,'#c9a86a');
+
+  // spiders
+  for(const s of R2.spiders){
+    px(s.x-4,s.y-3,8,6,'#1a0a12');
+    for(let l=0;l<3;l++){
+      const off=Math.sin(s.leg+l)*2;
+      px(s.x-6,s.y-2+l*2+off,3,1,'#1a0a12');
+      px(s.x+3,s.y-2+l*2-off,3,1,'#1a0a12');
+    }
+    px(s.x-2,s.y-2,2,2,'#c41010');px(s.x+1,s.y-2,2,2,'#c41010');
+  }
+
+  // held book indicator floats above player handled in drawPlayer
+}
+
+function drawR3(){
+  drawWalls('#20222a','#0e1016');
+  // mirrors
+  for(const m of R3.mirrors){
+    px(m.x-3,m.y-3,m.w+6,m.h+6,'#3a2f22'); // ornate frame
+    if(m.broken){
+      px(m.x,m.y,m.w,m.h,'#08080c');
+      // shard remnants
+      px(m.x+3,m.y+6,6,4,'#20222e');px(m.x+m.w-9,m.y+m.h-14,7,5,'#20222e');
+    } else {
+      px(m.x,m.y,m.w,m.h,'#5a6a7a');
+      // reflective sheen
+      x.globalAlpha=0.4; px(m.x+4,m.y+4,6,m.h-10,'#aab8c8'); x.globalAlpha=1;
+      // the hollow thing waiting in the glass
+      if(shadowReady && shadowSprite._canvas){
+        x.globalAlpha=0.28;
+        const sz=Math.min(m.w-6,28);
+        x.drawImage(shadowSprite._canvas,(m.x+m.w/2-sz/2)|0,(m.y+m.h/2-sz/2)|0,sz,sz);
+        x.globalAlpha=1;
+      } else {
+        x.globalAlpha=0.3;
+        px(m.x+m.w/2-4,m.y+m.h/2-6,8,12,'#c9a86a');
+        x.globalAlpha=1;
+      }
+    }
+  }
+  // shadow clones — evil hollow reflections
+  for(const c of R3.clones){
+    if(shadowReady && shadowSprite._canvas){
+      const sz=26;
+      x.drawImage(shadowSprite._canvas, (c.x-sz/2)|0, (c.y-sz+4)|0, sz, sz);
+    } else {
+      // fallback drawn shadow if the sprite hasn't loaded
+      px(c.x-5,c.y-12,10,18,'#08060c');
+      px(c.x-3+2,c.y-9,2,2,'#8a10c4');px(c.x+1,c.y-9,2,2,'#8a10c4');
+      for(let l=0;l<2;l++){const off=Math.sin(c.leg+l)*2;
+        px(c.x-4,c.y+2+l*2+off,3,1,'#08060c');px(c.x+2,c.y+2+l*2-off,3,1,'#08060c');}
+    }
+  }
+  // door
+  const d=R3.door;
+  px(d.x-2,d.y-2,d.w+4,d.h+4,'#1a1008');
+  px(d.x,d.y,d.w,d.h, R3.brokenCount>=3?'#6b4a20':'#2a1c12');
+  px(d.x+d.w-7,d.y+d.h/2,3,3,'#c9a86a');
+  // attack flash
+  if(R3.atkFlash>0){ x.globalAlpha=R3.atkFlash/16; x.fillStyle='#fff'; x.fillRect(0,0,W,H); x.globalAlpha=1; }
+}
+
+function drawR4(){
+  drawWalls('#2a1418','#160a0c');
+  // levers
+  for(const l of R4.levers){
+    px(l.x-3,l.y+l.h-4,l.w+6,5,'#2a1c14'); // base
+    px(l.x+l.w/2-2,l.y+ (l.on?l.h-10:0),4,12, l.on?'#3aa03a':'#a03a3a'); // handle
+    px(l.x+l.w/2-1,l.y+(l.on?l.h-2:10),2,4,'#1a1008');
+  }
+  // exit door
+  const d=R4.door;
+  px(d.x-2,d.y-2,d.w+4,d.h+4,'#1a1008');
+  px(d.x,d.y,d.w,d.h, R4.door.open?'#6b4a20':'#2a1c12');
+  px(d.x+d.w-7,d.y+d.h/2,3,3,'#c9a86a');
+  // chasing monster
+  const m=R4.monster;
+  x.globalAlpha=R4.grace>0?0.5:1;
+  px(m.x-9,m.y-24,18,32,'#0a0a10');
+  px(m.x-6,m.y-19,4,4,'#c41010');px(m.x+2,m.y-19,4,4,'#c41010');
+  px(m.x-9,m.y-24,18,4,'#050508');
+  x.globalAlpha=1;
+  // grace countdown hint
+  if(R4.grace>0){ x.fillStyle='#e0c088';x.font='8px monospace';x.textAlign='center';
+    x.fillText('RUN IN '+Math.ceil(R4.grace/60),W/2,H/2);x.textAlign='left'; }
+  // lever counter
+  x.fillStyle='#c9a86a';x.font='7px monospace';x.fillText('LEVERS '+R4.leversOn+'/3',W-58,22);
+}
+
+function drawPlayer(){
+  const p=player;
+  // hiding = draw faint outline inside closet
+  if(G.room===1 && R1.hiding){
+    x.globalAlpha=0.35;
+    px(R1.closet.x+8,R1.closet.y+14,R1.closet.w-16,R1.closet.h-20,'#c9a86a');
+    x.globalAlpha=1;
+    return;
+  }
+  // body
+  px(p.x-5,p.y-10,10,16,'#c9a86a');
+  px(p.x-5,p.y-14,10,6,'#e0c088'); // head
+  // eyes facing
+  px(p.x-2+p.face*2,p.y-12,2,2,'#3a2810');
+  // weapon in hand (carried across all rooms)
+  if(G.weapon){
+    const fx=p.x+p.face*5;
+    switch(G.weapon){
+      case 'knife':    px(fx,p.y-6,3,8,'#cfcfcf'); break;
+      case 'axe':      px(fx,p.y-8,2,10,'#5a3a1a'); px(fx-1,p.y-9,5,4,'#b0b0b8'); break;
+      case 'pistol':   px(fx,p.y-4,7,4,'#2a2a2a'); break;
+      case 'shotgun':  px(fx,p.y-3,10,3,'#2a2a2a'); px(fx,p.y-1,4,2,'#5a3a1a'); break;
+      case 'crossbow': px(fx,p.y-5,8,2,'#5a3a1a'); px(fx+2,p.y-7,2,6,'#7a5a2a'); break;
+      case 'torch':    px(fx+1,p.y-8,2,10,'#5a3a1a'); px(fx,p.y-12,4,5,'#ff8a1a'); px(fx+1,p.y-14,2,3,'#ffd23a'); break;
+    }
+  }
+  // held book
+  if(G.room===2 && R2.holding){
+    const col=R2.holding==='good'?'#207a3a':R2.holding==='bad'?'#7a2020':'#7a6020';
+    px(p.x-4,p.y-24,8,7,col);
+  }
+  // armor shimmer
+  if(G.armor>0){ x.globalAlpha=0.5; px(p.x-6,p.y-11,12,14,'#5a7aa0'); x.globalAlpha=1; }
+}
+
+function drawHUD(){
+  // revive flash — golden burst when the totem fires
+  if(G.reviveFlash>0){
+    x.globalAlpha=G.reviveFlash/40*0.7;
+    x.fillStyle='#f0c860'; x.fillRect(0,0,W,H);
+    x.globalAlpha=1; G.reviveFlash--;
+  }
+  // hp bar
+  px(6,6,84,8,'#1a0a0a');
+  px(7,7,82*(G.hp/G.maxhp),6,'#8b1a1a');
+  // armor
+  if(G.armor>0){px(6,16,84,5,'#0a0a1a');px(7,17,82*(G.armor/60),3,'#5a7aa0');}
+  x.fillStyle='#c9a86a';x.font='7px monospace';
+  x.fillText('ROOM '+G.room,W-46,12);
+  if(G.room===2)x.fillText('FRAG '+G.fragments+'/3',W-52,22);
+  if(G.weapon)x.fillText(WEAPONS[G.weapon].label,W-58,32);
+  // totem icon
+  if(G.totem){
+    const tx=6,ty=(G.armor>0?24:16);
+    px(tx,ty,8,10,'#7a5a2a'); px(tx+2,ty+2,4,3,'#f0c860'); px(tx+3,ty+6,2,3,'#3a2810');
+    x.fillStyle='#f0c860'; x.fillText('TOTEM',tx+11,ty+9);
+  }
+  // message
+  if(G.msgT>0){
+    x.fillStyle='rgba(0,0,0,0.7)';x.fillRect(0,H-24,W,18);
+    x.fillStyle='#e0c088';x.font='8px monospace';x.textAlign='center';
+    x.fillText(G.msg,W/2,H-12);x.textAlign='left';
+  }
+}
+
+// ---------- overlays ----------
+const overlay=document.getElementById('overlay');
+function showOverlay(title,body,btn){
+  overlay.querySelector('h1').textContent=title;
+  overlay.querySelectorAll('p').forEach(el=>el.style.display='none');
+  const p0=overlay.querySelectorAll('p')[0];
+  p0.style.display='block';p0.innerHTML=body;
+  overlay.querySelector('.hint').style.display='none';
+  overlay.querySelector('button').textContent=btn;
+  overlay.style.display='flex';
+}
+
+document.getElementById('startBtn').addEventListener('click',()=>{
+  if(G.state==='menu'||G.state==='dead'||G.state==='win'){
+    Object.assign(G,{state:'play',room:1,hp:100,armor:0,weapon:null,hasKey:false,fragments:0,totem:false,reviveFlash:0,msg:'',msgT:0});
+    initR1();
+  }
+  overlay.style.display='none';
+});
+
+function loop(){
+  update();
+  draw();
+  if(G.state==='dead'){
+    showOverlay('YOU DIED','The mansion keeps another soul.','TRY AGAIN');
+  } else if(G.state==='win'){
+    showOverlay('YOU ESCAPED','The night air. You made it out.','PLAY AGAIN');
+  }
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>

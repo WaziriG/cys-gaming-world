@@ -36,20 +36,38 @@ const GAMES: Game[] = [
     players: '1P',
   },
   {
-    slug: 'coming-soon-3',
-    title: '???',
-    tagline: 'Loading level 3...',
-    description: 'Third game in the Cys Gaming World universe. Coming soon.',
-    icon: '🎮',
-    iconBg: '🌌',
-    accentColor: '#f97316',
-    glowColor: 'rgba(249, 115, 22, 0.2)',
-    borderColor: 'rgba(249, 115, 22, 0.3)',
-    hoverBorder: 'rgba(251, 146, 60, 0.6)',
-    href: '#',
-    live: false,
-    genre: '???',
-    players: '?P',
+    slug: 'haunted-mansion',
+    title: 'HAUNTED MANSION',
+    tagline: 'Four rooms. One way out.',
+    description:
+      'Search a cursed mansion for keys, dodge spiders, smash cursed mirrors, and outrun the monster in the final chase. Find weapons, armor, and the rare Totem before the night ends you.',
+    icon: '🏚️',
+    iconBg: '🌕',
+    accentColor: '#ffd166',
+    glowColor: 'rgba(255, 209, 102, 0.35)',
+    borderColor: 'rgba(255, 209, 102, 0.5)',
+    hoverBorder: 'rgba(255, 224, 153, 0.9)',
+    href: '/games/haunted-mansion',
+    live: true,
+    genre: 'SURVIVAL HORROR',
+    players: '1P',
+  },
+  {
+    slug: 'sprite-forge',
+    title: 'SPRITE FORGE',
+    tagline: 'Draw your own monsters.',
+    description:
+      'A touch-friendly pixel-art editor built for making game characters. Draw sprites on a grid, save a gallery, and export paste-ready code to drop into any canvas game.',
+    icon: '🖌️',
+    iconBg: '🎨',
+    accentColor: '#3fd2e6',
+    glowColor: 'rgba(63, 210, 230, 0.35)',
+    borderColor: 'rgba(63, 210, 230, 0.5)',
+    hoverBorder: 'rgba(125, 249, 255, 0.9)',
+    href: '/games/sprite-forge',
+    live: true,
+    genre: 'TOOL',
+    players: '1P',
   },
 ]
 
@@ -104,7 +122,7 @@ export default function ArcadeLobby() {
           className="mt-12 border rounded-lg px-6 py-4 flex flex-wrap gap-6 justify-center"
           style={{ borderColor: 'rgba(63,210,230,0.2)', background: 'rgba(13,27,42,0.8)' }}
         >
-          <Stat label="GAMES" value="2" />
+          <Stat label="GAMES" value="4" />
           <Stat label="TOTAL BOSSES" value="40+" />
           <Stat label="WORLDS" value="4" />
           <Stat label="PLAYERS" value="1" />

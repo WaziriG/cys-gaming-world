@@ -1,0 +1,40 @@
+'use client'
+
+import Link from 'next/link'
+
+export default function HauntedMansionPage() {
+  return (
+    <div className="flex flex-col" style={{ height: '100dvh', background: '#080e14' }}>
+      {/* Top bar */}
+      <div
+        className="flex items-center justify-between px-4 py-2 shrink-0"
+        style={{ background: 'rgba(8,14,20,0.95)', borderBottom: '1px solid rgba(255,209,102,0.25)' }}
+      >
+        <Link
+          href="/"
+          className="font-pixel flex items-center gap-2 no-underline"
+          style={{ fontSize: '9px', color: 'var(--gold)', letterSpacing: '1px' }}
+        >
+          ◄ ARCADE
+        </Link>
+
+        <div className="font-pixel text-center" style={{ fontSize: 'clamp(8px,1.5vw,11px)', color: 'var(--gold)', letterSpacing: '2px' }}>
+          HAUNTED MANSION
+        </div>
+
+        <div style={{ width: '70px' }} />
+      </div>
+
+      {/* Game iframe */}
+      <div className="flex-1 relative">
+        <iframe
+          src="/games/haunted-mansion.html"
+          title="Haunted Mansion"
+          className="absolute inset-0 w-full h-full border-0"
+          allow="fullscreen"
+          sandbox="allow-scripts allow-same-origin"
+        />
+      </div>
+    </div>
+  )
+}
