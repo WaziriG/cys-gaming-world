@@ -4,6 +4,7 @@ import { getTopScores, insertScore } from '@/lib/db'
 const GAME_LIMITS: Record<string, { maxScore: number; maxKills: number; maxLevel: number }> = {
   'aqua-survivor': { maxScore: 7200, maxKills: 9999, maxLevel: 200 }, // score = survival seconds, 2hr cap
   'elemental-trials': { maxScore: 500000, maxKills: 999, maxLevel: 200 }, // score = points, endless-loop runs
+  'haunted-mansion': { maxScore: 20000, maxKills: 200, maxLevel: 4 }, // score = roomsCleared*1000 + kills*25 + secondsSurvived
 }
 const VALID_GAMES = new Set(Object.keys(GAME_LIMITS))
 

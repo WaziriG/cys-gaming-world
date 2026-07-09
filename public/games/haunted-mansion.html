@@ -150,8 +150,17 @@ const G={
   hasKey:false, fragments:0,
   totem:false, reviveFlash:0,
   msg:'', msgT:0,
+  kills:0, startTime:0,
 };
 function say(t,dur=140){G.msg=t;G.msgT=dur;}
+function reportGameOver(reason){
+  const elapsed=Math.max(0,Math.floor((performance.now()-G.startTime)/1000));
+  const roomsCleared=reason==='win' ? 4 : Math.max(0,G.room-1);
+  const score=roomsCleared*1000 + G.kills*25 + elapsed;
+  try{
+    window.parent.postMessage({ type:'haunted-game-over', score, kills:G.kills, level:G.room, elapsed, reason }, '*');
+  }catch(_){}
+}
 
 const player={x:128,y:170,r:6,face:1};
 
@@ -240,6 +249,7 @@ function damage(d){
   if(G.hp<=0){
     if(G.totem){ revive(); return; }
     G.hp=0; G.state='dead';
+    reportGameOver('dead');
   }
 }
 function revive(){
@@ -425,7 +435,7 @@ function updateR2(mv){
     for(const s of R2.spiders){
       const inFront=(s.x-player.x)*player.face>=-6;
       if(inFront && Math.hypot(s.x-player.x,s.y-player.y)<ws.reach+8){
-        s.hp-=ws.dmg; if(s.hp<=0)s.dead=true; hit=true;
+        s.hp-=ws.dmg; if(s.hp<=0){ s.dead=true; G.kills++; } hit=true;
         if(!ws.pierce)break;
       }
     }
@@ -518,7 +528,7 @@ function updateR4(mv){
     }
     // exit
     if(!did && near(player,R4.door.x,R4.door.y,R4.door.w,R4.door.h,10)){
-      if(R4.door.open){ G.state='win'; }
+      if(R4.door.open){ G.state='win'; reportGameOver('win'); }
       else say('Locked. Throw all 3 levers.',80);
     }
   }
@@ -779,7 +789,7 @@ function showOverlay(title,body,btn){
 
 document.getElementById('startBtn').addEventListener('click',()=>{
   if(G.state==='menu'||G.state==='dead'||G.state==='win'){
-    Object.assign(G,{state:'play',room:1,hp:100,armor:0,weapon:null,hasKey:false,fragments:0,totem:false,reviveFlash:0,msg:'',msgT:0});
+    Object.assign(G,{state:'play',room:1,hp:100,armor:0,weapon:null,hasKey:false,fragments:0,totem:false,reviveFlash:0,msg:'',msgT:0,kills:0,startTime:performance.now()});
     initR1();
   }
   overlay.style.display='none';
