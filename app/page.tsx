@@ -53,6 +53,23 @@ const GAMES: Game[] = [
     players: '1P',
   },
   {
+    slug: 'luffys-quest',
+    title: "LUFFY'S SURVIVAL QUEST",
+    tagline: 'Become King of the Pirates.',
+    description:
+      'Fight through 4 islands — The Town, Sky Island, Volcano Island, and Monkey Island. Master 6 powers from Lightning to Gear 5 Nika Mode, freeze crowds with Conqueror’s Haki, and take down every boss.',
+    icon: '👒',
+    iconBg: '🏴‍☠️',
+    accentColor: '#ff9f43',
+    glowColor: 'rgba(255, 159, 67, 0.35)',
+    borderColor: 'rgba(255, 159, 67, 0.5)',
+    hoverBorder: 'rgba(255, 190, 118, 0.9)',
+    href: '/games/luffys-quest',
+    live: true,
+    genre: 'SURVIVAL',
+    players: '1P',
+  },
+  {
     slug: 'sprite-forge',
     title: 'SPRITE FORGE',
     tagline: 'Draw your own monsters.',
@@ -122,9 +139,9 @@ export default function ArcadeLobby() {
           className="mt-12 border rounded-lg px-6 py-4 flex flex-wrap gap-6 justify-center"
           style={{ borderColor: 'rgba(63,210,230,0.2)', background: 'rgba(13,27,42,0.8)' }}
         >
-          <Stat label="GAMES" value="4" />
+          <Stat label="GAMES" value="5" />
           <Stat label="TOTAL BOSSES" value="40+" />
-          <Stat label="WORLDS" value="4" />
+          <Stat label="WORLDS" value="8" />
           <Stat label="PLAYERS" value="1" />
         </div>
       </main>
