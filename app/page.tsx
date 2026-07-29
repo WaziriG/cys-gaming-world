@@ -70,6 +70,23 @@ const GAMES: Game[] = [
     players: '1P',
   },
   {
+    slug: 'quadratic-quest',
+    title: "ADRIAN'S QUADRATIC QUEST",
+    tagline: 'Solve the equation. Blast through the gate.',
+    description:
+      'An endless run across an alien planet — double-jump over space rocks and slimes, grab crystals, and outrun the dark. Every so often a MATH GATE blocks the path, and only the right root of the quadratic opens it.',
+    icon: '🚀',
+    iconBg: '🪐',
+    accentColor: '#a78bfa',
+    glowColor: 'rgba(167, 139, 250, 0.35)',
+    borderColor: 'rgba(167, 139, 250, 0.5)',
+    hoverBorder: 'rgba(199, 180, 255, 0.9)',
+    href: '/games/quadratic-quest',
+    live: true,
+    genre: 'MATH RUNNER',
+    players: '1P',
+  },
+  {
     slug: 'sprite-forge',
     title: 'SPRITE FORGE',
     tagline: 'Draw your own monsters.',
@@ -139,7 +156,7 @@ export default function ArcadeLobby() {
           className="mt-12 border rounded-lg px-6 py-4 flex flex-wrap gap-6 justify-center"
           style={{ borderColor: 'rgba(63,210,230,0.2)', background: 'rgba(13,27,42,0.8)' }}
         >
-          <Stat label="GAMES" value="5" />
+          <Stat label="GAMES" value="6" />
           <Stat label="TOTAL BOSSES" value="40+" />
           <Stat label="WORLDS" value="8" />
           <Stat label="PLAYERS" value="1" />

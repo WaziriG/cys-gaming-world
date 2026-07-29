@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Adrian's Quadratic Quest 🚀</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #0a0a1a;
+    overflow: hidden;
+    font-family: 'Segoe UI', 'Comic Sans MS', system-ui, sans-serif;
+    touch-action: manipulation;
+    -webkit-user-select: none; user-select: none;
+  }
+  #gameWrap {
+    position: relative;
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  canvas {
+    display: block;
+    max-width: 100%; max-height: 100%;
+    border-radius: 8px;
+    box-shadow: 0 0 60px rgba(80, 60, 200, 0.35);
+  }
+  /* ---------- Overlays ---------- */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(6, 6, 24, 0.82);
+    backdrop-filter: blur(3px);
+    z-index: 10;
+  }
+  .hidden { display: none !important; }
+  .panel {
+    background: linear-gradient(160deg, #1b1440, #0e0c2a);
+    border: 2px solid #6c5ce7;
+    border-radius: 20px;
+    padding: 32px 40px;
+    max-width: 560px;
+    width: calc(100% - 40px);
+    text-align: center;
+    color: #eef;
+    box-shadow: 0 0 40px rgba(108, 92, 231, 0.5);
+  }
+  .panel h1 {
+    font-size: 2rem;
+    background: linear-gradient(90deg, #ffd76e, #ff8bd8, #7ef0ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 10px;
+  }
+  .panel h2 { color: #ffd76e; margin-bottom: 12px; font-size: 1.5rem; }
+  .panel p { line-height: 1.55; margin-bottom: 10px; color: #cfd0ff; }
+  .bigBtn {
+    margin-top: 16px;
+    padding: 14px 42px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #101;
+    background: linear-gradient(180deg, #ffe27a, #ffb44d);
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #b06e1f, 0 8px 22px rgba(255, 180, 77, .35);
+    transition: transform .08s ease;
+  }
+  .bigBtn:active { transform: translateY(4px); box-shadow: 0 1px 0 #b06e1f; }
+  /* ---------- Math gate ---------- */
+  #problemEq {
+    font-size: 2.6rem;
+    font-weight: 800;
+    color: #7ef0ff;
+    margin: 14px 0 22px;
+    text-shadow: 0 0 18px rgba(126, 240, 255, .55);
+    font-family: 'Cambria Math', Georgia, serif;
+  }
+  #answers {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .ansBtn {
+    padding: 16px 8px;
+    font-size: 1.35rem;
+    font-weight: 700;
+    font-family: 'Cambria Math', Georgia, serif;
+    color: #fff;
+    background: linear-gradient(180deg, #4a3f9e, #33296e);
+    border: 2px solid #7a6cf0;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: transform .08s ease, background .15s;
+  }
+  .ansBtn:hover { background: linear-gradient(180deg, #5a4ec4, #3d3187); }
+  .ansBtn:active { transform: scale(.96); }
+  .ansBtn.correct { background: linear-gradient(180deg, #2ecc71, #1d9a52); border-color: #7dffb5; }
+  .ansBtn.wrong   { background: linear-gradient(180deg, #e74c3c, #a83226); border-color: #ff9d92; animation: shake .35s; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-7px); }
+    75% { transform: translateX(7px); }
+  }
+  #mathFeedback { min-height: 28px; margin-top: 14px; font-size: 1.1rem; font-weight: 700; }
+  #mathHint { margin-top: 6px; font-size: .95rem; color: #9a97d6; }
+  .keyTip { color: #8a87c8; font-size: .85rem; margin-top: 14px; }
+  .statLine { font-size: 1.15rem; color: #ffd76e; margin: 6px 0; }
+</style>
+</head>
+<body>
+<div id="gameWrap">
+  <canvas id="game" width="960" height="540"></canvas>
+
+  <!-- Start screen -->
+  <div id="startScreen" class="overlay">
+    <div class="panel">
+      <h1>🚀 Adrian's Quadratic Quest</h1>
+      <p>Run across the alien planet, <b>jump</b> over space rocks and slimes, and grab ⭐ crystals!</p>
+      <p>Every so often a <b style="color:#7ef0ff">MATH GATE</b> blocks your path — solve the quadratic equation to blast through!</p>
+      <p>⌨️ <b>SPACE</b> / <b>↑</b> to jump (press again mid-air to double-jump)<br>📱 or tap the screen</p>
+      <button class="bigBtn" id="startBtn">START MISSION</button>
+    </div>
+  </div>
+
+  <!-- Math gate screen -->
+  <div id="mathScreen" class="overlay hidden">
+    <div class="panel">
+      <h2>🔒 MATH GATE</h2>
+      <p style="margin-bottom:0">Solve to open the gate:</p>
+      <div id="problemEq"></div>
+      <div id="answers"></div>
+      <div id="mathFeedback"></div>
+      <div id="mathHint">Hint: what number times itself gives you that? Don't forget the negative twin!</div>
+      <div class="keyTip">Tip: press keys 1–4 to answer</div>
+    </div>
+  </div>
+
+  <!-- Game over screen -->
+  <div id="overScreen" class="overlay hidden">
+    <div class="panel">
+      <h2 id="overTitle">💥 MISSION OVER</h2>
+      <div class="statLine">Score: <span id="finalScore">0</span></div>
+      <div class="statLine">Distance: <span id="finalDist">0</span> m</div>
+      <div class="statLine">Gates solved: <span id="finalGates">0</span> 🔓</div>
+      <div class="statLine" id="bestLine">Best score: <span id="bestScore">0</span></div>
+      <button class="bigBtn" id="retryBtn">TRY AGAIN</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ============================================================
+   ADRIAN'S QUADRATIC QUEST — space runner + quadratic math gates
+   ============================================================ */
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const GROUND_Y = H - 90;
+
+// ---------- Audio (tiny WebAudio blips) ----------
+let audioCtx = null;
+function beep(freq, dur = 0.12, type = 'square', vol = 0.15, slideTo = null) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, audioCtx.currentTime + dur);
+    g.gain.setValueAtTime(vol, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + dur);
+  } catch (e) { /* audio optional */ }
+}
+const sfx = {
+  jump:    () => beep(340, .15, 'square', .12, 620),
+  coin:    () => { beep(880, .08, 'square', .12); setTimeout(() => beep(1320, .12, 'square', .12), 70); },
+  hit:     () => beep(160, .3, 'sawtooth', .2, 60),
+  correct: () => { beep(660, .1, 'triangle', .18); setTimeout(() => beep(880, .1, 'triangle', .18), 100); setTimeout(() => beep(1100, .18, 'triangle', .18), 200); },
+  wrong:   () => beep(200, .35, 'sawtooth', .18, 110),
+  gate:    () => beep(520, .25, 'sine', .15, 780),
+};
+
+// ---------- Game state ----------
+const S = { MENU: 0, RUN: 1, MATH: 2, OVER: 3 };
+let state = S.MENU;
+
+let speed, distance, score, lives, gatesSolved, nextGateAt, t, shield;
+let obstacles, crystals, particles, stars, hills, hills2;
+let flashTimer = 0;
+let comboStreak = 0;
+
+const player = {
+  x: 140, y: GROUND_Y, vy: 0, w: 44, h: 58,
+  jumps: 0, maxJumps: 2, invuln: 0, runPhase: 0,
+};
+
+// Starfield (fixed layout, twinkling)
+function makeStars() {
+  stars = [];
+  for (let i = 0; i < 90; i++) {
+    stars.push({ x: Math.random() * W, y: Math.random() * (GROUND_Y - 60), r: Math.random() * 1.6 + 0.4, tw: Math.random() * Math.PI * 2, sp: 0.08 + Math.random() * 0.25 });
+  }
+}
+function makeHills() {
+  hills = []; hills2 = [];
+  for (let i = 0; i < 8; i++) hills.push({ x: i * 260, h: 60 + Math.random() * 70, w: 300 + Math.random() * 120 });
+  for (let i = 0; i < 8; i++) hills2.push({ x: i * 200, h: 30 + Math.random() * 45, w: 220 + Math.random() * 100 });
+}
+
+function reset() {
+  speed = 5.2; distance = 0; score = 0; lives = 3; gatesSolved = 0; shield = false;
+  nextGateAt = 280; t = 0; comboStreak = 0;
+  obstacles = []; crystals = []; particles = [];
+  player.y = GROUND_Y; player.vy = 0; player.jumps = 0; player.invuln = 0;
+  makeStars(); makeHills();
+}
+
+// ---------- Quadratic problem generator (simple roots) ----------
+let currentProblem = null;
+let mathLock = false;
+
+function makeProblem() {
+  const n = 2 + Math.floor(Math.random() * 11); // 2..12
+  const sq = n * n;
+  const form = Math.random() < 0.5 ? 0 : 1;
+  const eq = form === 0 ? `x² = ${sq}` : `x² − ${sq} = 0`;
+  const correct = `x = ±${n}`;
+  const dset = new Set();
+  const distractorPool = [
+    `x = ${n}`,                     // forgot the negative
+    `x = ±${n + 1}`,
+    `x = ±${Math.max(2, n - 1)}`,
+    `x = ±${Math.floor(sq / 2)}`,
+    `x = ${sq}`,                    // didn't take the root
+    `x = ±${n + 2}`,
+  ];
+  // shuffle pool, pick 3 unique that aren't the correct answer
+  distractorPool.sort(() => Math.random() - 0.5);
+  for (const d of distractorPool) {
+    if (d !== correct && !dset.has(d)) dset.add(d);
+    if (dset.size === 3) break;
+  }
+  const answers = [correct, ...dset].sort(() => Math.random() - 0.5);
+  return { eq, correct, answers };
+}
+
+const mathScreen = document.getElementById('mathScreen');
+const problemEq = document.getElementById('problemEq');
+const answersDiv = document.getElementById('answers');
+const mathFeedback = document.getElementById('mathFeedback');
+
+function openMathGate() {
+  state = S.MATH;
+  mathLock = false;
+  currentProblem = makeProblem();
+  problemEq.textContent = currentProblem.eq;
+  mathFeedback.textContent = '';
+  mathFeedback.style.color = '#7dffb5';
+  answersDiv.innerHTML = '';
+  currentProblem.answers.forEach((a, i) => {
+    const b = document.createElement('button');
+    b.className = 'ansBtn';
+    b.textContent = `${i + 1})  ${a}`;
+    b.dataset.answer = a;
+    b.addEventListener('click', () => pickAnswer(b));
+    answersDiv.appendChild(b);
+  });
+  mathScreen.classList.remove('hidden');
+  sfx.gate();
+}
+
+function pickAnswer(btn) {
+  if (mathLock || state !== S.MATH) return;
+  const a = btn.dataset.answer;
+  if (a === currentProblem.correct) {
+    mathLock = true;
+    btn.classList.add('correct');
+    comboStreak++;
+    const bonus = 100 + (comboStreak - 1) * 50;
+    mathFeedback.style.color = '#7dffb5';
+    mathFeedback.textContent = comboStreak > 1
+      ? `🎉 Correct! +${bonus} (streak x${comboStreak}!)`
+      : `🎉 Correct! +${bonus}`;
+    score += bonus;
+    gatesSolved++;
+    shield = true; // reward: one free hit
+    sfx.correct();
+    setTimeout(closeMathGate, 950);
+  } else {
+    btn.classList.add('wrong');
+    btn.disabled = true;
+    comboStreak = 0;
+    loseLife(true);
+    sfx.wrong();
+    if (lives <= 0) {
+      mathFeedback.style.color = '#ff9d92';
+      mathFeedback.textContent = `The answer was ${currentProblem.correct}`;
+      mathLock = true;
+      setTimeout(() => { mathScreen.classList.add('hidden'); gameOver(); }, 1100);
+    } else {
+      mathFeedback.style.color = '#ff9d92';
+      mathFeedback.textContent = `❌ Not quite — lost a life! Try again (${lives} ❤️ left)`;
+    }
+  }
+}
+
+function closeMathGate() {
+  mathScreen.classList.add('hidden');
+  state = S.RUN;
+  player.invuln = 60;
+  nextGateAt = distance + 420 + Math.random() * 180;
+}
+
+// keyboard 1-4 answers
+window.addEventListener('keydown', (e) => {
+  if (state === S.MATH && !mathLock) {
+    const i = parseInt(e.key, 10) - 1;
+    const btns = answersDiv.querySelectorAll('.ansBtn');
+    if (i >= 0 && i < btns.length && !btns[i].disabled) pickAnswer(btns[i]);
+  }
+});
+
+// ---------- Input ----------
+function jump() {
+  if (state !== S.RUN) return;
+  if (player.jumps < player.maxJumps) {
+    player.vy = player.jumps === 0 ? -13.5 : -11.5;
+    player.jumps++;
+    sfx.jump();
+    for (let i = 0; i < 6; i++) spawnParticle(player.x, player.y, '#9ef', 2);
+  }
+}
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+    e.preventDefault();
+    if (state === S.MENU) startGame();
+    else if (state === S.OVER) restart();
+    else jump();
+  }
+});
+canvas.addEventListener('pointerdown', () => { if (state === S.RUN) jump(); });
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('retryBtn').addEventListener('click', restart);
+
+function startGame() {
+  reset();
+  document.getElementById('startScreen').classList.add('hidden');
+  state = S.RUN;
+  beep(440, .1, 'triangle', .12, 660);
+}
+function restart() {
+  document.getElementById('overScreen').classList.add('hidden');
+  reset();
+  state = S.RUN;
+}
+
+// ---------- Spawning ----------
+function spawnObstacle() {
+  const roll = Math.random();
+  if (roll < 0.45) {
+    // space rock
+    const h = 34 + Math.random() * 26;
+    obstacles.push({ type: 'rock', x: W + 40, y: GROUND_Y, w: 40 + Math.random() * 22, h, seed: Math.random() * 10 });
+  } else if (roll < 0.78) {
+    // alien slime (short, wide)
+    obstacles.push({ type: 'slime', x: W + 40, y: GROUND_Y, w: 52, h: 30, seed: Math.random() * 10 });
+  } else {
+    // floating drone — jump under or double-jump over? It hovers; duck under by staying grounded
+    obstacles.push({ type: 'drone', x: W + 40, y: GROUND_Y - 95 - Math.random() * 30, w: 46, h: 30, seed: Math.random() * 10 });
+  }
+}
+function spawnCrystal() {
+  const high = Math.random() < 0.5;
+  const baseY = high ? GROUND_Y - 130 - Math.random() * 60 : GROUND_Y - 40;
+  const count = 1 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < count; i++) {
+    crystals.push({ x: W + 40 + i * 42, y: baseY, r: 11, seed: Math.random() * 10 });
+  }
+}
+function spawnParticle(x, y, color, size) {
+  particles.push({
+    x, y, color,
+    vx: (Math.random() - 0.5) * 5, vy: -Math.random() * 4 - 1,
+    life: 30 + Math.random() * 20, size: size + Math.random() * 2,
+  });
+}
+
+let obstacleTimer = 0, crystalTimer = 0;
+
+// ---------- Collision / damage ----------
+function loseLife(fromMath = false) {
+  if (!fromMath && shield) {
+    shield = false;
+    flashTimer = 8;
+    player.invuln = 70;
+    beep(500, .15, 'sine', .15, 300);
+    return;
+  }
+  lives--;
+  flashTimer = 12;
+  if (!fromMath) {
+    sfx.hit();
+    player.invuln = 80;
+    for (let i = 0; i < 14; i++) spawnParticle(player.x, player.y - 20, '#ff7b6b', 3);
+    if (lives <= 0) gameOver();
+  }
+}
+
+function gameOver() {
+  state = S.OVER;
+  score = Math.floor(score);
+  const best = Math.max(score, Number(sessionBest));
+  sessionBest = best;
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('finalDist').textContent = Math.floor(distance);
+  document.getElementById('finalGates').textContent = gatesSolved;
+  document.getElementById('bestScore').textContent = best;
+  document.getElementById('overTitle').textContent = gatesSolved >= 5 ? '🏆 AMAZING RUN, ADRIAN!' : '💥 MISSION OVER';
+  document.getElementById('overScreen').classList.remove('hidden');
+  beep(300, .5, 'sawtooth', .12, 80);
+}
+let sessionBest = 0;
+
+// ---------- Update ----------
+function update() {
+  if (state !== S.RUN) return;
+  t++;
+  // difficulty ramp
+  speed = Math.min(11, 5.2 + distance / 900);
+  distance += speed * 0.06;
+  score += 0.03 * speed;
+
+  // player physics
+  player.vy += 0.62;
+  player.y += player.vy;
+  if (player.y >= GROUND_Y) { player.y = GROUND_Y; player.vy = 0; player.jumps = 0; }
+  if (player.invuln > 0) player.invuln--;
+  player.runPhase += speed * 0.045;
+
+  // spawn timers
+  obstacleTimer--;
+  if (obstacleTimer <= 0) {
+    spawnObstacle();
+    obstacleTimer = Math.max(45, 110 - distance / 25) + Math.random() * 50;
+  }
+  crystalTimer--;
+  if (crystalTimer <= 0) { spawnCrystal(); crystalTimer = 90 + Math.random() * 120; }
+
+  // move world
+  for (const o of obstacles) o.x -= speed;
+  for (const c of crystals) c.x -= speed;
+  obstacles = obstacles.filter(o => o.x > -120);
+  crystals = crystals.filter(c => c.x > -60);
+
+  // parallax hills
+  for (const h of hills)  { h.x -= speed * 0.25; if (h.x < -h.w) h.x += 8 * 260; }
+  for (const h of hills2) { h.x -= speed * 0.5;  if (h.x < -h.w) h.x += 8 * 200; }
+
+  // collisions — player box
+  const px = player.x - player.w / 2 + 6, py = player.y - player.h + 4, pw = player.w - 12, ph = player.h - 6;
+  if (player.invuln <= 0) {
+    for (const o of obstacles) {
+      const ox = o.x - o.w / 2, oy = o.y - o.h;
+      if (px < ox + o.w && px + pw > ox && py < oy + o.h && py + ph > oy) {
+        loseLife();
+        break;
+      }
+    }
+  }
+  // crystals
+  for (const c of crystals) {
+    const dx = c.x - player.x, dy = c.y - (player.y - player.h / 2);
+    if (dx * dx + dy * dy < 42 * 42) {
+      c.x = -999;
+      score += 25;
+      sfx.coin();
+      for (let i = 0; i < 8; i++) spawnParticle(c.x < 0 ? player.x + 20 : c.x, c.y, '#ffe27a', 2);
+    }
+  }
+
+  // particles
+  for (const p of particles) { p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life--; }
+  particles = particles.filter(p => p.life > 0);
+
+  if (flashTimer > 0) flashTimer--;
+
+  // math gate trigger
+  if (distance >= nextGateAt) openMathGate();
+}
+
+// ---------- Drawing ----------
+function drawBackground() {
+  // deep space gradient
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#070716');
+  g.addColorStop(0.6, '#141034');
+  g.addColorStop(1, '#241a4e');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+
+  // stars
+  for (const s of stars) {
+    s.tw += s.sp * 0.1;
+    const a = 0.4 + 0.6 * Math.abs(Math.sin(s.tw));
+    ctx.globalAlpha = a;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 7); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  // ringed planet
+  ctx.save();
+  ctx.translate(W - 160, 95);
+  ctx.fillStyle = '#e8925a';
+  ctx.beginPath(); ctx.arc(0, 0, 38, 0, 7); ctx.fill();
+  ctx.fillStyle = '#d97f45';
+  ctx.beginPath(); ctx.arc(-10, 8, 12, 0, 7); ctx.fill();
+  ctx.beginPath(); ctx.arc(15, -12, 8, 0, 7); ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 220, 170, .8)';
+  ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.ellipse(0, 2, 62, 16, -0.35, 0, 7); ctx.stroke();
+  ctx.restore();
+
+  // far hills
+  ctx.fillStyle = '#2b2260';
+  for (const h of hills) {
+    ctx.beginPath();
+    ctx.ellipse(h.x + h.w / 2, GROUND_Y + 20, h.w / 2, h.h, 0, Math.PI, 0);
+    ctx.fill();
+  }
+  // near hills
+  ctx.fillStyle = '#3a2d80';
+  for (const h of hills2) {
+    ctx.beginPath();
+    ctx.ellipse(h.x + h.w / 2, GROUND_Y + 25, h.w / 2, h.h, 0, Math.PI, 0);
+    ctx.fill();
+  }
+
+  // ground
+  const gg = ctx.createLinearGradient(0, GROUND_Y, 0, H);
+  gg.addColorStop(0, '#5a3fb0');
+  gg.addColorStop(1, '#2e1f63');
+  ctx.fillStyle = gg;
+  ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+  // ground stripes scrolling
+  ctx.strokeStyle = 'rgba(160, 130, 255, .35)';
+  ctx.lineWidth = 3;
+  const off = (t * speed) % 70;
+  for (let x = -off; x < W; x += 70) {
+    ctx.beginPath();
+    ctx.moveTo(x + 20, GROUND_Y + 14);
+    ctx.lineTo(x, GROUND_Y + 34);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = '#8f7bff';
+  ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(0, GROUND_Y); ctx.lineTo(W, GROUND_Y); ctx.stroke();
+}
+
+function drawPlayer() {
+  const { x } = player;
+  const y = player.y;
+  const airborne = y < GROUND_Y - 1;
+  const bob = airborne ? 0 : Math.sin(player.runPhase * 2) * 2;
+
+  if (player.invuln > 0 && Math.floor(t / 4) % 2 === 0) ctx.globalAlpha = 0.45;
+
+  ctx.save();
+  ctx.translate(x, y + bob);
+
+  // jetpack flame when airborne
+  if (airborne) {
+    ctx.fillStyle = `rgba(255, ${140 + Math.random() * 80 | 0}, 40, .9)`;
+    ctx.beginPath();
+    ctx.moveTo(-16, -22);
+    ctx.lineTo(-24 - Math.random() * 10, -8);
+    ctx.lineTo(-10, -16);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // legs (running animation)
+  ctx.strokeStyle = '#dfe4ff';
+  ctx.lineWidth = 7;
+  ctx.lineCap = 'round';
+  const legSwing = airborne ? 0.5 : Math.sin(player.runPhase * 2) * 0.9;
+  ctx.beginPath();
+  ctx.moveTo(-2, -18);
+  ctx.lineTo(-2 + Math.sin(legSwing) * 13, -1);
+  ctx.moveTo(2, -18);
+  ctx.lineTo(2 - Math.sin(legSwing) * 13, -1);
+  ctx.stroke();
+
+  // jetpack
+  ctx.fillStyle = '#8f8f9f';
+  ctx.fillRect(-22, -46, 12, 24);
+  ctx.fillStyle = '#c33';
+  ctx.fillRect(-22, -46, 12, 6);
+
+  // body suit
+  ctx.fillStyle = '#f4f6ff';
+  ctx.beginPath();
+  ctx.roundRect(-13, -48, 26, 32, 9);
+  ctx.fill();
+  // chest panel
+  ctx.fillStyle = '#6c5ce7';
+  ctx.fillRect(-6, -40, 12, 9);
+
+  // arm
+  ctx.strokeStyle = '#f4f6ff';
+  ctx.lineWidth = 7;
+  const armSwing = airborne ? -0.9 : Math.sin(player.runPhase * 2 + Math.PI) * 0.8;
+  ctx.beginPath();
+  ctx.moveTo(4, -40);
+  ctx.lineTo(4 + Math.cos(armSwing) * 13, -30 + Math.sin(armSwing) * 8);
+  ctx.stroke();
+
+  // helmet
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath(); ctx.arc(2, -58, 13, 0, 7); ctx.fill();
+  // visor
+  ctx.fillStyle = '#39c2ff';
+  ctx.beginPath(); ctx.arc(6, -58, 8, -1.2, 1.4); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,.7)';
+  ctx.beginPath(); ctx.arc(8, -61, 2.5, 0, 7); ctx.fill();
+
+  ctx.restore();
+
+  // shield bubble
+  if (shield) {
+    ctx.strokeStyle = `rgba(126, 240, 255, ${0.5 + 0.3 * Math.sin(t * 0.15)})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(x, y - 30, 42, 0, 7);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawObstacle(o) {
+  ctx.save();
+  ctx.translate(o.x, o.y);
+  if (o.type === 'rock') {
+    ctx.fillStyle = '#8a8296';
+    ctx.beginPath();
+    ctx.moveTo(-o.w / 2, 0);
+    ctx.lineTo(-o.w / 2 + 6, -o.h * 0.7);
+    ctx.lineTo(-o.w * 0.15, -o.h);
+    ctx.lineTo(o.w * 0.3, -o.h * 0.85);
+    ctx.lineTo(o.w / 2, -o.h * 0.35);
+    ctx.lineTo(o.w / 2 - 4, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#6d6580';
+    ctx.beginPath();
+    ctx.arc(-o.w * 0.15, -o.h * 0.5, 5, 0, 7);
+    ctx.arc(o.w * 0.18, -o.h * 0.35, 4, 0, 7);
+    ctx.fill();
+  } else if (o.type === 'slime') {
+    const squish = 1 + Math.sin(t * 0.2 + o.seed) * 0.12;
+    ctx.fillStyle = '#5ee06a';
+    ctx.beginPath();
+    ctx.ellipse(0, -o.h / 2 * squish, o.w / 2, o.h / 2 * squish, 0, 0, 7);
+    ctx.fill();
+    // eyes
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(-9, -o.h * 0.6, 6, 0, 7); ctx.arc(9, -o.h * 0.6, 6, 0, 7); ctx.fill();
+    ctx.fillStyle = '#123';
+    ctx.beginPath(); ctx.arc(-7, -o.h * 0.6, 3, 0, 7); ctx.arc(11, -o.h * 0.6, 3, 0, 7); ctx.fill();
+  } else { // drone
+    const hover = Math.sin(t * 0.1 + o.seed) * 6;
+    ctx.translate(0, hover);
+    ctx.fillStyle = '#c9c9d9';
+    ctx.beginPath(); ctx.ellipse(0, -o.h / 2, o.w / 2, o.h / 2, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = '#ff5470';
+    ctx.beginPath(); ctx.arc(0, -o.h / 2, 6 + Math.sin(t * 0.3) * 2, 0, 7); ctx.fill();
+    // little antennas
+    ctx.strokeStyle = '#c9c9d9'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(-10, -o.h + 2); ctx.lineTo(-14, -o.h - 8);
+    ctx.moveTo(10, -o.h + 2); ctx.lineTo(14, -o.h - 8); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawCrystal(c) {
+  if (c.x < 0) return;
+  const pulse = 1 + Math.sin(t * 0.15 + c.seed) * 0.15;
+  ctx.save();
+  ctx.translate(c.x, c.y + Math.sin(t * 0.08 + c.seed) * 4);
+  ctx.rotate(Math.sin(t * 0.05 + c.seed) * 0.3);
+  ctx.scale(pulse, pulse);
+  ctx.fillStyle = '#ffe27a';
+  ctx.shadowColor = '#ffd76e';
+  ctx.shadowBlur = 12;
+  ctx.beginPath();
+  ctx.moveTo(0, -c.r);
+  ctx.lineTo(c.r * 0.7, 0);
+  ctx.lineTo(0, c.r);
+  ctx.lineTo(-c.r * 0.7, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawHUD() {
+  ctx.font = 'bold 22px "Segoe UI", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#ffd76e';
+  ctx.fillText(`⭐ ${Math.floor(score)}`, 20, 36);
+  ctx.fillStyle = '#9ad7ff';
+  ctx.fillText(`${Math.floor(distance)} m`, 20, 66);
+
+  // lives
+  ctx.textAlign = 'right';
+  let hearts = '';
+  for (let i = 0; i < 3; i++) hearts = (i < lives ? '❤️' : '🖤') + hearts;
+  ctx.fillText(hearts, W - 20, 36);
+  if (shield) { ctx.fillStyle = '#7ef0ff'; ctx.fillText('🛡 shield', W - 20, 66); }
+
+  // gate warning
+  const toGate = nextGateAt - distance;
+  if (state === S.RUN && toGate < 80 && toGate > 0) {
+    ctx.textAlign = 'center';
+    ctx.fillStyle = `rgba(126, 240, 255, ${0.5 + 0.5 * Math.sin(t * 0.3)})`;
+    ctx.font = 'bold 26px "Segoe UI", sans-serif';
+    ctx.fillText('⚠️ MATH GATE AHEAD!', W / 2, 60);
+  }
+}
+
+function draw() {
+  drawBackground();
+  for (const c of crystals) drawCrystal(c);
+  for (const o of obstacles) drawObstacle(o);
+  drawPlayer();
+  for (const p of particles) {
+    ctx.globalAlpha = Math.min(1, p.life / 25);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+  }
+  ctx.globalAlpha = 1;
+  drawHUD();
+  if (flashTimer > 0) {
+    ctx.fillStyle = `rgba(255, 60, 60, ${flashTimer / 30})`;
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+// ---------- Resize (fit while keeping aspect) ----------
+function fit() {
+  const scale = Math.min(window.innerWidth / W, window.innerHeight / H);
+  canvas.style.width = (W * scale) + 'px';
+  canvas.style.height = (H * scale) + 'px';
+}
+window.addEventListener('resize', fit);
+fit();
+
+// hidden hook for automated testing
+window.__forceGate = () => { if (state === S.RUN) openMathGate(); };
+
+// ---------- Main loop ----------
+reset();
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+
+})();
+</script>
+</body>
+</html>
