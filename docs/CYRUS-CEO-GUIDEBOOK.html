@@ -1,0 +1,565 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Cyrus's CEO Guidebook</title>
+<style>
+  @page {
+    size: Letter;
+    margin: 0.75in 0.7in;
+    @bottom-center {
+      content: "Cys Gaming World — CEO Guidebook — Page " counter(page) " of " counter(pages);
+      font-family: Verdana, Arial, sans-serif;
+      font-size: 8pt;
+      color: #8a8a8a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: Verdana, Arial, sans-serif;
+    color: #1c2430;
+    font-size: 11.5pt;
+    line-height: 1.5;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; }
+
+  /* Cover */
+  .cover {
+    text-align: center;
+    padding-top: 40px;
+    page-break-after: always;
+  }
+  .cover .badge {
+    display: inline-block;
+    background: #1B4D5C;
+    color: #ffd166;
+    font-weight: bold;
+    font-size: 12pt;
+    letter-spacing: 2px;
+    padding: 8px 20px;
+    border-radius: 30px;
+    margin-bottom: 24px;
+  }
+  .cover h1 {
+    font-size: 34pt;
+    color: #1B2A4A;
+    margin: 10px 0 4px 0;
+  }
+  .cover .sub {
+    font-size: 15pt;
+    color: #ff6b6b;
+    font-weight: bold;
+    margin-bottom: 30px;
+  }
+  .cover .icon-row { font-size: 46pt; margin: 30px 0; }
+  .cover .tagline-box {
+    margin: 40px auto 0 auto;
+    max-width: 520px;
+    border: 3px dashed #C9A84C;
+    border-radius: 16px;
+    padding: 20px 24px;
+    font-size: 13pt;
+    color: #1B2A4A;
+    background: #FFF9EC;
+  }
+  .cover .to-line {
+    margin-top: 50px;
+    font-size: 12pt;
+    color: #555;
+  }
+
+  /* Section headers */
+  .section {
+    page-break-before: always;
+    padding-top: 6px;
+  }
+  .section:first-of-type { page-break-before: auto; }
+  .section-num {
+    display: inline-block;
+    background: #1B2A4A;
+    color: #fff;
+    font-family: Georgia, serif;
+    font-weight: bold;
+    font-size: 13pt;
+    width: 34px; height: 34px;
+    line-height: 34px;
+    text-align: center;
+    border-radius: 50%;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+  h2.title {
+    font-size: 22pt;
+    color: #1B2A4A;
+    border-bottom: 4px solid #C9A84C;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+  }
+  h3 {
+    color: #1B4D5C;
+    font-size: 14pt;
+    margin-top: 22px;
+  }
+
+  .callout {
+    background: #EFF7F8;
+    border-left: 6px solid #1B4D5C;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 14px 0;
+  }
+  .callout.gold { background: #FFF9EC; border-left-color: #C9A84C; }
+  .callout.coral { background: #FFF1F0; border-left-color: #ff6b6b; }
+
+  ul, ol { margin: 8px 0; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; }
+  th {
+    background: #1B2A4A;
+    color: #fff;
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 10pt;
+  }
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #ddd;
+    font-size: 10.5pt;
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #F7F9FA; }
+
+  .fill-line {
+    display: inline-block;
+    border-bottom: 1.5px solid #999;
+    min-width: 260px;
+    height: 16px;
+    margin-left: 6px;
+  }
+  .fill-block {
+    border: 1.5px solid #ccc;
+    border-radius: 6px;
+    min-height: 40px;
+    margin: 6px 0 14px 0;
+    padding: 8px;
+  }
+
+  /* Quest cards */
+  .quest {
+    border: 3px solid #1B4D5C;
+    border-radius: 14px;
+    margin: 22px 0;
+    overflow: hidden;
+    page-break-inside: avoid;
+  }
+  .quest-head {
+    background: linear-gradient(90deg, #1B4D5C, #1B2A4A);
+    color: #fff;
+    padding: 12px 16px;
+  }
+  .quest-head .qtitle {
+    font-family: Georgia, serif;
+    font-size: 15pt;
+    font-weight: bold;
+  }
+  .quest-head .qtag {
+    color: #ffd166;
+    font-size: 10pt;
+    letter-spacing: 1px;
+  }
+  .quest-body { padding: 14px 18px; }
+  .quest .prosconstable td { font-size: 10pt; }
+  .stars { color: #C9A84C; font-size: 14pt; letter-spacing: 4px; }
+
+  .worksheet-title {
+    background: #ffd166;
+    color: #1B2A4A;
+    font-weight: bold;
+    padding: 6px 10px;
+    border-radius: 6px;
+    display: inline-block;
+    margin-top: 14px;
+    font-size: 10.5pt;
+    letter-spacing: 1px;
+  }
+
+  .domain-grid { display: block; }
+  .domain-item {
+    display: inline-block;
+    width: 46%;
+    background: #F7F9FA;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: 4px 1%;
+    font-family: 'Courier New', monospace;
+    font-size: 10.5pt;
+  }
+
+  .checkbox { font-size: 12pt; margin-right: 6px; }
+
+  .certificate {
+    border: 6px double #C9A84C;
+    border-radius: 12px;
+    text-align: center;
+    padding: 40px 30px;
+    margin-top: 30px;
+  }
+  .certificate h2 {
+    font-family: Georgia, serif;
+    color: #1B2A4A;
+    font-size: 20pt;
+    border: none;
+  }
+  .sign-row { display: flex; justify-content: space-between; margin-top: 60px; }
+  .sign-line { border-top: 1.5px solid #333; width: 40%; padding-top: 6px; font-size: 10pt; color: #555; }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="badge">OFFICIAL CEO GUIDEBOOK</div>
+  <h1>CYS GAMING WORLD</h1>
+  <div class="sub">Prepared for CEO Cyrus</div>
+  <div class="icon-row">🕹️ 🐢 ⚔️ 🏆</div>
+  <div class="tagline-box">
+    This book explains your arcade — what it is, how it works,
+    what your job is as the boss, and how you could turn it into
+    a real business one day. Read it, keep it, and come back to it
+    anytime you have a new idea.
+  </div>
+  <div class="to-line">Written for Cyrus, Founder &amp; CEO of Cys Gaming World</div>
+</div>
+
+<!-- SECTION 1 -->
+<div class="section">
+<h2 class="title"><span class="section-num">1</span>What Has Been Built</h2>
+
+<p>You now own a real website called <b>Cys Gaming World</b> — think of it like your very own game
+store on the internet, except every game in it can be one YOU made up.</p>
+
+<div class="callout">
+Right now your store has <b>2 games</b> in it, and <b>2 empty shelves</b> ("Coming Soon" cards)
+waiting for whatever you dream up next.
+</div>
+
+<h3>🐢 Game 1 — Aquatic Survival</h3>
+<p>You play as Aqua, a tough little turtle, fighting off wave after wave of enemies and giant
+animal bosses underwater and on land. The goal: survive as long as you can.</p>
+
+<h3>⚔️ Game 2 — Elemental Trials</h3>
+<p>You battle 7 elemental guardians (Water, Fire, Earth, Lightning, Ice, Poison, Wind), and there's
+even a secret hidden world with 5 MORE bosses if you find the secret portal. You collect weapons,
+merge them together to make them stronger, and can even loop the whole game again on higher
+difficulty for better rewards.</p>
+
+<h3>🏆 The Trophy Case (Leaderboard)</h3>
+<p>Both games have a "Top Scores" button. When someone finishes a run, they can type their name in
+and their score gets saved forever — so you (and everyone who plays) can see who's the best in the
+world at your games.</p>
+
+<div class="callout gold">
+<b>Fun fact:</b> every game has its OWN trophy case. Aquatic Survival scores don't mix with
+Elemental Trials scores — each game gets to crown its own champion.
+</div>
+</div>
+
+<!-- SECTION 2 -->
+<div class="section">
+<h2 class="title"><span class="section-num">2</span>How It All Works</h2>
+
+<p>You don't need to know how to code to be the CEO — but every good boss understands roughly how
+their company runs. Here's the simple version:</p>
+
+<table>
+<tr><th>Part</th><th>What it really is</th><th>What it does</th></tr>
+<tr>
+  <td><b>The Website</b></td>
+  <td>The front door</td>
+  <td>The page people see first — your logo, your 3 game shelves, your stats.</td>
+</tr>
+<tr>
+  <td><b>Each Game</b></td>
+  <td>Its own little room</td>
+  <td>One single file holds the ENTIRE game — art, sounds, controls, everything.</td>
+</tr>
+<tr>
+  <td><b>The Trophy Case</b></td>
+  <td>A magic notebook in the cloud</td>
+  <td>A database (a super-organized digital notebook) that remembers every score, forever, even
+  if the computer turns off.</td>
+</tr>
+<tr>
+  <td><b>The Host (Vercel)</b></td>
+  <td>The power company</td>
+  <td>Keeps your website turned ON and available to anyone, anywhere, 24 hours a day —
+  even while you're asleep.</td>
+</tr>
+</table>
+
+<div class="callout">
+Think of it like a real arcade building: the <b>website</b> is the storefront, each <b>game</b> is
+an arcade cabinet, the <b>trophy case</b> is the high-score board bolted to the wall, and
+<b>Vercel</b> is the electric company making sure the lights never go out.
+</div>
+</div>
+
+<!-- SECTION 3 -->
+<div class="section">
+<h2 class="title"><span class="section-num">3</span>Your Job: Game Designer &amp; CEO</h2>
+
+<p>As the CEO, YOU decide what games go into your arcade. Here's how a new game gets from
+"idea in your head" to "playable on the website":</p>
+
+<ol>
+<li><b>Dream it up.</b> What's the game about? Who's the hero? What are the bad guys? How do you win?</li>
+<li><b>Build or describe it.</b> You can build the whole game yourself, or describe it in detail
+and work with a grown-up (and Claude) to build it.</li>
+<li><b>Hand off the finished file.</b> One game = one file. When it's ready to play, it gets
+handed over to be added to the arcade.</li>
+<li><b>It gets wired in.</b> The trophy case gets connected, a card gets made for the home page,
+and it goes live for the whole world to play.</li>
+</ol>
+
+<div class="callout coral">
+<b>You are the Game Designer.</b> That means the ideas, the characters, the difficulty, the art
+style, the vibe — all of that is 100% your call. Nobody can tell you your game idea is wrong.
+</div>
+
+<h3>Things a good Game Designer does</h3>
+<ul>
+<li>Plays their OWN games a lot, to find what's fun and what's boring.</li>
+<li>Writes down ideas the second they think of them (keep a notebook!).</li>
+<li>Isn't afraid to change something that isn't fun yet.</li>
+<li>Decides which "Coming Soon" shelf gets filled next.</li>
+</ul>
+</div>
+
+<!-- SECTION 4 -->
+<div class="section">
+<h2 class="title"><span class="section-num">4</span>Telling Friends &amp; Family</h2>
+
+<p>A store with no customers isn't much of a business. Here's how to get people to visit
+(with a grown-up's help sending links):</p>
+
+<h3>Your elevator pitch</h3>
+<div class="callout gold">
+"I built a video game website called <b>Cys Gaming World</b>. It's got a turtle survival game
+and a boss-battle game with 12 bosses. You can play for free right in your browser — no
+downloading anything. Try to beat my high score!"
+</div>
+
+<h3>Easy ways to spread the word</h3>
+<ul>
+<li><b>Send the link</b> in a family group chat: "Check out the arcade I made!"</li>
+<li><b>Challenge them</b> — "Bet you can't beat my score of ___." A challenge always gets people to click.</li>
+<li><b>Show, don't just tell</b> — play it in front of them for 30 seconds so they see how fun it is.</li>
+<li><b>Ask them to share it</b> with 2 more people. That's how something small grows big.</li>
+<li><b>Update people</b> when a new game goes live — "New game just dropped!" is exciting news.</li>
+</ul>
+
+<div class="fill-block">
+<span class="worksheet-title">TRY IT: Write your own 1-sentence pitch</span><br><br>
+<span class="fill-line" style="min-width: 90%;"></span>
+</div>
+</div>
+
+<!-- SECTION 5 -->
+<div class="section">
+<h2 class="title"><span class="section-num">5</span>Domain Name Ideas</h2>
+
+<p>Right now your site lives at <b>cys-gaming-world.vercel.app</b> — a free address. One day, when
+you're ready, a grown-up can buy you a real ".com" address (like a real shop sign out front). Here
+are some name ideas to think about:</p>
+
+<div class="domain-grid">
+<div class="domain-item">cysgamingworld.com</div>
+<div class="domain-item">cysarcade.com</div>
+<div class="domain-item">playcys.com</div>
+<div class="domain-item">cysquest.com</div>
+<div class="domain-item">arcadebycyrus.com</div>
+<div class="domain-item">cyrusarcade.com</div>
+<div class="domain-item">bosscade.com</div>
+<div class="domain-item">guardiancade.com</div>
+<div class="domain-item">cysgames.gg</div>
+<div class="domain-item">cyswins.com</div>
+<div class="domain-item">pixelcyrus.com</div>
+<div class="domain-item">cysgameworld.io</div>
+</div>
+
+<div class="callout">
+<b>Tip:</b> shorter is usually better, and it should be easy to say out loud AND easy to spell
+if a friend hears it. A grown-up will need to check which of these are actually available to buy.
+</div>
+
+<div class="fill-block">
+<span class="worksheet-title">TRY IT: Circle your top 3 favorites above, then rank them here</span><br><br>
+1st choice: <span class="fill-line"></span> &nbsp; 2nd choice: <span class="fill-line"></span><br><br>
+3rd choice: <span class="fill-line"></span>
+</div>
+</div>
+
+<!-- SECTION 6 -->
+<div class="section">
+<h2 class="title"><span class="section-num">6</span>💰 Money Quest — Level Up Your Arcade</h2>
+
+<p>Here's a secret: almost every big video game company started exactly like yours — one person
+with one game and an idea. Below are <b>5 real ways</b> arcades like yours make money. Read each
+"Quest Card," then fill out the worksheet with what YOU think. There are no wrong answers — this
+is just you thinking like a real CEO.</p>
+
+<!-- QUEST 1 -->
+<div class="quest">
+  <div class="quest-head">
+    <div class="qtitle">Quest 1: The Supporter Club 💛</div>
+    <div class="qtag">DIFFICULTY: EASY &nbsp;·&nbsp; NEEDS A GROWN-UP TEAMMATE</div>
+  </div>
+  <div class="quest-body">
+    <p><b>What it is:</b> A button on your site that says "Support Cyrus's Arcade." People who
+    love your games (family, friends) can send a small amount of money — like $1, $5, or $10 —
+    just to say "keep making cool stuff!"</p>
+    <table class="prosconstable">
+      <tr><th>👍 Good things</th><th>🤔 Tricky things</th></tr>
+      <tr><td>Easiest one to set up. People WANT to support kids who make things.</td>
+          <td>A grown-up has to run the actual payment account — you can't do it alone yet.</td></tr>
+    </table>
+    <div class="fill-block">
+      <span class="worksheet-title">WORKSHEET</span><br><br>
+      Who do I think would support me? <span class="fill-line"></span><br><br>
+      What would I say to ask them? <span class="fill-line"></span><br><br>
+      My excitement level: <span class="stars">★★★★★</span> (circle your rating)
+    </div>
+  </div>
+</div>
+
+<!-- QUEST 2 -->
+<div class="quest">
+  <div class="quest-head">
+    <div class="qtitle">Quest 2: The Merch Corner 👕</div>
+    <div class="qtag">DIFFICULTY: MEDIUM &nbsp;·&nbsp; NEEDS A GROWN-UP TEAMMATE</div>
+  </div>
+  <div class="quest-body">
+    <p><b>What it is:</b> Put your game characters (Aqua the turtle! The elemental guardians!) on
+    real t-shirts, hoodies, or stickers that people can actually buy and wear.</p>
+    <table class="prosconstable">
+      <tr><th>👍 Good things</th><th>🤔 Tricky things</th></tr>
+      <tr><td>People love wearing stuff from games they enjoy. Feels very "real company."</td>
+          <td>Takes longer to set up, and someone has to design the shirt art.</td></tr>
+    </table>
+    <div class="fill-block">
+      <span class="worksheet-title">WORKSHEET</span><br><br>
+      Which character would I put on a shirt first? <span class="fill-line"></span><br><br>
+      What would I call the design? <span class="fill-line"></span><br><br>
+      My excitement level: <span class="stars">★★★★★</span> (circle your rating)
+    </div>
+  </div>
+</div>
+
+<!-- QUEST 3 -->
+<div class="quest">
+  <div class="quest-head">
+    <div class="qtitle">Quest 3: Sponsor-a-Boss 🐉</div>
+    <div class="qtag">DIFFICULTY: EASY &nbsp;·&nbsp; MOST PERSONAL ONE</div>
+  </div>
+  <div class="quest-body">
+    <p><b>What it is:</b> Someone who loves you (grandma, an uncle, a best friend) pays a small
+    amount to get a <b>brand-new boss or character named after them</b> (or their pet!) built into
+    your NEXT game. Very special, very one-of-a-kind.</p>
+    <table class="prosconstable">
+      <tr><th>👍 Good things</th><th>🤔 Tricky things</th></tr>
+      <tr><td>Super fun and personal — people love seeing themselves in a game.</td>
+          <td>You have to actually build the new boss, which takes creative work.</td></tr>
+    </table>
+    <div class="fill-block">
+      <span class="worksheet-title">WORKSHEET</span><br><br>
+      Who's the first person I'd offer this to? <span class="fill-line"></span><br><br>
+      What kind of boss would I design for them? <span class="fill-line"></span><br><br>
+      My excitement level: <span class="stars">★★★★★</span> (circle your rating)
+    </div>
+  </div>
+</div>
+
+<!-- QUEST 4 -->
+<div class="quest">
+  <div class="quest-head">
+    <div class="qtitle">Quest 4: The CEO Paycheck 💼</div>
+    <div class="qtag">DIFFICULTY: EASY &nbsp;·&nbsp; STARTS TODAY</div>
+  </div>
+  <div class="quest-body">
+    <p><b>What it is:</b> Treat game-making like a real job. You and your family agree on a set
+    amount you get paid every time you finish and ship a new game or a big new feature — like a
+    commission for real work delivered.</p>
+    <table class="prosconstable">
+      <tr><th>👍 Good things</th><th>🤔 Tricky things</th></tr>
+      <tr><td>You don't need any customers — you get paid for the WORK, right away.</td>
+          <td>Only works as long as your family agrees to be the "customer."</td></tr>
+    </table>
+    <div class="fill-block">
+      <span class="worksheet-title">WORKSHEET</span><br><br>
+      What would be a fair paycheck per finished game? $<span class="fill-line" style="min-width:120px;"></span><br><br>
+      What counts as "finished"? <span class="fill-line"></span><br><br>
+      My excitement level: <span class="stars">★★★★★</span> (circle your rating)
+    </div>
+  </div>
+</div>
+
+<!-- QUEST 5 (bonus) -->
+<div class="quest">
+  <div class="quest-head">
+    <div class="qtitle">Bonus Quest: Arcade Ads 📺 <span style="font-size:9pt; color:#ffd166;">(SOMEDAY)</span></div>
+    <div class="qtag">DIFFICULTY: HARD &nbsp;·&nbsp; NEEDS AN ADULT ACCOUNT / AGE RULES</div>
+  </div>
+  <div class="quest-body">
+    <p><b>What it is:</b> Big websites often show small ads and earn a tiny bit of money every time
+    someone sees one. It's how a LOT of free games make money.</p>
+    <table class="prosconstable">
+      <tr><th>👍 Good things</th><th>🤔 Tricky things</th></tr>
+      <tr><td>Doesn't cost players anything — the game stays free.</td>
+          <td>Ad companies require the account holder to be an adult, so this one waits until
+          a grown-up sets it up on your behalf, or you're older.</td></tr>
+    </table>
+    <div class="fill-block">
+      <span class="worksheet-title">WORKSHEET</span><br><br>
+      Would ads make the games feel less fun? <span class="fill-line"></span><br><br>
+      My excitement level: <span class="stars">★★★★★</span> (circle your rating)
+    </div>
+  </div>
+</div>
+
+<h3>🎯 Final Boss: Pick Your First Quest</h3>
+<table>
+<tr><th>Quest</th><th>My rating (1–5 stars)</th><th>Would I try this first?</th></tr>
+<tr><td>1. Supporter Club</td><td></td><td></td></tr>
+<tr><td>2. Merch Corner</td><td></td><td></td></tr>
+<tr><td>3. Sponsor-a-Boss</td><td></td><td></td></tr>
+<tr><td>4. CEO Paycheck</td><td></td><td></td></tr>
+<tr><td>5. Arcade Ads (someday)</td><td></td><td></td></tr>
+</table>
+
+<div class="callout gold" style="margin-top:20px;">
+The quest I'm picking first is: <span class="fill-line" style="min-width:70%;"></span>
+</div>
+</div>
+
+<!-- CERTIFICATE -->
+<div class="section">
+<div class="certificate">
+  <div style="font-size:34pt;">🏆</div>
+  <h2>Certificate of CEO-ship</h2>
+  <p style="font-size:12pt; margin-top:10px;">This certifies that</p>
+  <p style="font-size:20pt; font-family:Georgia,serif; color:#ff6b6b; font-weight:bold; margin:6px 0;">CYRUS</p>
+  <p style="font-size:12pt;">is the Founder, CEO, and Head Game Designer of<br><b>Cys Gaming World</b>,
+  and has full authority over which games get built next.</p>
+  <div class="sign-row">
+    <div class="sign-line">Cyrus, CEO</div>
+    <div class="sign-line">Date</div>
+  </div>
+</div>
+</div>
+
+</body>
+</html>

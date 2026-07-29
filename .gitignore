@@ -3,3 +3,14 @@ node_modules/
 *.tsbuildinfo
 .env*.local
 .vercel
+
+# OS junk
+.DS_Store
+
+# Local staging areas for games before they ship into public/games/.
+# Kept on disk, out of git — the shipped copy in public/games/ is canonical.
+\*new\*/
+New_game_repor/
+
+# Duplicate of docs/CYRUS-CEO-GUIDEBOOK.pdf
+/CYRUS-CEO-GUIDEBOOK.pdf

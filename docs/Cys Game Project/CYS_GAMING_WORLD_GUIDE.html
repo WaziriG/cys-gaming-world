@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    color: #1a1a2e;
+    background: #fff;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 52px;
+    line-height: 1.55;
+  }
+
+  /* Header */
+  .doc-header {
+    background: #1B4D5C;
+    color: #fff;
+    padding: 28px 32px;
+    border-radius: 6px;
+    margin-bottom: 32px;
+  }
+  .doc-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+  .doc-header .sub {
+    font-size: 13px;
+    color: #C9A84C;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .doc-header .meta {
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+    margin-top: 8px;
+  }
+
+  /* Gold rule */
+  .gold-rule {
+    height: 3px;
+    background: #C9A84C;
+    border-radius: 2px;
+    margin: 28px 0;
+  }
+
+  /* Section headings */
+  h2 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1B4D5C;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #1B4D5C;
+  }
+  h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1B2A4A;
+    margin: 16px 0 6px;
+  }
+
+  /* Resume prompt box */
+  .prompt-box {
+    background: #0d1b2a;
+    color: #7df9ff;
+    border-radius: 6px;
+    padding: 20px 24px;
+    font-family: 'Courier New', monospace;
+    font-size: 11.5px;
+    line-height: 1.7;
+    margin: 14px 0;
+    border-left: 4px solid #C9A84C;
+  }
+
+  /* Code / terminal snippets */
+  .code {
+    background: #f0f4f8;
+    border: 1px solid #d0dce8;
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-family: 'Courier New', monospace;
+    font-size: 11.5px;
+    line-height: 1.7;
+    margin: 10px 0;
+    color: #1B2A4A;
+  }
+  .code .comment { color: #6a8a9a; }
+
+  /* File tree */
+  .tree {
+    background: #f7f9fb;
+    border: 1px solid #d0dce8;
+    border-radius: 4px;
+    padding: 14px 18px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    line-height: 1.9;
+    color: #1B2A4A;
+    margin: 10px 0;
+  }
+  .tree .folder { color: #1B4D5C; font-weight: 700; }
+  .tree .note { color: #888; font-style: italic; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 12.5px;
+  }
+  thead tr {
+    background: #1B2A4A;
+    color: #fff;
+  }
+  thead th {
+    padding: 9px 12px;
+    text-align: left;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  tbody tr:nth-child(even) { background: #f0f4f8; }
+  tbody tr:nth-child(odd) { background: #fff; }
+  tbody td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #e0e8f0;
+    vertical-align: top;
+  }
+  td.key { font-family: 'Courier New', monospace; font-size: 11px; color: #1B4D5C; white-space: nowrap; }
+
+  /* Callout boxes */
+  .callout {
+    border-radius: 5px;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 12.5px;
+  }
+  .callout.gold {
+    background: #fdf8ec;
+    border-left: 4px solid #C9A84C;
+    color: #5a3e00;
+  }
+  .callout.teal {
+    background: #edf5f7;
+    border-left: 4px solid #1B4D5C;
+    color: #0d2830;
+  }
+  .callout.navy {
+    background: #eef0f5;
+    border-left: 4px solid #1B2A4A;
+    color: #1B2A4A;
+  }
+  .callout strong { font-weight: 700; }
+
+  /* Steps */
+  .steps ol { padding-left: 22px; }
+  .steps li { margin-bottom: 10px; }
+  .steps li strong { color: #1B4D5C; }
+
+  /* Section spacing */
+  .section { margin-bottom: 36px; }
+
+  /* Footer */
+  .footer {
+    margin-top: 40px;
+    padding-top: 18px;
+    border-top: 2px solid #C9A84C;
+    font-size: 11.5px;
+    color: #888;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  p { margin-bottom: 8px; }
+  ul { padding-left: 20px; margin: 8px 0; }
+  li { margin-bottom: 5px; }
+
+  .badge {
+    display: inline-block;
+    background: #1B4D5C;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+    vertical-align: middle;
+    margin-left: 6px;
+  }
+  .badge.gold { background: #C9A84C; color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="sub">Project Reference Guide</div>
+  <h1>Cys Gaming World — Arcade Platform</h1>
+  <div class="meta">Built June 17–18, 2026 &nbsp;·&nbsp; Claude Code Session &nbsp;·&nbsp; Harlem Labs</div>
+</div>
+
+<!-- SECTION 1: RESUME PROMPT -->
+<div class="section">
+  <h2>1. Resume Prompt — Start Here Next Session</h2>
+  <p>Copy and paste this into Claude Code at the start of your next session to pick up exactly where we left off:</p>
+
+  <div class="prompt-box">
+I'm continuing work on <strong style="color:#ffd166;">Cys Gaming World</strong> — an arcade platform I'm building for my son Cyrus.<br><br>
+
+The project is a Next.js 16 app that serves as a hub where Cyrus can add games over time.<br>
+The first game is <strong style="color:#ffd166;">Aquatic Survival</strong> (a top-down arena game he built).<br><br>
+
+<strong style="color:#ffd166;">Repo:</strong> /Users/wazirigaruba/Documents/GitHub/cys-gaming-world<br>
+<strong style="color:#ffd166;">GitHub:</strong> github.com/WaziriG/cys-gaming-world<br>
+<strong style="color:#ffd166;">Vercel project:</strong> cys-gaming-world<br><br>
+
+<strong style="color:#ffd166;">What's built:</strong><br>
+— Arcade lobby home page (retro pixel aesthetic, game cards, scanline effect)<br>
+— /games/aqua-survivor page with full-screen iframe + score submit modal + leaderboard<br>
+— /api/leaderboard (GET/POST) backed by Neon Postgres<br>
+— postMessage hook in aqua-survivor.html fires on game over → auto-shows score modal<br>
+— Migration script at scripts/migrate.mjs to create the leaderboard table<br><br>
+
+<strong style="color:#ffd166;">What still needs to be done:</strong><br>
+— Neon Postgres database needs to be created in Vercel Storage tab and migration run<br>
+— User accounts + cloud saves (Phase 2)<br>
+— Multiplayer (Phase 3)<br><br>
+
+Help me continue building this out.
+  </div>
+</div>
+
+<div class="gold-rule"></div>
+
+<!-- SECTION 2: WHAT WAS BUILT -->
+<div class="section">
+  <h2>2. What Was Built</h2>
+
+  <h3>Overview</h3>
+  <p>A Next.js 16 arcade hub deployed on Vercel. The home page is a retro-styled arcade lobby with game cards. Aquatic Survival is the first game — embedded in a full-screen iframe with a global leaderboard. Future games slot into the same structure.</p>
+
+  <h3>File Structure</h3>
+  <div class="tree">
+<span class="folder">cys-gaming-world/</span>
+├── <span class="folder">app/</span>
+│   ├── layout.tsx              <span class="note">Root layout — loads fonts, scanline + vignette overlays</span>
+│   ├── globals.css             <span class="note">Tailwind 4 + retro arcade CSS (neon glow, scanlines, animations)</span>
+│   ├── page.tsx                <span class="note">Arcade lobby home page — game cards grid</span>
+│   ├── <span class="folder">games/aqua-survivor/</span>
+│   │   └── page.tsx            <span class="note">Game page — iframe + score modal + leaderboard modal</span>
+│   └── <span class="folder">api/leaderboard/</span>
+│       └── route.ts            <span class="note">GET /api/leaderboard?game=aqua-survivor  |  POST to submit score</span>
+├── <span class="folder">components/</span>
+│   └── GameCard.tsx            <span class="note">Reusable arcade game card (client component — has hover effects)</span>
+├── <span class="folder">lib/</span>
+│   └── db.ts                   <span class="note">Neon Postgres query functions (getTopScores, insertScore)</span>
+├── <span class="folder">public/games/</span>
+│   └── aqua-survivor.html      <span class="note">The game — MODIFIED to send postMessage on game over</span>
+├── <span class="folder">scripts/</span>
+│   └── migrate.mjs             <span class="note">Run once to create the leaderboard table in Neon</span>
+└── aqua-survivor.html          <span class="note">Original standalone game (untouched — backup)</span>
+  </div>
+
+  <h3>Key Pages</h3>
+  <table>
+    <thead><tr><th>Route</th><th>What It Does</th></tr></thead>
+    <tbody>
+      <tr><td class="key">/</td><td>Arcade lobby — game cards grid, stats bar, footer. Currently shows Aquatic Survival + 2 "Coming Soon" slots.</td></tr>
+      <tr><td class="key">/games/aqua-survivor</td><td>Full-screen game with top bar (back button, leaderboard, submit score). Score modal auto-appears when game over.</td></tr>
+      <tr><td class="key">/api/leaderboard</td><td>GET: returns top 15 scores. POST: validates and saves a score. Requires DATABASE_URL env var.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>How the Score System Works</h3>
+  <div class="callout teal">
+    <strong>The flow:</strong> Player finishes a run in Aquatic Survival → the game's <code>gameOver()</code> function fires a <code>window.parent.postMessage({ type: 'aqua-game-over', score, kills, level })</code> → the Next.js game page receives it → the score submission modal auto-appears → player types their name → score saved to Neon Postgres → leaderboard updates.
+  </div>
+  <p>The score is measured in <strong>seconds survived</strong>. Kills and level reached are stored as secondary stats. The leaderboard sorts by seconds survived (highest first).</p>
+</div>
+
+<div class="gold-rule"></div>
+
+<!-- SECTION 3: SETUP STILL NEEDED -->
+<div class="section">
+  <h2>3. Setup Still Needed — Neon Database</h2>
+
+  <div class="callout gold">
+    <strong>Status as of this session:</strong> The site is deployed on Vercel. The leaderboard API exists but the database has not been created yet. The "Top Scores" button will return an empty list until this is done.
+  </div>
+
+  <div class="steps">
+    <ol>
+      <li><strong>Go to Vercel</strong> → open the <code>cys-gaming-world</code> project → click the <strong>Storage</strong> tab</li>
+      <li>Click <strong>Create Database</strong> → select <strong>Neon Postgres</strong> → follow the prompts. Vercel auto-adds <code>DATABASE_URL</code> to your environment variables.</li>
+      <li><strong>Run the migration</strong> — go to your Neon database in the Storage tab → open the <strong>SQL Editor</strong> → paste and run:</li>
+    </ol>
+  </div>
+
+  <div class="code">
+CREATE TABLE IF NOT EXISTS leaderboard (
+  id         SERIAL PRIMARY KEY,
+  game_slug  VARCHAR(50)  NOT NULL,
+  player_name VARCHAR(30) NOT NULL,
+  score      INTEGER      NOT NULL,
+  kills      INTEGER      NOT NULL DEFAULT 0,
+  level      INTEGER      NOT NULL DEFAULT 1,
+  created_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS leaderboard_game_score_idx
+ON leaderboard (game_slug, score DESC);
+  </div>
+
+  <div class="steps">
+    <ol start="4">
+      <li><strong>Redeploy</strong> the Vercel project so it picks up the new DATABASE_URL — Vercel → Deployments → Redeploy latest.</li>
+    </ol>
+  </div>
+</div>
+
+<div class="gold-rule"></div>
+
+<!-- SECTION 4: ADDING FUTURE GAMES -->
+<div class="section">
+  <h2>4. How to Add a Future Game</h2>
+
+  <p>The arcade is designed so Cyrus can drop in new games over time. Here's the pattern:</p>
+
+  <div class="steps">
+    <ol>
+      <li><strong>Add the game file</strong> — drop the HTML game file into <code>public/games/</code> (e.g., <code>public/games/space-blaster.html</code>)</li>
+      <li><strong>Add a card on the home page</strong> — open <code>app/page.tsx</code> and add a new entry to the <code>GAMES</code> array with <code>live: true</code> and the new slug/colors/description</li>
+      <li><strong>Create a game page</strong> — create <code>app/games/space-blaster/page.tsx</code> (copy the aqua-survivor page and change the game name and iframe src)</li>
+      <li><strong>Enable leaderboard for new game</strong> — in <code>app/api/leaderboard/route.ts</code>, add the new slug to the <code>VALID_GAMES</code> set</li>
+      <li><strong>Wire up postMessage</strong> — add <code>window.parent.postMessage({ type: 'GAME-SLUG-game-over', score, kills, level }, '*')</code> to the game's "game over" function, then update the event listener in the new page</li>
+    </ol>
+  </div>
+
+  <div class="callout navy">
+    <strong>No database changes needed for new games</strong> — the leaderboard table stores <code>game_slug</code> so all games share the same table automatically.
+  </div>
+</div>
+
+<div class="gold-rule"></div>
+
+<!-- SECTION 5: TECH STACK -->
+<div class="section">
+  <h2>5. Tech Stack</h2>
+  <table>
+    <thead><tr><th>Layer</th><th>Technology</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Framework</td><td>Next.js 16 (App Router)</td><td>Server components by default; game page is client component</td></tr>
+      <tr><td>Language</td><td>TypeScript 5 (strict)</td><td>No <code>any</code> — use <code>unknown</code> and narrow</td></tr>
+      <tr><td>Styling</td><td>Tailwind CSS 4</td><td>CSS-first config; custom arcade tokens in globals.css</td></tr>
+      <tr><td>Database</td><td>Neon Postgres</td><td>Via Vercel Storage — <code>@neondatabase/serverless</code> driver</td></tr>
+      <tr><td>Hosting</td><td>Vercel</td><td>Auto-deploys on every push to <code>main</code></td></tr>
+      <tr><td>Game engine</td><td>Vanilla JS + HTML5 Canvas</td><td>Single-file, no dependencies — Cyrus built it himself</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="gold-rule"></div>
+
+<!-- SECTION 6: PHASE ROADMAP -->
+<div class="section">
+  <h2>6. Roadmap — What's Next</h2>
+  <table>
+    <thead><tr><th>Phase</th><th>Feature</th><th>Complexity</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Now</strong></td><td>Set up Neon database (see Section 3)</td><td>Low</td><td>15 min in Vercel UI</td></tr>
+      <tr><td><strong>Phase 2</strong></td><td>User accounts + cloud saves</td><td>Medium</td><td>Add auth (Clerk or simple JWT) + save localStorage state to Postgres</td></tr>
+      <tr><td><strong>Phase 2</strong></td><td>Cyrus's profile page</td><td>Low</td><td>Show his games, his high scores, a bio</td></tr>
+      <tr><td><strong>Phase 2</strong></td><td>Custom domain</td><td>Low</td><td>e.g. cysgaming.world — add in Vercel Domains tab</td></tr>
+      <tr><td><strong>Phase 3</strong></td><td>Multiplayer</td><td>High</td><td>Needs WebSocket server (Vercel Durable Objects or Cloudflare) — separate infrastructure conversation</td></tr>
+      <tr><td><strong>Anytime</strong></td><td>Add a 2nd game</td><td>Low</td><td>Follow the pattern in Section 4</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="gold-rule"></div>
+
+<!-- SECTION 7: KEY LINKS -->
+<div class="section">
+  <h2>7. Key Links &amp; References</h2>
+  <table>
+    <thead><tr><th>Resource</th><th>Location</th></tr></thead>
+    <tbody>
+      <tr><td>Local code</td><td class="key">/Users/wazirigaruba/Documents/GitHub/cys-gaming-world</td></tr>
+      <tr><td>GitHub repo</td><td class="key">github.com/WaziriG/cys-gaming-world</td></tr>
+      <tr><td>Vercel project</td><td class="key">cys-gaming-world (in Waziri Garuba's projects)</td></tr>
+      <tr><td>Game file (live)</td><td class="key">public/games/aqua-survivor.html</td></tr>
+      <tr><td>Game file (original)</td><td class="key">aqua-survivor.html (root — untouched backup)</td></tr>
+      <tr><td>Leaderboard API</td><td class="key">/api/leaderboard?game=aqua-survivor</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="footer">
+  <span>Cys Gaming World — Project Guide &nbsp;·&nbsp; Harlem Labs</span>
+  <span>Built June 2026</span>
+</div>
+
+</body>
+</html>
