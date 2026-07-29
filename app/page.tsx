@@ -100,13 +100,13 @@ export default function ArcadeLobby() {
           className="font-pixel flicker neon-aqua text-center leading-tight"
           style={{ fontSize: 'clamp(20px, 5vw, 42px)', letterSpacing: '3px' }}
         >
-          CYS GAMING WORLD
+          NANO GAMES
         </div>
         <div
           className="font-vt neon-gold mt-2 tracking-widest"
           style={{ fontSize: 'clamp(16px, 3vw, 24px)' }}
         >
-          CYRUS&apos;S ARCADE
+          NANO GAMES ARCADE
           <span className="blink ml-1">█</span>
         </div>
 
@@ -152,7 +152,7 @@ export default function ArcadeLobby() {
           className="font-pixel"
           style={{ fontSize: '8px', color: 'var(--muted)', letterSpacing: '2px' }}
         >
-          DESIGNED &amp; BUILT BY CYRUS &nbsp;·&nbsp; CYS GAMING WORLD © 2025
+          DESIGNED &amp; BUILT BY CYRUS &nbsp;·&nbsp; NANO GAMES © 2026
         </div>
         <div className="font-vt mt-2" style={{ fontSize: '16px', color: 'rgba(63,210,230,0.3)' }}>
           INSERT COIN TO CONTINUE

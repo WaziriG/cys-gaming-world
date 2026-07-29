@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Cys Gaming World',
-  description: "Cyrus's Arcade — original games built from scratch",
+  title: 'Nano Games',
+  description: 'Nano Games Arcade — original games built from scratch',
   icons: { icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><text y="32" font-size="32">🎮</text></svg>' },
 }
 
