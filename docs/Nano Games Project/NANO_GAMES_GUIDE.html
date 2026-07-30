@@ -202,7 +202,7 @@
 
 <div class="doc-header">
   <div class="sub">Project Reference Guide</div>
-  <h1>Cys Gaming World — Arcade Platform</h1>
+  <h1>Nano Games — Arcade Platform</h1>
   <div class="meta">Built June 17–18, 2026 &nbsp;·&nbsp; Claude Code Session &nbsp;·&nbsp; Harlem Labs</div>
 </div>
 
@@ -212,14 +212,14 @@
   <p>Copy and paste this into Claude Code at the start of your next session to pick up exactly where we left off:</p>
 
   <div class="prompt-box">
-I'm continuing work on <strong style="color:#ffd166;">Cys Gaming World</strong> — an arcade platform I'm building for my son Cyrus.<br><br>
+I'm continuing work on <strong style="color:#ffd166;">Nano Games</strong> — an arcade platform I'm building for my son Cyrus.<br><br>
 
 The project is a Next.js 16 app that serves as a hub where Cyrus can add games over time.<br>
 The first game is <strong style="color:#ffd166;">Aquatic Survival</strong> (a top-down arena game he built).<br><br>
 
-<strong style="color:#ffd166;">Repo:</strong> /Users/wazirigaruba/Documents/GitHub/cys-gaming-world<br>
-<strong style="color:#ffd166;">GitHub:</strong> github.com/WaziriG/cys-gaming-world<br>
-<strong style="color:#ffd166;">Vercel project:</strong> cys-gaming-world<br><br>
+<strong style="color:#ffd166;">Repo:</strong> /Users/wazirigaruba/Documents/GitHub/nano-games<br>
+<strong style="color:#ffd166;">GitHub:</strong> github.com/WaziriG/nano-games<br>
+<strong style="color:#ffd166;">Vercel project:</strong> nano-games<br><br>
 
 <strong style="color:#ffd166;">What's built:</strong><br>
 — Arcade lobby home page (retro pixel aesthetic, game cards, scanline effect)<br>
@@ -248,7 +248,7 @@ Help me continue building this out.
 
   <h3>File Structure</h3>
   <div class="tree">
-<span class="folder">cys-gaming-world/</span>
+<span class="folder">nano-games/</span>
 ├── <span class="folder">app/</span>
 │   ├── layout.tsx              <span class="note">Root layout — loads fonts, scanline + vignette overlays</span>
 │   ├── globals.css             <span class="note">Tailwind 4 + retro arcade CSS (neon glow, scanlines, animations)</span>
@@ -297,7 +297,7 @@ Help me continue building this out.
 
   <div class="steps">
     <ol>
-      <li><strong>Go to Vercel</strong> → open the <code>cys-gaming-world</code> project → click the <strong>Storage</strong> tab</li>
+      <li><strong>Go to Vercel</strong> → open the <code>nano-games</code> project → click the <strong>Storage</strong> tab</li>
       <li>Click <strong>Create Database</strong> → select <strong>Neon Postgres</strong> → follow the prompts. Vercel auto-adds <code>DATABASE_URL</code> to your environment variables.</li>
       <li><strong>Run the migration</strong> — go to your Neon database in the Storage tab → open the <strong>SQL Editor</strong> → paste and run:</li>
     </ol>
@@ -377,7 +377,7 @@ ON leaderboard (game_slug, score DESC);
       <tr><td><strong>Now</strong></td><td>Set up Neon database (see Section 3)</td><td>Low</td><td>15 min in Vercel UI</td></tr>
       <tr><td><strong>Phase 2</strong></td><td>User accounts + cloud saves</td><td>Medium</td><td>Add auth (Clerk or simple JWT) + save localStorage state to Postgres</td></tr>
       <tr><td><strong>Phase 2</strong></td><td>Cyrus's profile page</td><td>Low</td><td>Show his games, his high scores, a bio</td></tr>
-      <tr><td><strong>Phase 2</strong></td><td>Custom domain</td><td>Low</td><td>e.g. cysgaming.world — add in Vercel Domains tab</td></tr>
+      <tr><td><strong>Done</strong></td><td>Custom domain</td><td>Low</td><td>Live at nanogames.app — the arcade was rebranded from Cys Gaming World to Nano Games</td></tr>
       <tr><td><strong>Phase 3</strong></td><td>Multiplayer</td><td>High</td><td>Needs WebSocket server (Vercel Durable Objects or Cloudflare) — separate infrastructure conversation</td></tr>
       <tr><td><strong>Anytime</strong></td><td>Add a 2nd game</td><td>Low</td><td>Follow the pattern in Section 4</td></tr>
     </tbody>
@@ -392,9 +392,9 @@ ON leaderboard (game_slug, score DESC);
   <table>
     <thead><tr><th>Resource</th><th>Location</th></tr></thead>
     <tbody>
-      <tr><td>Local code</td><td class="key">/Users/wazirigaruba/Documents/GitHub/cys-gaming-world</td></tr>
-      <tr><td>GitHub repo</td><td class="key">github.com/WaziriG/cys-gaming-world</td></tr>
-      <tr><td>Vercel project</td><td class="key">cys-gaming-world (in Waziri Garuba's projects)</td></tr>
+      <tr><td>Local code</td><td class="key">/Users/wazirigaruba/Documents/GitHub/nano-games</td></tr>
+      <tr><td>GitHub repo</td><td class="key">github.com/WaziriG/nano-games</td></tr>
+      <tr><td>Vercel project</td><td class="key">nano-games (in Waziri Garuba's projects)</td></tr>
       <tr><td>Game file (live)</td><td class="key">public/games/aqua-survivor.html</td></tr>
       <tr><td>Game file (original)</td><td class="key">aqua-survivor.html (root — untouched backup)</td></tr>
       <tr><td>Leaderboard API</td><td class="key">/api/leaderboard?game=aqua-survivor</td></tr>
@@ -403,7 +403,7 @@ ON leaderboard (game_slug, score DESC);
 </div>
 
 <div class="footer">
-  <span>Cys Gaming World — Project Guide &nbsp;·&nbsp; Harlem Labs</span>
+  <span>Nano Games — Project Guide &nbsp;·&nbsp; Harlem Labs</span>
   <span>Built June 2026</span>
 </div>
 

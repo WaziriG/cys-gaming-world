@@ -1,14 +1,14 @@
 # Luffy's Survival Quest — Arcade Integration Guide
 
 **Date:** July 11, 2026
-**Site:** https://cys-gaming-world.vercel.app
-**Game URL:** https://cys-gaming-world.vercel.app/games/luffys-quest
+**Site:** https://nanogames.app
+**Game URL:** https://nanogames.app/games/luffys-quest
 
 ---
 
 ## What This Is
 
-Luffy's Survival Quest is now the fifth game in Cys Gaming World. It is a One Piece–themed
+Luffy's Survival Quest is now the fifth game in Nano Games. It is a One Piece–themed
 top-down survival game: fight through 4 islands (The Town, Sky Island, Volcano Island,
 Monkey Island), master 6 powers (Lightning, Heal, Teleport, Block, Conqueror's Haki,
 Gear 5 Nika Mode), and defeat every boss. Touch-friendly with a virtual joystick, so it
@@ -24,7 +24,7 @@ plays on phones and tablets as well as desktop.
 
 ## How the Arcade Pattern Works
 
-Every game in Cys Gaming World follows the same three-part pattern:
+Every game in Nano Games follows the same three-part pattern:
 
 1. **The game itself** is one standalone HTML file in `public/games/<slug>.html`.
    It needs no build step — Next.js serves it as a static asset.
@@ -40,7 +40,7 @@ Every game in Cys Gaming World follows the same three-part pattern:
 2. Commit and push to `main` — Vercel auto-deploys production in about 20 seconds.
 
 ```bash
-cd ~/Documents/GitHub/cys-gaming-world
+cd ~/Documents/GitHub/nano-games
 git add public/games/luffys-quest.html
 git commit -m "Update Luffy's Quest"
 git push origin main

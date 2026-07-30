@@ -1,43 +1,64 @@
-# Aquatic Survival
+# Nano Games
 
-A single-file, top-down survival arena game built with vanilla JavaScript and HTML5 canvas. No build step, no dependencies — the entire game lives in one `.html` file.
+The arcade at **[nanogames.app](https://nanogames.app)** — original games designed and built by Cyrus.
 
-Play as **Aqua**, a tuxedo water turtle, surviving waves of enemies and battling a long gauntlet of animal bosses across two worlds.
+A Next.js 16 lobby that hosts self-contained HTML5 games. Each game is a single `.html` file with no
+dependencies and no build step of its own; the Next app wraps it in a full-screen iframe and, for the
+games that report scores, feeds a shared global leaderboard.
 
-## Play it
+## The games
 
-Just open `aqua-survivor.html` in any modern browser — desktop or mobile. That's it.
+| Game | Genre | Leaderboard |
+|---|---|---|
+| Aquatic Survival | Survival | Yes |
+| Elemental Trials | Boss rush | Yes |
+| Haunted Mansion | Survival horror | Yes |
+| Luffy's Survival Quest | Survival | No |
+| Adrian's Quadratic Quest | Math runner | No |
+| Sprite Forge | Tool (pixel-art editor) | n/a |
 
-To host it for free, drop the file into any static host (GitHub Pages, Vercel, Netlify, etc.).
+## Run it locally
 
-### GitHub Pages (quickest free hosting)
-1. Push this repo to GitHub.
-2. Repo **Settings → Pages → Build and deployment → Source: Deploy from a branch**.
-3. Pick your branch (e.g. `main`) and the `/root` folder, then **Save**.
-4. After a minute your game is live at `https://<your-username>.github.io/<repo-name>/aqua-survivor.html`
-   (rename the file to `index.html` if you want it at the root URL).
+```bash
+npm install
+npm run dev      # http://localhost:3000
+```
 
-## Controls
+`npm run build` for a production build. The leaderboard routes need `DATABASE_URL` pointing at the
+Neon Postgres instance; without it the games still play, only score submission fails.
 
-- **Move:** WASD / arrow keys (or on-screen joystick on touch devices)
-- **Aim & shoot:** mouse / tap
-- **Shield:** hold Shift / right-click / shield button
-- Plus a **Sandbox** mode (button on the start screen) to summon any boss, trigger weather, and grant abilities for testing.
+## How a game is wired
 
-## Features
+Three pieces per game, all named off the same slug:
 
-- **Two worlds:** an underwater gauntlet ending in the **Leviathan**, then a surface **land world** unlocked by beating it.
-- **Dozens of bosses**, each with unique mechanics (charges, shockwaves, grabs, summons, enrage, dive-bombs, venom, and more).
-- **A three-at-once boss fight** (the Pride: leopard, tiger, lion).
-- **Special weather:** lightning storms (catch fire) and droughts (water-breathers suffocate).
-- **Upgrades, hats, and unlockable playable skins** for every boss.
-- **Persistent progress** via the browser's localStorage (per device).
+1. **`public/games/<slug>.html`** — the game itself. Self-contained: no external scripts, fonts, or
+   images. This is the canonical copy.
+2. **`app/games/<slug>/page.tsx`** — a thin client wrapper: top bar with a `◄ ARCADE` link back to
+   the lobby, plus a sandboxed iframe pointing at the HTML above.
+3. **An entry in the `GAMES` array in `app/page.tsx`** — the lobby card (title, tagline, description,
+   icon, accent color, genre). Bump the `GAMES` stat in the same file when adding one.
+
+To put a game on the global leaderboard, have it `postMessage` a score to the parent window and read
+that message in the wrapper page — `haunted-mansion` is the smallest example of the full pattern.
+
+## Layout
+
+```
+app/
+  page.tsx              lobby (GAMES array lives here)
+  layout.tsx            metadata, CRT overlays
+  api/leaderboard/      score submit + read (Neon Postgres)
+  games/<slug>/page.tsx  one wrapper per game
+components/GameCard.tsx  lobby card
+public/games/*.html      the games
+docs/                    CEO guidebook + project guides
+```
 
 ## Tech
 
-- Vanilla JS + HTML5 `<canvas>`, pixel-art sprites generated in code.
-- Self-contained: one file, no frameworks, no build tooling.
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · Neon Postgres · deployed on Vercel.
+Retro pixel/CRT aesthetic — scanlines, neon glow, vignette.
 
-## License
+## Notes
 
-Add your license of choice (e.g. MIT) here.
+Formerly **Cys Gaming World**; rebranded to Nano Games when the site moved to nanogames.app.

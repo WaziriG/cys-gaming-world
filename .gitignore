@@ -12,5 +12,6 @@ node_modules/
 \*new\*/
 New_game_repor/
 
-# Duplicate of docs/CYRUS-CEO-GUIDEBOOK.pdf
+# Stray copies of the guidebook; docs/CEO-GUIDEBOOK.pdf is canonical
 /CYRUS-CEO-GUIDEBOOK.pdf
+/CEO-GUIDEBOOK.pdf
