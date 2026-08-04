@@ -156,12 +156,18 @@ best</strong>.</p>
 <tr><td>Aqua Survivor</td><td>Time</td><td>Kills, Level</td></tr>
 <tr><td>Elemental Trials</td><td>Score</td><td>Bosses, Stage</td></tr>
 <tr><td>Anthill</td><td>Tier</td><td>Food, Raids</td></tr>
-<tr><td>Nano Slime</td><td>Form</td><td>Eaten, Pumpkins</td></tr>
-<tr><td>Luffy's Quest</td><td>Score</td><td>Defeated, Island</td></tr>
-<tr><td>Quadratic Quest</td><td>Score</td><td>Gates, Crystals</td></tr>
+<tr><td>Nano Slime</td><td>Form</td><td>Goo, Pumpkins</td></tr>
+<tr><td>Luffy's Quest</td><td>Score</td><td>Waves, Island</td></tr>
+<tr><td>Quadratic Quest</td><td>Score</td><td>Gates, Distance</td></tr>
 </table>
 
 <p>A board that says "SPIDERS" in your haunted house feels like it belongs to <em>that</em> game.</p>
+
+<p>Fun thing: I got three of these <strong>wrong</strong> at first. I guessed what each game
+counted before I read the code. Turns out Luffy's Quest never counts how many enemies you beat
+(it counts waves), and Quadratic Quest never counts crystals (they just add to your score). So I
+fixed the labels to match what your games <em>actually</em> track. <strong>Reading beats
+guessing.</strong></p>
 
 <h2>5. Your Old Scores Are Safe ✅</h2>
 
@@ -178,17 +184,34 @@ anything?</strong> So I checked the real live site afterward.</p>
 <p>Your 5,250 survived. 🎉 That check is called <strong>testing</strong> — making sure your change
 worked instead of just hoping. Hoping is not a plan.</p>
 
-<h2>6. What's NOT Done Yet 🚧</h2>
+<h2>6. The Games Can Talk Now 🔊</h2>
 
-<p>Four games — <strong>Anthill, Nano Slime, Luffy's Quest, and Quadratic Quest</strong> — have
-leaderboards built and ready. But open them and they're <strong>empty</strong>.</p>
+<p>For most of today those four boards were <strong>empty</strong>. The scoreboard was built and
+hanging on the wall, but the games didn't <strong>shout out the score</strong> when you finished.
+The board was listening. Nobody was talking.</p>
 
-<p>The scoreboard is built and hanging on the wall. But the games don't <strong>shout out the
-score</strong> when you finish yet. The board is listening. Nobody's talking.</p>
+<p>Now they talk. Three were easy — Luffy's Quest and Quadratic Quest already had a clear "game
+over" moment, and Nano Slime has the moment your slime dies. Each one now calls out its score,
+and the board hears it.</p>
 
-<p>Luffy's Quest and Quadratic Quest are easy — they already have a clear "game over" moment. Nano
-Slime works too, using the moment your slime dies. <strong>Anthill has no ending at all</strong> —
-the colony just grows forever — so it probably needs its own "Submit my colony" button.</p>
+<p><strong>Anthill was the interesting one.</strong> It has no ending at all — the colony just keeps
+growing. So there's no moment to shout at.</p>
+
+<div class="box green">
+<h3>So we flipped it around</h3>
+<p>Every other game: the <strong>game tells</strong> the scoreboard when you finish.</p>
+<p>Anthill: the <strong>scoreboard asks</strong> the game. When you press SUBMIT, the board taps the
+game on the shoulder and says "how's the colony doing?" — and the game answers.</p>
+<p>Same scoreboard. Opposite direction. When a problem doesn't fit, sometimes you turn it around
+instead of forcing it.</p>
+</div>
+
+<p>One more detail: Nano Slime's <strong>sandbox</strong> is for testing builds, so scores from it
+do <em>not</em> go to the board. That'd be like practicing with cheat codes on and then putting it
+on the record.</p>
+
+<p>I checked that the code is valid and that real scores are accepted. But <strong>nobody has
+actually played them yet</strong> — that part is your job.</p>
 
 <h2>7. One Last Thing: Cheating 😈</h2>
 
@@ -202,9 +225,11 @@ believable.</p>
 <ol>
 <li>Play Anthill and Nano Slime on the real site.</li>
 <li>Check that Nano Slime <strong>saves</strong> — play, close the tab, come back.</li>
+<li><strong>Play each new game to the end</strong> and check the score screen pops up. This hasn't
+been tested by a real player yet — you're the first.</li>
+<li>In Anthill, press SUBMIT and make sure your tier, food, and raids look right.</li>
 <li>Decide what Quadratic Quest should rank on. It's Score now, but <strong>Gates solved</strong> is
 the math part. Your call.</li>
-<li>Decide how Anthill should submit a score, since it never ends.</li>
 </ol>
 
 <div class="quiz">
@@ -236,12 +261,13 @@ many times?</p>
 be unfair?</p>
 <p><span class="blank"></span></p><p><span class="blank"></span></p></div>
 
-<div class="q"><p><span class="num">8.</span> The four new leaderboards are empty. What's missing?</p>
+<div class="q"><p><span class="num">8.</span> Anthill never ends, so it can't shout out a score
+when you finish. What did we do instead?</p>
 <div class="choices">
-<div>a) The database broke</div>
-<div>b) The games don't tell the scoreboard the score yet</div>
-<div>c) Nobody has played them</div>
-<div>d) The boards weren't built</div></div></div>
+<div>a) Gave it a fake ending</div>
+<div>b) The scoreboard asks the game for the score when you press SUBMIT</div>
+<div>c) Left Anthill off the board</div>
+<div>d) Made the game shorter</div></div></div>
 
 <div class="q"><p><span class="num">9.</span> Why did we set a <em>maximum</em> score for each game?</p>
 <div class="choices">
@@ -274,7 +300,8 @@ differently from the others.</li>
 <li><strong>Sprite Forge</strong> — it's a drawing tool. No way to win or lose, so no score to rank.</li>
 <li>Because ants collect food while the game is <strong>closed</strong>. The winner would be whoever
 left it alone longest, not whoever played best.</li>
-<li><strong>b) The games don't tell the scoreboard the score yet.</strong></li>
+<li><strong>b) The scoreboard asks the game</strong> when you press SUBMIT. Every other game tells
+the board; Anthill gets asked. Same board, opposite direction.</li>
 <li><strong>c) So a cheater can't post a giant fake number.</strong></li>
 <li><strong>b) Anthill</strong> — it's an idle game, so it never stops.</li>
 <li><strong>5,250</strong> 🎉</li>
