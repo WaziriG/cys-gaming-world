@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<title>Nano Games — What Changed on Your Site</title>
+<style>
+@page { size: Letter; margin: 0.7in 0.65in;
+  @bottom-center { content: "Nano Games  ·  Report for Cyrus  ·  Page " counter(page) " of " counter(pages);
+    font-size: 9pt; color: #9a8f80; } }
+
+body { font-family: "Avenir Next", "Trebuchet MS", -apple-system, sans-serif;
+  color: #2f2a24; font-size: 12.5pt; line-height: 1.6; max-width: 900px; margin: 0 auto;
+  background: #fffdf8; }
+
+h1 { color: #e05340; font-size: 25pt; line-height: 1.15; margin: 0 0 2pt; }
+.sub { font-size: 13pt; color: #7a6f62; margin: 0 0 16pt; }
+
+h2 { color: #1f7a8c; font-size: 16pt; margin: 22pt 0 6pt; padding-bottom: 4pt;
+  border-bottom: 3px solid #ffd166; }
+h3 { color: #b8452f; font-size: 13pt; margin: 13pt 0 3pt; }
+
+p { margin: 7pt 0; }
+ul, ol { padding-left: 20pt; margin: 7pt 0; }
+li { margin: 4pt 0; }
+strong { color: #b8452f; }
+
+.box { background: #fff5e0; border: 3px solid #ffd166; border-radius: 12pt;
+  padding: 10pt 14pt; margin: 12pt 0; }
+.box.green { background: #eef8e8; border-color: #8fd07a; }
+.box.pink  { background: #fdeeeb; border-color: #f0a191; }
+.box h3 { margin-top: 0; }
+
+.big { font-size: 19pt; color: #1f7a8c; font-weight: bold; text-align: center;
+  margin: 5pt 0; letter-spacing: 0.5pt; }
+.caption { text-align: center; font-size: 10.5pt; color: #7a6f62; margin: 0; }
+
+table { border-collapse: collapse; width: 100%; margin: 10pt 0; font-size: 11.5pt; }
+th { background: #1f7a8c; color: #fff; text-align: left; padding: 6pt 9pt; }
+td { border-bottom: 1px solid #e8ded0; padding: 5pt 9pt; vertical-align: top; }
+tr:nth-child(even) td { background: #fdf8ef; }
+
+.word { background: #fff; border-left: 5px solid #a78bfa; padding: 7pt 12pt;
+  margin: 11pt 0; border-radius: 0 6pt 6pt 0; font-size: 11.5pt; }
+.word b { color: #7c5cd6; }
+
+.quiz { page-break-before: always; }
+.q { background: #fff; border: 2px solid #e8ded0; border-radius: 10pt;
+  padding: 9pt 13pt; margin: 9pt 0; }
+.q .num { color: #e05340; font-weight: bold; }
+.choices { margin: 3pt 0 0 6pt; }
+.choices div { margin: 2pt 0; }
+.blank { border-bottom: 1.5px solid #b0a496; display: inline-block; min-width: 200pt; }
+.answers { page-break-before: always; }
+</style></head><body>
+
+<h1>Your Site Got a Big Upgrade 🎮</h1>
+<p class="sub">A report for Cyrus about nanogames.app · August 4, 2026</p>
+
+<p>Hi Cyrus. I worked on your website today. Here's what changed, what I decided, and
+<strong>why</strong>. There's a quiz at the end.</p>
+
+<h2>1. You Have 8 Games Now</h2>
+
+<p class="big">6 → 8</p>
+<p class="caption">Anthill and Nano Slime are live. I checked — both work.</p>
+
+<h2>2. The Mystery of the Twin Files 👯</h2>
+
+<p>There were <strong>two copies</strong> of Nano Slime on the computer. They looked the same. I
+compared them line by line, and the game part <em>was</em> identical — same monsters, same pumpkins,
+same slime forms.</p>
+
+<p>But one had a hidden problem. It could not <strong>save</strong>.</p>
+
+<div class="box pink">
+<h3>Think of two backpacks</h3>
+<p>They look the same. You put your homework in one and carry it to school — it's still there. You
+put your homework in the other, and by the time you get to school it's gone, because that backpack
+has a hole in the bottom.</p>
+<p>Play the broken Nano Slime and close the tab, and <strong>everything you earned disappears.</strong>
+All your goo. Your costumes. Your best form.</p>
+</div>
+
+<p>The dangerous part: the broken one <strong>looks completely normal</strong>. No error message. No
+warning. It just quietly forgets. I put the <strong>good copy</strong> on your site, so progress now
+sticks.</p>
+
+<p>I also deleted an old leftover copy of Aqua Survivor that your site wasn't using. Nothing was
+lost — your project uses <strong>Git</strong>, which remembers every version of every file forever,
+like a time machine.</p>
+
+<div class="word">
+<b>New word: a "bug"</b> — a mistake in code that makes a program do the wrong thing. The worst bugs
+are the quiet ones that don't look like mistakes at all.
+</div>
+
+<h2>3. The Big One: Leaderboards 🏆</h2>
+
+<p>A <strong>leaderboard</strong> is the list of top scores. Before today, only <strong>3</strong> of
+your games had one: Aqua Survivor, Elemental Trials, and Haunted Mansion.</p>
+
+<p>Here's the problem. The instructions for building that leaderboard were written out
+<strong>three separate times</strong> — about 390 lines of code, copied into each game.</p>
+
+<div class="box">
+<h3>Imagine writing your game rules in three notebooks</h3>
+<p>Then you find a mistake. Now you have to fix it in <strong>all three</strong>. Forget one, and
+that notebook has different rules than the others — and nobody knows which is right.</p>
+</div>
+
+<p>I rewrote it so there's <strong>one single copy</strong> that all the games share. One rulebook
+everybody reads from.</p>
+
+<p class="big">1,551 lines → 40 lines</p>
+<p class="caption">Same features. Way less code.</p>
+
+<p>Now a fix in one place reaches every game at once. And giving a brand new game a leaderboard takes
+about <strong>6 lines</strong> instead of 390.</p>
+
+<div class="word">
+<b>New word: "don't repeat yourself"</b> — a rule real programmers follow. If you're copying and
+pasting the same code over and over, write it once and share it instead.
+</div>
+
+<h2>4. Decisions I Made (And Why) 🤔</h2>
+
+<h3>Sprite Forge gets NO leaderboard</h3>
+
+<p>Sprite Forge is a <strong>drawing tool</strong>, not a game. No way to win, no way to lose, so no
+score. A board with nothing to rank would just confuse people. <strong>7 games have leaderboards.
+Sprite Forge doesn't.</strong></p>
+
+<h3>Anthill is ranked by TIER, not FOOD</h3>
+
+<p>This is the one I really want you to get.</p>
+
+<p>Anthill is an <strong>idle game</strong> — your ants keep collecting food even while the game is
+closed, up to 8 hours' worth. So imagine the board ranked players by <strong>total food</strong>.
+Who wins?</p>
+
+<div class="box green">
+<h3>Not the best player — the most patient one</h3>
+<p>A kid who plays really well for an hour might collect 5,000 food. A kid who taps once, closes the
+tab, goes to school, and comes back 8 hours later might have <strong>more</strong> — having done
+nothing.</p>
+<p>The board wouldn't measure skill. It'd measure <em>who waited longest.</em></p>
+</div>
+
+<p>So Anthill ranks by <strong>colony tier</strong> — how far you actually got. Food still shows, but
+only to break ties. Waiting helps a little; the top spot goes to whoever <strong>played
+best</strong>.</p>
+
+<h3>Every game gets its own words</h3>
+
+<table>
+<tr><th>Game</th><th>Ranked by</th><th>Also shows</th></tr>
+<tr><td>Haunted Mansion</td><td>Score</td><td>Spiders, Room</td></tr>
+<tr><td>Aqua Survivor</td><td>Time</td><td>Kills, Level</td></tr>
+<tr><td>Elemental Trials</td><td>Score</td><td>Bosses, Stage</td></tr>
+<tr><td>Anthill</td><td>Tier</td><td>Food, Raids</td></tr>
+<tr><td>Nano Slime</td><td>Form</td><td>Eaten, Pumpkins</td></tr>
+<tr><td>Luffy's Quest</td><td>Score</td><td>Defeated, Island</td></tr>
+<tr><td>Quadratic Quest</td><td>Score</td><td>Gates, Crystals</td></tr>
+</table>
+
+<p>A board that says "SPIDERS" in your haunted house feels like it belongs to <em>that</em> game.</p>
+
+<h2>5. Your Old Scores Are Safe ✅</h2>
+
+<p>When you rewrite a big chunk of a site, the scary question is: <strong>did I break
+anything?</strong> So I checked the real live site afterward.</p>
+
+<table>
+<tr><th>Game</th><th>Top score still saved</th></tr>
+<tr><td>Elemental Trials</td><td>CYRUS — 5,250</td></tr>
+<tr><td>Haunted Mansion</td><td>Deke — 3,150</td></tr>
+<tr><td>Aqua Survivor</td><td>Deke — 77</td></tr>
+</table>
+
+<p>Your 5,250 survived. 🎉 That check is called <strong>testing</strong> — making sure your change
+worked instead of just hoping. Hoping is not a plan.</p>
+
+<h2>6. What's NOT Done Yet 🚧</h2>
+
+<p>Four games — <strong>Anthill, Nano Slime, Luffy's Quest, and Quadratic Quest</strong> — have
+leaderboards built and ready. But open them and they're <strong>empty</strong>.</p>
+
+<p>The scoreboard is built and hanging on the wall. But the games don't <strong>shout out the
+score</strong> when you finish yet. The board is listening. Nobody's talking.</p>
+
+<p>Luffy's Quest and Quadratic Quest are easy — they already have a clear "game over" moment. Nano
+Slime works too, using the moment your slime dies. <strong>Anthill has no ending at all</strong> —
+the colony just grows forever — so it probably needs its own "Submit my colony" button.</p>
+
+<h2>7. One Last Thing: Cheating 😈</h2>
+
+<p>Your games run in the web browser, so someone who knows how could fake a score. We can't fully
+stop that. But I set a <strong>maximum</strong> for every game — if Anthill's highest tier is 50, the
+site refuses anything above 50. A cheater can't post <em>999,999,999</em>. The board stays
+believable.</p>
+
+<h2>What To Do Next</h2>
+
+<ol>
+<li>Play Anthill and Nano Slime on the real site.</li>
+<li>Check that Nano Slime <strong>saves</strong> — play, close the tab, come back.</li>
+<li>Decide what Quadratic Quest should rank on. It's Score now, but <strong>Gates solved</strong> is
+the math part. Your call.</li>
+<li>Decide how Anthill should submit a score, since it never ends.</li>
+</ol>
+
+<div class="quiz">
+<h1>Quiz Time ✏️</h1>
+<p class="sub">Try it without looking back. Answers on the last page.</p>
+
+<div class="q"><p><span class="num">1.</span> How many games are on nanogames.app now?</p>
+<div class="choices"><div>a) 5</div><div>b) 6</div><div>c) 8</div><div>d) 12</div></div></div>
+
+<div class="q"><p><span class="num">2.</span> What was wrong with the bad copy of Nano Slime?</p>
+<div class="choices"><div>a) The monsters were missing</div><div>b) It couldn't save your progress</div>
+<div>c) It was too slow</div><div>d) The colors were wrong</div></div></div>
+
+<div class="q"><p><span class="num">3.</span> True or false: the broken copy showed an error message
+so you'd know something was wrong.</p>
+<div class="choices"><div>TRUE &nbsp; / &nbsp; FALSE</div></div></div>
+
+<div class="q"><p><span class="num">4.</span> Before the rewrite, the leaderboard code was copied how
+many times?</p>
+<div class="choices"><div>a) Once</div><div>b) Two times</div><div>c) Three times</div><div>d) Eight times</div></div></div>
+
+<div class="q"><p><span class="num">5.</span> Why is copying the same code over and over a bad idea?</p>
+<p><span class="blank"></span></p><p><span class="blank"></span></p></div>
+
+<div class="q"><p><span class="num">6.</span> Which game does NOT get a leaderboard, and why?</p>
+<p><span class="blank"></span></p><p><span class="blank"></span></p></div>
+
+<div class="q"><p><span class="num">7.</span> Why would ranking Anthill by total <strong>food</strong>
+be unfair?</p>
+<p><span class="blank"></span></p><p><span class="blank"></span></p></div>
+
+<div class="q"><p><span class="num">8.</span> The four new leaderboards are empty. What's missing?</p>
+<div class="choices">
+<div>a) The database broke</div>
+<div>b) The games don't tell the scoreboard the score yet</div>
+<div>c) Nobody has played them</div>
+<div>d) The boards weren't built</div></div></div>
+
+<div class="q"><p><span class="num">9.</span> Why did we set a <em>maximum</em> score for each game?</p>
+<div class="choices">
+<div>a) To make the games harder</div>
+<div>b) To save space</div>
+<div>c) So a cheater can't post a giant fake number</div>
+<div>d) Because the database is small</div></div></div>
+
+<div class="q"><p><span class="num">10.</span> Which game has no ending at all, which makes submitting
+a score tricky?</p>
+<div class="choices"><div>a) Haunted Mansion</div><div>b) Anthill</div><div>c) Luffy's Quest</div>
+<div>d) Sprite Forge</div></div></div>
+
+<div class="q"><p><span class="num">BONUS.</span> Your top score on Elemental Trials survived the
+rewrite. What was it?</p>
+<p><span class="blank"></span></p></div>
+</div>
+
+<div class="answers">
+<h1>Answers 🔑</h1>
+<p class="sub">No peeking until you've finished!</p>
+<ol>
+<li><strong>c) 8</strong> — up from 6.</li>
+<li><strong>b) It couldn't save your progress.</strong> The game itself was identical.</li>
+<li><strong>FALSE.</strong> That's what made it dangerous — it looked normal and quietly forgot
+everything.</li>
+<li><strong>c) Three times</strong> — in Aqua Survivor, Elemental Trials, and Haunted Mansion.</li>
+<li>Because a mistake has to be fixed in <strong>every copy</strong>. Miss one and it behaves
+differently from the others.</li>
+<li><strong>Sprite Forge</strong> — it's a drawing tool. No way to win or lose, so no score to rank.</li>
+<li>Because ants collect food while the game is <strong>closed</strong>. The winner would be whoever
+left it alone longest, not whoever played best.</li>
+<li><strong>b) The games don't tell the scoreboard the score yet.</strong></li>
+<li><strong>c) So a cheater can't post a giant fake number.</strong></li>
+<li><strong>b) Anthill</strong> — it's an idle game, so it never stops.</li>
+<li><strong>5,250</strong> 🎉</li>
+</ol>
+
+<div class="box green">
+<h3>How did you do?</h3>
+<p><strong>9–11 right:</strong> You understand your own codebase better than most grown-ups
+understand theirs.</p>
+<p><strong>6–8 right:</strong> Solid. Reread the leaderboard section.</p>
+<p><strong>5 or fewer:</strong> Read it again slower. This is real engineering — it's genuinely
+tricky.</p>
+</div>
+</div>
+
+</body></html>
