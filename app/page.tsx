@@ -2,6 +2,40 @@ import { GameCard, type Game } from '@/components/GameCard'
 
 const GAMES: Game[] = [
   {
+    slug: 'anthill',
+    title: 'ANTHILL',
+    tagline: 'Tap the fruit. Grow the colony.',
+    description:
+      'A colony that keeps working after you close the tab. Tap the big fruit, hatch new castes, buy permanent gear that stacks across every ant, and hold the line when a raid hits. Come back to eight hours of banked foraging.',
+    icon: '🐜',
+    iconBg: '🍎',
+    accentColor: '#e05340',
+    glowColor: 'rgba(224, 83, 64, 0.35)',
+    borderColor: 'rgba(224, 83, 64, 0.5)',
+    hoverBorder: 'rgba(255, 138, 120, 0.9)',
+    href: '/games/anthill',
+    live: true,
+    genre: 'IDLE TAPPER',
+    players: '1P',
+  },
+  {
+    slug: 'nano-slime',
+    title: 'NANO SLIME',
+    tagline: 'Eat. Grow. Evolve.',
+    description:
+      'Start as a speck in the grass and eat your way up the food chain. Unlock new slime forms, stockpile acorns and pumpkins, earn costumes, and chase your best form ever — with a hardcore mode and a sandbox for testing builds.',
+    icon: '🦠',
+    iconBg: '🌿',
+    accentColor: '#8fd07a',
+    glowColor: 'rgba(143, 208, 122, 0.35)',
+    borderColor: 'rgba(143, 208, 122, 0.5)',
+    hoverBorder: 'rgba(190, 240, 170, 0.9)',
+    href: '/games/nano-slime',
+    live: true,
+    genre: 'GROWTH',
+    players: '1P',
+  },
+  {
     slug: 'aqua-survivor',
     title: 'AQUATIC SURVIVAL',
     tagline: 'Survive the deep. Battle the bosses.',
@@ -156,7 +190,7 @@ export default function ArcadeLobby() {
           className="mt-12 border rounded-lg px-6 py-4 flex flex-wrap gap-6 justify-center"
           style={{ borderColor: 'rgba(63,210,230,0.2)', background: 'rgba(13,27,42,0.8)' }}
         >
-          <Stat label="GAMES" value="6" />
+          <Stat label="GAMES" value="8" />
           <Stat label="TOTAL BOSSES" value="40+" />
           <Stat label="WORLDS" value="8" />
           <Stat label="PLAYERS" value="1" />

@@ -1,0 +1,1985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>ANTHILL — Colony Tapper</title>
+<meta name="description" content="Tap the giant fruit, grow your colony, and hold the nest against fire ant raids. A pixel-art idle tapper.">
+<meta name="theme-color" content="#20150f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Anthill">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ANTHILL — Colony Tapper">
+<meta property="og:description" content="Tap the giant fruit, grow your colony, and hold the nest against fire ant raids.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ANTHILL — Colony Tapper">
+<meta name="twitter:description" content="Tap the giant fruit, grow your colony, and hold the nest against fire ant raids.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%2320150f'/%3E%3Crect x='6' y='2' width='4' height='3' fill='%23d9762c'/%3E%3Crect x='5' y='6' width='6' height='3' fill='%23d9762c'/%3E%3Crect x='4' y='10' width='8' height='4' fill='%23d9762c'/%3E%3Crect x='3' y='3' width='1' height='2' fill='%238a4212'/%3E%3Crect x='12' y='3' width='1' height='2' fill='%238a4212'/%3E%3C/svg%3E">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  :root{
+    --soil-deep:#20150f;
+    --soil:#3b2618;
+    --soil-lt:#5c3b26;
+    --grass:#7dc242;
+    --grass-dk:#3f7a24;
+    --honey:#ffc633;
+    --honey-dk:#c78d16;
+    --bone:#f4e6c8;
+    --danger:#e05340;
+    --ink:#14100c;
+  }
+  html,body{height:100%;overflow:hidden;background:var(--soil-deep);}
+  body{
+    font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+    color:var(--bone);
+    display:flex;align-items:center;justify-content:center;
+    touch-action:manipulation;
+    padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+  #app{
+    width:100%;max-width:460px;height:100%;
+    display:flex;flex-direction:column;
+    background:var(--soil-deep);
+    position:relative;overflow:hidden;
+  }
+
+  /* ---------- HUD ---------- */
+  #hud{
+    display:flex;align-items:stretch;gap:2px;
+    padding:6px;background:var(--ink);
+    border-bottom:3px solid var(--soil-lt);
+    flex:0 0 auto;
+  }
+  .stat{flex:1;padding:4px 6px;background:var(--soil);border:2px solid var(--soil-lt);}
+  .stat b{display:block;font-size:9px;letter-spacing:1px;color:var(--honey-dk);text-transform:uppercase;}
+  .stat span{display:block;font-size:15px;font-weight:700;line-height:1.2;color:var(--bone);}
+  .stat.food span{color:var(--honey);}
+  #sound{
+    flex:0 0 auto;width:38px;background:var(--soil);border:2px solid var(--soil-lt);
+    color:var(--bone);font:inherit;font-size:16px;cursor:pointer;
+  }
+  #sound.off{color:#77604c;}
+
+  /* ---------- STAGE ---------- */
+  #stage{flex:1 1 auto;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--soil-deep);}
+  canvas{
+    image-rendering:pixelated;image-rendering:crisp-edges;
+    display:block;max-width:100%;max-height:100%;
+    touch-action:none;
+  }
+  #hint{
+    position:absolute;top:14%;left:0;right:0;text-align:center;
+    font-size:13px;letter-spacing:2px;color:var(--honey);
+    text-shadow:2px 2px 0 var(--ink);pointer-events:none;
+    animation:pulse 1.1s steps(2,end) infinite;
+  }
+  @keyframes pulse{50%{opacity:.25}}
+  @media (prefers-reduced-motion:reduce){#hint{animation:none}}
+
+  /* ---------- ABILITY ---------- */
+  #ability{
+    position:absolute;right:10px;bottom:10px;width:76px;height:52px;
+    background:var(--soil-lt);border:3px solid var(--ink);
+    color:var(--bone);font:inherit;font-size:9px;letter-spacing:1px;
+    text-transform:uppercase;cursor:pointer;overflow:hidden;
+    box-shadow:0 4px 0 var(--ink);
+  }
+  #ability .fill{position:absolute;left:0;bottom:0;width:100%;background:var(--grass-dk);transition:none;}
+  #ability .lbl{position:relative;display:block;padding:6px 3px;line-height:1.3;}
+  #ability.ready{background:var(--grass-dk);border-color:var(--grass);}
+  #ability.ready .lbl{color:#fff;}
+  #ability.active{background:var(--honey);border-color:#fff;}
+  #ability.active .lbl{color:var(--ink);font-weight:700;}
+
+  /* ---------- TABS ---------- */
+  #tabs{display:flex;gap:2px;padding:6px;background:var(--ink);flex:0 0 auto;border-top:3px solid var(--soil-lt);}
+  .tab{
+    flex:1;padding:10px 2px;background:var(--soil);border:2px solid var(--soil-lt);
+    color:var(--bone);font:inherit;font-size:11px;letter-spacing:1px;
+    text-transform:uppercase;cursor:pointer;
+  }
+  .tab.on{background:var(--honey);border-color:var(--bone);color:var(--ink);font-weight:700;}
+  .tab .dot{display:inline-block;width:6px;height:6px;background:var(--grass);margin-left:3px;vertical-align:middle;}
+
+  /* ---------- PANEL ---------- */
+  #panel{
+    position:absolute;left:0;right:0;bottom:0;top:0;
+    background:rgba(12,8,5,.94);
+    display:none;flex-direction:column;z-index:20;
+  }
+  #panel.open{display:flex;}
+  #panelHead{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 12px;background:var(--soil);border-bottom:3px solid var(--soil-lt);
+  }
+  #panelHead h2{font-size:14px;letter-spacing:3px;text-transform:uppercase;color:var(--honey);}
+  #close{background:var(--danger);border:2px solid var(--ink);color:#fff;font:inherit;font-size:14px;width:32px;height:32px;cursor:pointer;}
+  #panelBody{flex:1;overflow-y:auto;padding:10px;-webkit-overflow-scrolling:touch;}
+
+  .card{
+    display:flex;gap:10px;align-items:center;
+    background:var(--soil);border:2px solid var(--soil-lt);
+    padding:9px;margin-bottom:8px;
+  }
+  .card .icon{
+    flex:0 0 40px;height:40px;background:var(--soil-deep);border:2px solid var(--ink);
+    display:flex;align-items:center;justify-content:center;font-size:20px;
+  }
+  .card .body{flex:1;min-width:0;}
+  .card h3{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--bone);}
+  .card p{font-size:10px;line-height:1.5;color:#c3ac8b;margin-top:3px;}
+  .card .lvl{font-size:9px;color:var(--honey-dk);letter-spacing:1px;margin-top:3px;}
+  .buy{
+    flex:0 0 auto;min-width:64px;padding:9px 6px;
+    background:var(--grass-dk);border:2px solid var(--grass);color:#fff;
+    font:inherit;font-size:11px;font-weight:700;cursor:pointer;
+    box-shadow:0 3px 0 var(--ink);
+  }
+  .buy:disabled{background:#3a2c20;border-color:#5c4632;color:#7a6650;box-shadow:0 3px 0 var(--ink);cursor:default;}
+  .buy.equipped{background:var(--honey);border-color:#fff;color:var(--ink);}
+  .card.locked{opacity:.55;}
+  .card.on{border-color:var(--honey);}
+
+  .note{font-size:10px;line-height:1.6;color:#9c8467;padding:2px 2px 10px;letter-spacing:.5px;}
+  .divider{font-size:10px;letter-spacing:3px;color:var(--honey-dk);text-transform:uppercase;margin:14px 0 8px;border-bottom:2px solid var(--soil-lt);padding-bottom:4px;}
+  .fruitrow{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:10px;color:#c3ac8b;}
+  .swatch{width:14px;height:14px;border:2px solid var(--ink);flex:0 0 auto;}
+
+  /* ---------- TOAST ---------- */
+  #toast{
+    position:absolute;left:50%;top:12px;transform:translateX(-50%);
+    background:var(--honey);color:var(--ink);font-size:11px;font-weight:700;
+    letter-spacing:1px;padding:7px 12px;border:2px solid var(--ink);
+    z-index:30;opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap;
+  }
+  #toast.show{opacity:1;}
+
+  /* ---------- WELCOME BACK ---------- */
+  #welcome{
+    position:absolute;inset:0;background:rgba(8,5,3,.92);
+    display:none;align-items:center;justify-content:center;z-index:40;padding:20px;
+  }
+  #welcome.open{display:flex;}
+  .wbox{
+    width:100%;max-width:300px;background:var(--soil);
+    border:3px solid var(--honey);padding:18px 16px;text-align:center;
+    box-shadow:0 6px 0 var(--ink);
+  }
+  .wbox h2{font-size:11px;letter-spacing:3px;color:var(--honey);text-transform:uppercase;}
+  .wtime{font-size:10px;letter-spacing:1px;color:#c3ac8b;margin-top:8px;}
+  .wfood{font-size:28px;font-weight:700;color:var(--honey);margin:8px 0 6px;text-shadow:2px 2px 0 var(--ink);}
+  .wbox p{font-size:10px;line-height:1.6;color:#9c8467;margin-bottom:14px;}
+  #wOk{
+    width:100%;padding:12px;background:var(--grass-dk);border:2px solid var(--grass);
+    color:#fff;font:inherit;font-size:13px;font-weight:700;letter-spacing:2px;
+    cursor:pointer;box-shadow:0 4px 0 var(--ink);
+  }
+  .danger{
+    width:100%;padding:11px;background:#4a1c16;border:2px solid var(--danger);
+    color:#ffb3a8;font:inherit;font-size:11px;letter-spacing:1px;
+    text-transform:uppercase;cursor:pointer;margin-top:4px;
+  }
+  .danger.armed{background:var(--danger);color:#fff;border-color:#fff;font-weight:700;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="hud">
+    <div class="stat food"><b>Food</b><span id="uiFood">0</span></div>
+    <div class="stat"><b>Per sec</b><span id="uiRate">0</span></div>
+    <div class="stat"><b>Colony</b><span id="uiAnts">1</span></div>
+    <button id="sound" aria-label="Toggle sound">♪</button>
+  </div>
+
+  <div id="stage">
+    <canvas id="cv" width="220" height="340"></canvas>
+    <div id="hint">TAP THE BIG FRUIT</div>
+    <button id="ability"><span class="fill"></span><span class="lbl">—</span></button>
+  </div>
+
+  <div id="tabs">
+    <button class="tab" data-tab="colony">Colony</button>
+    <button class="tab" data-tab="class">Caste<span class="dot" id="classDot" hidden></span></button>
+    <button class="tab" data-tab="items">Gear</button>
+  </div>
+
+  <div id="panel">
+    <div id="panelHead"><h2 id="panelTitle">Colony</h2><button id="close">✕</button></div>
+    <div id="panelBody"></div>
+  </div>
+
+  <div id="toast"></div>
+
+  <div id="welcome">
+    <div class="wbox">
+      <h2>WHILE YOU WERE GONE</h2>
+      <div class="wtime" id="wTime">—</div>
+      <div class="wfood" id="wFood">+0</div>
+      <p id="wNote">Your colony kept foraging.</p>
+      <button id="wOk">CLAIM</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =========================================================
+   ANTHILL — a pixel-art ant colony tapper
+   Single file. Canvas + vanilla JS + Web Audio.
+   ========================================================= */
+
+const W = 220, H = 340;
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+/* ---------------------------------------------------------
+   SPRITE ENGINE
+   --------------------------------------------------------- */
+function makeSprite(rows, pal){
+  const h = rows.length, w = rows[0].length;
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const x = c.getContext('2d');
+  for(let y=0;y<h;y++){
+    for(let i=0;i<w;i++){
+      const ch = rows[y][i];
+      const col = pal[ch];
+      if(!col) continue;
+      x.fillStyle = col;
+      x.fillRect(i,y,1,1);
+    }
+  }
+  return c;
+}
+
+const ANT_ROWS = [
+  '.a.....a.',
+  '..a...a..',
+  '...ddd...',
+  '..dHHHd..',
+  '..dHHHd..',
+  '...ddd...',
+  'l..TTT..l',
+  '.l.TTT.l.',
+  'l..TTT..l',
+  '..BBBBB..',
+  '.BBhBBBB.',
+  '.BBBBBBB.',
+  '..BBBBB..'
+];
+
+const QUEEN_ROWS = [
+  '.a.......a.',
+  '..a.....a..',
+  '...c.c.c...',
+  '...ddddd...',
+  '..dHHHHHd..',
+  '..dHHHHHd..',
+  '...ddddd...',
+  'l..TTTTT..l',
+  '.l.TTTTT.l.',
+  'l..TTTTT..l',
+  '..BBBBBBB..',
+  '.BBBhBBBBB.',
+  'BBBBBBBBBBB',
+  '.BBBBBBBBB.',
+  '..BBBBB....'
+];
+
+/* ---------------------------------------------------------
+   CASTES (classes)
+   --------------------------------------------------------- */
+const CASTES = {
+  forager: {
+    name:'Forager', icon:'🍒', body:'#d9762c', dark:'#8a4212', lite:'#ffb066',
+    unlock:0,
+    desc:'Built for the surface. Every bite of fruit is worth more.',
+    perk:'Tap value ×1.6',
+    tapMult:1.6, passMult:1, gainMult:1,
+    ab:{ name:'Frenzy', dur:8, cd:42, desc:'Taps count triple for 8s' }
+  },
+  soldier: {
+    name:'Soldier', icon:'🛡️', body:'#c93b34', dark:'#7a1d18', lite:'#ff8074',
+    unlock:0,
+    desc:'Mandibles first. Raiders die in one hit and drop what they stole.',
+    perk:'One-tap pests, ½ theft',
+    tapMult:1.15, passMult:1.1, gainMult:1,
+    ab:{ name:'Rally', dur:0, cd:50, desc:'Wipe all raiders, gain 30s of income' }
+  },
+  scout: {
+    name:'Scout', icon:'🧭', body:'#3a8fd0', dark:'#1a4d78', lite:'#8fd4ff',
+    unlock:15,
+    desc:'Reads every trail. Food shows up faster and the rare stuff shows up at all.',
+    perk:'+70% spawns, ×3 rare odds',
+    tapMult:1.2, passMult:1, gainMult:1, spawnMult:1.7, rareMult:3, fruitLife:1.35,
+    ab:{ name:'Fruit Rain', dur:0, cd:45, desc:'Drop 9 fruit at once' }
+  },
+  leafcutter: {
+    name:'Leafcutter', icon:'🍄', body:'#4aa03c', dark:'#215c19', lite:'#9ce87e',
+    unlock:35,
+    desc:'Farms fungus underground. The colony feeds itself while you rest.',
+    perk:'Income ×2.2, ants −15%',
+    tapMult:1, passMult:2.2, gainMult:1, antDisc:0.15,
+    ab:{ name:'Bloom', dur:12, cd:50, desc:'Income ×5 for 12s' }
+  },
+  royal: {
+    name:'Royal', icon:'👑', body:'#a05fc0', dark:'#5a2b74', lite:'#e0a6ff',
+    unlock:70,
+    desc:'The queen lays without pause. Everything you earn is worth more.',
+    perk:'All food +35%, free ants',
+    tapMult:1.2, passMult:1.3, gainMult:1.35, autoAnt:22,
+    ab:{ name:'Decree', dur:0, cd:80, desc:'Hatch 4 ants instantly' }
+  }
+};
+const CASTE_IDS = Object.keys(CASTES);
+
+/* build tinted ant sprites per caste */
+const antSprites = {}, queenSprites = {};
+for(const id of CASTE_IDS){
+  const c = CASTES[id];
+  const pal = {a:c.dark, d:c.dark, l:c.dark, H:c.body, T:c.body, B:c.body, h:c.lite, c:'#ffd83d'};
+  antSprites[id] = makeSprite(ANT_ROWS, pal);
+  queenSprites[id] = makeSprite(QUEEN_ROWS, pal);
+}
+
+const RAIDER_ROWS = [
+  '.a.........a.',
+  '..a.......a..',
+  '...ccc.ccc...',
+  '....ddddd....',
+  '...dHHHHHd...',
+  '...dHHHHHd...',
+  '...dHHHHHd...',
+  '....ddddd....',
+  'l...TTTTT...l',
+  '.l..TTTTT..l.',
+  'l...TTTTT...l',
+  '...BBBBBBB...',
+  '..BBBhBBBBB..',
+  '.BBBBBBBBBBB.',
+  '.BBBBBBBBBBB.',
+  '..BBBBBBBBB..',
+  '....BBBBB....'
+];
+
+/* ---------------------------------------------------------
+   INVADERS — rival ants that raid the nest
+   --------------------------------------------------------- */
+const INVADERS = {
+  fire: {
+    key:'fire', name:'Fire Ant', rows:ANT_ROWS,
+    body:'#e0452c', dark:'#7a1a0e', lite:'#ff9b74',
+    hp:6, spd:21, crumbs:2, steal:1.0, hitR:8
+  },
+  army: {
+    key:'army', name:'Army Ant', rows:ANT_ROWS,
+    body:'#2f2723', dark:'#0e0b09', lite:'#6b5a4d',
+    hp:4, spd:31, crumbs:1, steal:0.6, hitR:8
+  },
+  carpenter: {
+    key:'carpenter', name:'Carpenter Ant', rows:QUEEN_ROWS,
+    body:'#7a4a1e', dark:'#38200a', lite:'#c98c46',
+    hp:20, spd:11, crumbs:5, steal:2.2, hitR:11
+  },
+  raider: {
+    key:'raider', name:'Raider Queen', rows:RAIDER_ROWS,
+    body:'#b0202a', dark:'#54080f', lite:'#ff7a6a',
+    hp:75, spd:8, crumbs:16, steal:3.2, hitR:14, boss:true
+  }
+};
+for(const k in INVADERS){
+  const v=INVADERS[k];
+  v.spr = makeSprite(v.rows, {a:v.dark, d:v.dark, l:v.dark, H:v.body, T:v.body, B:v.body, h:v.lite, c:'#ffd83d'});
+}
+
+/* ---------------------------------------------------------
+   FRUIT SPRITES + TYPES
+   --------------------------------------------------------- */
+const SPR = {};
+
+SPR.crumb = makeSprite([
+  '.ccc.',
+  'cCCCc',
+  'cCCcc',
+  '.ccc.'
+],{c:'#a9793f',C:'#e0b56d'});
+
+SPR.berry = makeSprite([
+  '...g....',
+  '..gG....',
+  '.rrrrr..',
+  'rrRRrrr.',
+  'rrRrrrrr',
+  'rrrrrrr.',
+  '.rrrrr..',
+  '..rrr...'
+],{g:'#3f7a24',G:'#7dc242',r:'#c22a45',R:'#ff6e86'});
+
+SPR.apple = makeSprite([
+  '....s.....',
+  '...sgg....',
+  '..aaaaaa..',
+  '.aaAAaaaa.',
+  'aaAaaaaaaa',
+  'aaAaaaaaaa',
+  'aaaaaaaaaa',
+  '.aaaaaaaa.',
+  '..aa..aa..',
+  '..a....a..'
+],{s:'#6b4630',g:'#7dc242',a:'#e03a3a',A:'#ff9b8f'});
+
+SPR.melon = makeSprite([
+  '...mmmmmm...',
+  '..mmMmmmmm..',
+  '.mMmmdmmmmm.',
+  'mmmdmmmdmmmm',
+  'mmdmmmdmmmmm',
+  'mmmdmmmdmmmm',
+  'mmmmdmmmdmmm',
+  '.mmmdmmmdmm.',
+  '..mmmmmmmm..',
+  '...mmmmmm...'
+],{m:'#4f9c3a',M:'#9ce87e',d:'#20541a'});
+
+SPR.honeydew = makeSprite([
+  '...y....',
+  '...yy...',
+  '..yYyy..',
+  '..yYyy..',
+  '.yyYyyy.',
+  'yyYyyyyy',
+  'yyyyyyyy',
+  'yyyyyyyy',
+  '.yyyyyy.',
+  '..yyyy..'
+],{y:'#ffc633',Y:'#fff5c0'});
+
+SPR.rotten = makeSprite([
+  '..ppppp..',
+  '.pPppppp.',
+  'ppppgpppp',
+  'pxpppppxp',
+  'ppppppppp',
+  'pgppppppg',
+  '.ppgppgp.',
+  '..ppppp..',
+  '...ggg...'
+],{p:'#6b3f7a',P:'#a06bb0',g:'#8fbf3a',x:'#14100c'});
+
+SPR.spider = makeSprite([
+  'l...........l',
+  '.l..sssss..l.',
+  '..lsSSSSSsl..',
+  '...sSSSSSs...',
+  '..lsssssssl..',
+  '.l..sxsxs..l.',
+  'l...sssss...l',
+  '.....sss.....',
+  '......s......'
+],{l:'#241a12',s:'#3a2b3f',S:'#5c4468',x:'#e05340'});
+
+SPR.beetle = makeSprite([
+  '..a.....a..',
+  '...bbbbb...',
+  '..bbbbbbb..',
+  'l.bbBbBbb.l',
+  'l.bbbbbbb.l',
+  'l.bbBbBbb.l',
+  '..bbbbbbb..',
+  '...bbbbb...',
+  '....bbb....'
+],{a:'#241a12',b:'#2f4a2a',B:'#7dc242',l:'#241a12'});
+
+/* ---------------------------------------------------------
+   THE GIANT FRUIT — procedurally drawn, one pixel at a time
+   --------------------------------------------------------- */
+function bigFruit(o){
+  const r=o.r, pad=8;
+  const w=r*2+pad*2, h=r*2+pad*2;
+  const c=document.createElement('canvas');
+  c.width=w; c.height=h;
+  const g=c.getContext('2d');
+  const cx=Math.floor(w/2), cy=Math.floor(h/2)+2;
+  const ky=o.squash||1;
+
+  for(let y=-r-2;y<=r+2;y++){
+    for(let x=-r-2;x<=r+2;x++){
+      const d=Math.sqrt(x*x + (y*ky)*(y*ky));
+      if(d>r) continue;
+      let col=o.body;
+      // rim shading
+      if(d>r-1.6) col=o.dark;
+      // ribs / stripes / spots
+      if(o.style==='stripe' && ((x+r)%7<2)) col = d>r-1.6?o.dark:o.stripe;
+      if(o.style==='rib'){
+        const a=Math.atan2(y*ky,x);
+        if(Math.abs(Math.sin(a*4))<0.16) col=o.dark;
+      }
+      if(o.style==='spot' && ((x*7+y*13)%11===0)) col=o.dark;
+      if(o.style==='net' && ((x+y+40)%5===0 || (x-y+40)%5===0)) col=o.stripe;
+      // top-left highlight
+      const hd=Math.sqrt((x+r*0.38)*(x+r*0.38)+(y*ky+r*0.42)*(y*ky+r*0.42));
+      if(hd<r*0.30) col=o.lite;
+      if(hd<r*0.14) col=o.glow||o.lite;
+      g.fillStyle=col;
+      g.fillRect(cx+x,cy+y,1,1);
+    }
+  }
+  // stem
+  const sh=Math.max(3,Math.round(r*0.32));
+  g.fillStyle='#6b4630';
+  g.fillRect(cx-1, cy-Math.round(r/ky)-sh+1, 2, sh);
+  g.fillStyle='#8a6238';
+  g.fillRect(cx-1, cy-Math.round(r/ky)-sh+1, 1, sh);
+  // leaf
+  const lx=cx+1, ly=cy-Math.round(r/ky)-sh+2;
+  const lw=Math.max(4,Math.round(r*0.55));
+  for(let i=0;i<lw;i++){
+    const t=i/lw;
+    const th=Math.max(1,Math.round(3*Math.sin(Math.PI*t)));
+    g.fillStyle='#3f7a24'; g.fillRect(lx+i, ly-th, 1, th*2);
+    g.fillStyle='#7dc242'; g.fillRect(lx+i, ly-th, 1, 1);
+  }
+  return c;
+}
+
+const GIANTS = [
+  { name:'Berry Cluster', r:13, body:'#c22a45', dark:'#7d1128', lite:'#ff6e86', stripe:'#8f1a33', style:'spot' },
+  { name:'Great Apple',   r:15, body:'#e03a3a', dark:'#8f1c1c', lite:'#ff9b8f', stripe:'#a82525', style:'none' },
+  { name:'Sun Orange',    r:16, body:'#e88a1e', dark:'#94500a', lite:'#ffc574', stripe:'#b06612', style:'spot', squash:1.05 },
+  { name:'Striped Melon', r:18, body:'#4f9c3a', dark:'#20541a', lite:'#9ce87e', stripe:'#2d6b22', style:'stripe' },
+  { name:'Field Pumpkin', r:19, body:'#d9762c', dark:'#8a4212', lite:'#ffb066', stripe:'#a3510f', style:'rib', squash:1.12 },
+  { name:'Golden Dew',    r:20, body:'#ffc633', dark:'#c78d16', lite:'#fff5c0', stripe:'#e0aa22', style:'net', glow:'#ffffff' }
+];
+GIANTS.forEach(g=>g.spr=bigFruit(g));
+
+const FRUIT = {
+  crumb:    { spr:SPR.crumb,    mult:1,   hp:1, weight:38, tier:0, color:'#e0b56d', label:'Crumb' },
+  berry:    { spr:SPR.berry,    mult:3,   hp:1, weight:28, tier:0, color:'#c22a45', label:'Berry' },
+  apple:    { spr:SPR.apple,    mult:9,   hp:2, weight:17, tier:6, color:'#e03a3a', label:'Apple' },
+  melon:    { spr:SPR.melon,    mult:26,  hp:3, weight:8,  tier:14,color:'#4f9c3a', label:'Melon' },
+  honeydew: { spr:SPR.honeydew, mult:80,  hp:1, weight:3,  tier:26,color:'#ffc633', label:'Honeydew', rare:true },
+  rotten:   { spr:SPR.rotten,   mult:0,   hp:1, weight:11, tier:14,color:'#6b3f7a', label:'Rotten', bad:true }
+};
+
+/* ---------------------------------------------------------
+   GEAR (items)
+   --------------------------------------------------------- */
+const GEAR = [
+  { id:'mandible', icon:'⚔️', name:'Mandible File',  max:6, base:40,   grow:2.3, desc:l=>`+${l*2} flat food per tap`, },
+  { id:'trail',    icon:'〰️', name:'Pheromone Trail',max:6, base:70,   grow:2.4, desc:l=>`+${l*25}% colony income` },
+  { id:'cache',    icon:'🍯', name:'Sugar Cache',    max:6, base:160,  grow:2.6, desc:l=>`+${l*10}% to all food gained` },
+  { id:'aphid',    icon:'🐛', name:'Aphid Ranch',    max:6, base:300,  grow:2.5, desc:l=>`+${l*3} food per second, flat` },
+  { id:'antenna',  icon:'📡', name:'Long Antennae',  max:4, base:220,  grow:2.6, desc:l=>`Fruit lingers +${l*20}%, rares +${l*40}%` },
+  { id:'magnet',   icon:'🧲', name:'Crumb Magnet',   max:4, base:520,  grow:2.7, desc:l=>`Auto-eats a fruit every ${(7/l).toFixed(1)}s` },
+  { id:'chitin',   icon:'🪖', name:'Chitin Plating', max:4, base:400,  grow:2.5, desc:l=>`Raiders steal ${Math.min(90,l*25)}% less` },
+  { id:'jelly',    icon:'🥚', name:'Royal Jelly',    max:6, base:250,  grow:2.6, desc:l=>`Ants cost ${l*7}% less` },
+  { id:'venom',    icon:'☠️', name:'Venom Sac',      max:6, base:180,  grow:2.5, desc:l=>`Colony bites invaders ${l*35}% harder` },
+  { id:'alarm',    icon:'📣', name:'Alarm Pheromone',max:4, base:340,  grow:2.6, desc:l=>`Downed raiders drop ${l*30}% richer crumbs` }
+];
+const gearById = {}; GEAR.forEach(g=>gearById[g.id]=g);
+
+/* ---------------------------------------------------------
+   STATE
+   --------------------------------------------------------- */
+const S = {
+  food:0, lifetime:0, ants:1,
+  caste:'forager',
+  unlocked:{forager:true, soldier:true},
+  gear:{},
+  frenzy:0, bloom:0, rallyGrace:0,
+  stun:0,
+  abCd:0, abActive:0,
+  spawnT:1.0, pestT:30, magnetT:0, autoAntT:0,
+  tapped:false, shake:0, flash:0,
+  wave:0, raid:false, raidT:38, raidWarn:0, alarm:0,
+  best:0
+};
+GEAR.forEach(g=>S.gear[g.id]=0);
+
+const fruits=[], pests=[], colony=[], parts=[], floats=[];
+const invaders=[], crumbs=[], spawnQueue=[];
+
+/* the one big fruit */
+const GX = W/2, GY = 122;
+const G = {
+  tier:0, broken:0,
+  hp:12, maxhp:12,
+  wob:0, grow:1, regrow:0,
+  bites:[]
+};
+function giantDef(){ return GIANTS[G.tier % GIANTS.length]; }
+function giantPrime(){ return Math.floor(G.tier / GIANTS.length); }
+function giantHpFor(t){ return Math.round(12 * Math.pow(1.62, t)); }
+function rollBites(){
+  G.bites=[];
+  for(let i=0;i<5;i++){
+    const a=rnd(0,6.283), d=giantDef().r*rnd(0.45,0.92);
+    G.bites.push({x:Math.cos(a)*d, y:Math.sin(a)*d, r:rint(3,5)});
+  }
+}
+function newGiant(){
+  G.maxhp = giantHpFor(G.tier);
+  G.hp = G.maxhp;
+  G.grow = 0;
+  G.regrow = 0.55;
+  rollBites();
+}
+
+/* ---------------------------------------------------------
+   MATH HELPERS
+   --------------------------------------------------------- */
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const rint=(a,b)=>Math.floor(rnd(a,b+1));
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+
+function fmt(n){
+  n=Math.floor(n);
+  if(n<1000) return ''+n;
+  if(n<1e6) return (n/1000).toFixed(n<10000?1:0)+'K';
+  if(n<1e9) return (n/1e6).toFixed(n<1e7?1:0)+'M';
+  return (n/1e9).toFixed(1)+'B';
+}
+
+const lvl=id=>S.gear[id]||0;
+const caste=()=>CASTES[S.caste];
+
+function tapPower(){
+  const c=caste();
+  let p = (1 + lvl('mandible')*2) * (c.tapMult||1);
+  p *= (1 + lvl('cache')*0.10) * (c.gainMult||1);
+  if(S.frenzy>0) p *= 3;
+  return p;
+}
+function perSec(){
+  const c=caste();
+  let p = S.ants*0.3 * (1 + lvl('trail')*0.25);
+  p += lvl('aphid')*3;
+  p *= (c.passMult||1) * (1 + lvl('cache')*0.10) * (c.gainMult||1);
+  if(S.bloom>0) p *= 5;
+  return p;
+}
+function antCost(){
+  const c=caste();
+  const disc = clamp(lvl('jelly')*0.07 + (c.antDisc||0), 0, 0.75);
+  return Math.floor(18 * Math.pow(1.17, S.ants-1) * (1-disc));
+}
+function fruitLife(){
+  return 7 * (1 + lvl('antenna')*0.20) * (caste().fruitLife||1);
+}
+
+newGiant();   // must run after rnd/rint exist
+
+/* ---------------------------------------------------------
+   AUDIO
+   --------------------------------------------------------- */
+let actx=null, master=null, soundOn=true, musicNode=null, musicStep=0, musicTimer=null;
+function audioInit(){
+  if(actx) return;
+  const AC = window.AudioContext||window.webkitAudioContext;
+  if(!AC) return;
+  actx = new AC();
+  master = actx.createGain();
+  master.gain.value = 0.5;
+  master.connect(actx.destination);
+  startMusic();
+}
+function tone(freq,dur,type='square',vol=0.09,slide=0){
+  if(!actx||!soundOn) return;
+  const o=actx.createOscillator(), g=actx.createGain();
+  o.type=type; o.frequency.setValueAtTime(freq,actx.currentTime);
+  if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(30,freq+slide),actx.currentTime+dur);
+  g.gain.setValueAtTime(vol,actx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001,actx.currentTime+dur);
+  o.connect(g); g.connect(master);
+  o.start(); o.stop(actx.currentTime+dur+0.02);
+}
+function noise(dur,vol=0.07){
+  if(!actx||!soundOn) return;
+  const n=actx.sampleRate*dur|0;
+  const buf=actx.createBuffer(1,n,actx.sampleRate);
+  const d=buf.getChannelData(0);
+  for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
+  const s=actx.createBufferSource(); s.buffer=buf;
+  const g=actx.createGain(); g.gain.value=vol;
+  s.connect(g); g.connect(master); s.start();
+}
+const SFX={
+  chomp(t){ tone(180+t*40,0.07,'square',0.08,-90); noise(0.05,0.05); },
+  big(){ [440,660,880].forEach((f,i)=>setTimeout(()=>tone(f,0.09,'square',0.09),i*45)); },
+  rare(){ [523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>tone(f,0.12,'triangle',0.11),i*60)); },
+  bad(){ tone(110,0.35,'sawtooth',0.10,-60); noise(0.2,0.08); },
+  buy(){ tone(660,0.06,'square',0.08); setTimeout(()=>tone(990,0.08,'square',0.08),60); },
+  hatch(){ tone(392,0.07,'triangle',0.09); setTimeout(()=>tone(587,0.1,'triangle',0.09),70); },
+  hit(){ noise(0.06,0.09); tone(90,0.08,'sawtooth',0.07,-40); },
+  power(){ [330,415,523,659,880].forEach((f,i)=>setTimeout(()=>tone(f,0.14,'square',0.10),i*55)); },
+  denied(){ tone(150,0.12,'square',0.06,-40); },
+  alarm(){ for(let i=0;i<4;i++) setTimeout(()=>{ tone(660,0.09,'square',0.10); setTimeout(()=>tone(495,0.09,'square',0.10),90); }, i*200); }
+};
+
+/* tiny chiptune loop: bass + lead over a 16-step grid */
+const BASS=[55,0,55,0,73.4,0,55,0,49,0,49,0,65.4,0,55,0];
+const LEAD=[0,440,0,523,0,440,0,392,0,349,0,392,0,440,0,0];
+function startMusic(){
+  if(musicTimer) clearInterval(musicTimer);
+  musicTimer=setInterval(()=>{
+    if(!actx||!soundOn) return;
+    const b=BASS[musicStep%16], l=LEAD[musicStep%16];
+    if(b) tone(b,0.16,'triangle',0.075);
+    if(l) tone(l,0.11,'square',0.028);
+    if(musicStep%8===0) noise(0.03,0.02);
+    musicStep++;
+  },170);
+}
+
+/* ---------------------------------------------------------
+   BACKGROUND (pre-rendered once)
+   --------------------------------------------------------- */
+const bg = document.createElement('canvas');
+bg.width=W; bg.height=H;
+(function buildBg(){
+  const g=bg.getContext('2d');
+  g.fillStyle='#4a3021'; g.fillRect(0,0,W,H);
+  // soil noise
+  for(let i=0;i<2600;i++){
+    const x=rint(0,W-1), y=rint(0,H-1);
+    const v=Math.random();
+    g.fillStyle = v<0.4 ? '#553726' : v<0.75 ? '#3f281b' : '#5f4029';
+    g.fillRect(x,y,1,1);
+  }
+  // pebbles
+  for(let i=0;i<40;i++){
+    const x=rint(4,W-6), y=rint(4,H-6), s=rint(2,3);
+    g.fillStyle='#7a5a3f'; g.fillRect(x,y,s,s);
+    g.fillStyle='#3a2618'; g.fillRect(x,y+s,s,1);
+  }
+  // grass tufts
+  for(let i=0;i<34;i++){
+    const x=rint(3,W-5), y=rint(6,H-40);
+    g.fillStyle='#3f7a24';
+    g.fillRect(x,y,1,4); g.fillRect(x+2,y+1,1,3); g.fillRect(x-2,y+1,1,3);
+    g.fillStyle='#7dc242';
+    g.fillRect(x,y,1,1); g.fillRect(x+2,y+1,1,1);
+  }
+})();
+
+const NEST_X = W/2, NEST_Y = H-46;
+const nest = document.createElement('canvas');
+nest.width=90; nest.height=64;
+(function buildNest(){
+  const g=nest.getContext('2d');
+  const cx=45, cy=40;
+  function ring(r,col){
+    for(let y=-r;y<=r;y++) for(let x=-r;x<=r;x++){
+      if(x*x+y*y*2.6<=r*r) { g.fillStyle=col; g.fillRect(cx+x,cy+y,1,1); }
+    }
+  }
+  ring(40,'#5f4029'); ring(34,'#75512f'); ring(26,'#8a6238'); ring(17,'#3a2618'); ring(11,'#1a110b');
+  // little dirt specks on the mound
+  for(let i=0;i<120;i++){
+    const x=rint(8,80), y=rint(8,58);
+    g.fillStyle=Math.random()<0.5?'#96703f':'#5a3d26';
+    if(Math.random()<0.5) g.fillRect(x,y,1,1);
+  }
+  // re-punch the hole so specks don't fill it
+  ring(11,'#160e08'); ring(8,'#0b0705');
+})();
+
+/* ---------------------------------------------------------
+   BITMAP FONT (for floating numbers)
+   --------------------------------------------------------- */
+const FONT={
+ '0':['111','101','101','101','111'],'1':['010','110','010','010','111'],
+ '2':['111','001','111','100','111'],'3':['111','001','111','001','111'],
+ '4':['101','101','111','001','001'],'5':['111','100','111','001','111'],
+ '6':['111','100','111','101','111'],'7':['111','001','001','010','010'],
+ '8':['111','101','111','101','111'],'9':['111','101','111','001','111'],
+ '+':['000','010','111','010','000'],'-':['000','000','111','000','000'],
+ '.':['000','000','000','000','010'],'K':['101','110','100','110','101'],
+ 'M':['101','111','111','101','101'],'B':['110','101','110','101','110'],
+ '!':['010','010','010','000','010']
+};
+function drawText(str,x,y,col,scale=1){
+  ctx.fillStyle=col;
+  let cx=x;
+  for(const ch of str.toUpperCase()){
+    const glyph=FONT[ch];
+    if(!glyph){ cx+=4*scale; continue; }
+    for(let r=0;r<5;r++) for(let c=0;c<3;c++)
+      if(glyph[r][c]==='1') ctx.fillRect(cx+c*scale,y+r*scale,scale,scale);
+    cx+=4*scale;
+  }
+}
+const textWidth=(s,sc=1)=>s.length*4*sc-sc;
+
+/* ---------------------------------------------------------
+   SPAWNING
+   --------------------------------------------------------- */
+function unlockedFruitKeys(){
+  return Object.keys(FRUIT).filter(k=>S.ants>=FRUIT[k].tier);
+}
+function pickFruitKey(){
+  const keys=unlockedFruitKeys();
+  const rareBoost=(caste().rareMult||1)*(1+lvl('antenna')*0.40);
+  let total=0; const w=[];
+  for(const k of keys){
+    let ww=FRUIT[k].weight;
+    if(FRUIT[k].rare) ww*=rareBoost;
+    total+=ww; w.push(ww);
+  }
+  let r=Math.random()*total;
+  for(let i=0;i<keys.length;i++){ r-=w[i]; if(r<=0) return keys[i]; }
+  return keys[0];
+}
+function spawnFruit(forceKey, force){
+  if(fruits.length > (force?16:8)) return;
+  const key = forceKey || pickFruitKey();
+  const t = FRUIT[key];
+  let x,y,tries=0;
+  do{
+    x = rnd(20, W-20); y = rnd(24, H-84); tries++;
+  } while(tries<24 && Math.hypot(x-GX, y-GY) < giantDef().r+18);
+  fruits.push({
+    key, t, x, y,
+    hp: t.hp, maxhp:t.hp,
+    life: fruitLife(), age:0,
+    bob: Math.random()*6.28, pop:0
+  });
+}
+function spawnPest(){
+  if(pests.length>=3) return;
+  const fromLeft=Math.random()<0.5;
+  const type = Math.random()<0.5?'spider':'beetle';
+  pests.push({
+    type, spr:SPR[type],
+    x: fromLeft?-14:W+14, y: rnd(60,H-70),
+    hp: type==='spider'?4:3, maxhp: type==='spider'?4:3,
+    stole:0, hurt:0
+  });
+}
+const MAX_ANT_ENTITIES = 44;
+function addAnt(n=1){
+  for(let i=0;i<n;i++){
+    S.ants++;
+    if(colony.length >= MAX_ANT_ENTITIES) continue;
+    colony.push({
+      x: NEST_X + rnd(-30,30), y: NEST_Y + rnd(-22,20),
+      tx: NEST_X, ty: NEST_Y, spd: rnd(9,17), wait: rnd(0,1.5), rot:0
+    });
+  }
+}
+addAnt(0);
+colony.push({x:NEST_X-16,y:NEST_Y-6,tx:NEST_X,ty:NEST_Y,spd:12,wait:0,rot:0});
+
+/* ---------------------------------------------------------
+   FX
+   --------------------------------------------------------- */
+function burst(x,y,col,n=10,pow=45){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*6.283, s=rnd(pow*0.3,pow);
+    parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-14,life:rnd(0.3,0.65),col,sz:rint(1,2)});
+  }
+}
+function floatText(x,y,str,col){
+  floats.push({x,y,str,col,life:0.9,vy:-22});
+}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t=setTimeout(()=>t.classList.remove('show'),1600);
+}
+
+/* ---------------------------------------------------------
+   TAP HANDLING
+   --------------------------------------------------------- */
+function eatFruit(f, viaMagnet){
+  const power=tapPower();
+  if(f.t.bad){
+    const loss=Math.min(S.food, Math.max(8, S.food*0.10));
+    S.food-=loss;
+    S.stun=1.4; S.flash=0.35; S.shake=6;
+    burst(f.x,f.y,'#8fbf3a',16,60);
+    floatText(f.x,f.y,'-'+fmt(loss),'#e05340');
+    SFX.bad();
+    fruits.splice(fruits.indexOf(f),1);
+    return;
+  }
+  f.hp--;
+  const partial = f.hp>0;
+  const award = power * f.t.mult / f.maxhp;
+  S.food+=award; S.lifetime+=award;
+  floatText(f.x,f.y-6,'+'+fmt(award),f.t.rare?'#ffc633':'#f4e6c8');
+  burst(f.x,f.y,f.t.color, partial?6:12, partial?35:55);
+  if(f.t.rare){ SFX.rare(); S.shake=5; }
+  else if(f.t.mult>=9 && !partial){ SFX.big(); S.shake=3; }
+  else SFX.chomp(f.t.mult/10);
+  if(f.hp<=0) fruits.splice(fruits.indexOf(f),1);
+  if(!S.tapped && !viaMagnet){ S.tapped=true; const h=document.getElementById('hint'); if(h) h.remove(); }
+}
+
+function hitGiant(viaMagnet){
+  if(G.regrow>0) return;
+  const dmg = tapPower();
+  G.hp -= dmg;
+  G.wob = 1;
+  const def = giantDef();
+
+  // trickle food on every bite
+  const nibble = dmg*0.15;
+  S.food += nibble; S.lifetime += nibble;
+  burst(GX+rnd(-def.r*0.6,def.r*0.6), GY+rnd(-def.r*0.6,def.r*0.6), def.body, 5, 40);
+  if(!viaMagnet) SFX.chomp(2);
+
+  if(G.hp<=0){
+    const reward = G.maxhp*2 * (1 + giantPrime()*0.25);
+    S.food += reward; S.lifetime += reward;
+    floatText(GX, GY-10, '+'+fmt(reward), '#ffc633');
+    burst(GX,GY,def.body,34,110);
+    burst(GX,GY,def.lite,18,80);
+    S.shake=8;
+    SFX.rare();
+    G.broken++;
+    G.tier++;
+    const nd = giantDef();
+    toast('BROKEN! NEXT: '+nd.name.toUpperCase()+(giantPrime()?' ✦'+giantPrime():''));
+    newGiant();
+    // the colony celebrates
+    for(let i=0;i<4;i++) setTimeout(()=>spawnFruit(), i*90);
+  } else {
+    if(!viaMagnet) S.shake=2;
+  }
+  if(!S.tapped && !viaMagnet){
+    S.tapped=true;
+    const h=document.getElementById('hint'); if(h) h.remove();
+  }
+}
+
+/* ---------------------------------------------------------
+   RAIDS
+   --------------------------------------------------------- */
+function waveRoster(w){
+  const list=[];
+  const n = Math.min(9, 2 + Math.floor(w*0.7));
+  if(w % 5 === 0) list.push('raider');
+  for(let i=0;i<n;i++){
+    const r=Math.random();
+    if(w>=3 && r<0.30) list.push('army');
+    else if(w>=2 && r<0.48) list.push('carpenter');
+    else list.push('fire');
+  }
+  if(w>=4) for(let i=0;i<Math.min(5,w-3);i++) list.push('army');
+  return list;
+}
+function startRaid(){
+  S.wave++;
+  S.raid=true;
+  S.raidWarn=1.8;
+  S.alarm=1;
+  const roster=waveRoster(S.wave);
+  let t=1.6;
+  for(const key of roster){ spawnQueue.push({key, t}); t += rnd(0.35,0.9); }
+  toast('FIRE ANT RAID — WAVE '+S.wave);
+  SFX.alarm();
+}
+function spawnInvader(key){
+  const def=INVADERS[key];
+  const side=rint(0,3);
+  let x,y;
+  if(side===0){ x=-16; y=rnd(40,H-70); }
+  else if(side===1){ x=W+16; y=rnd(40,H-70); }
+  else if(side===2){ x=rnd(20,W-20); y=-16; }
+  else { x=rnd(20,W-20); y=H+16; }
+  const hp = def.hp * (1 + S.wave*0.28);
+  invaders.push({ def, x, y, hp, maxhp:hp, hurt:0, wig:Math.random()*6.28, atNest:false });
+}
+function dropCrumbs(inv){
+  const n = inv.def.crumbs;
+  const val = Math.max(6, perSec()*2.4) * (1 + S.wave*0.15)
+            * (1 + lvl('cache')*0.10) * (caste().gainMult||1) * (1 + lvl('alarm')*0.30);
+  for(let i=0;i<n;i++){
+    const a=Math.random()*6.283, s=rnd(18,52);
+    crumbs.push({
+      x:inv.x, y:inv.y, vx:Math.cos(a)*s, vy:Math.sin(a)*s-20,
+      val, life:11, bob:Math.random()*6.28, settled:0
+    });
+  }
+}
+function killInvader(inv){
+  dropCrumbs(inv);
+  burst(inv.x,inv.y,inv.def.body,inv.def.boss?26:12,inv.def.boss?90:55);
+  burst(inv.x,inv.y,inv.def.dark,8,40);
+  if(inv.def.boss){ S.shake=8; SFX.rare(); toast('RAIDER QUEEN DOWN'); }
+  else SFX.hit();
+  invaders.splice(invaders.indexOf(inv),1);
+  checkRaidClear();
+}
+function checkRaidClear(){
+  if(!S.raid) return;
+  if(invaders.length>0 || spawnQueue.length>0) return;
+  S.raid=false;
+  const bonus = perSec()*18 + S.wave*20;
+  S.food+=bonus; S.lifetime+=bonus;
+  floatText(NEST_X, NEST_Y-42, '+'+fmt(bonus), '#7dc242');
+  toast('WAVE '+S.wave+' HELD — +'+fmt(bonus));
+  SFX.power();
+  S.raidT = clamp(58 - S.wave*1.2, 26, 58);
+}
+function collectCrumb(c, half){
+  const v = half ? c.val*0.5 : c.val;
+  S.food+=v; S.lifetime+=v;
+  floatText(c.x, c.y-4, '+'+fmt(v), half?'#c3ac8b':'#ffc633');
+  burst(c.x,c.y,'#e0b56d',5,32);
+  if(!half) SFX.chomp(0.5);
+  crumbs.splice(crumbs.indexOf(c),1);
+}
+function colonyDps(){
+  return S.ants * 0.32 * (1 + lvl('venom')*0.35) * (S.caste==='soldier'?2:1);
+}
+
+function hitPest(p){
+  const oneShot = S.caste==='soldier';
+  p.hp -= oneShot ? 99 : 1;
+  p.hurt=0.18; SFX.hit(); S.shake=3;
+  burst(p.x,p.y,'#e05340',6,40);
+  if(p.hp<=0){
+    const reward = Math.max(25, perSec()*12) + p.stole;
+    S.food+=reward; S.lifetime+=reward;
+    floatText(p.x,p.y-8,'+'+fmt(reward),'#7dc242');
+    burst(p.x,p.y,'#5c4468',14,60);
+    pests.splice(pests.indexOf(p),1);
+  }
+}
+
+function onTap(px,py){
+  audioInit();
+  if(S.stun>0){ SFX.denied(); return; }
+  // crumbs on the ground are free money — grab them first
+  for(let i=crumbs.length-1;i>=0;i--){
+    const c=crumbs[i];
+    if(Math.abs(px-c.x)<10 && Math.abs(py-c.y)<10){ collectCrumb(c,false); return; }
+  }
+  // invading ants
+  {
+    let best=null, bd=1e9;
+    for(const v of invaders){
+      const d=Math.hypot(px-v.x,py-v.y);
+      if(d<v.def.hitR+4 && d<bd){ bd=d; best=v; }
+    }
+    if(best){
+      const dmg = tapPower() * (S.caste==='soldier'?3:1);
+      best.hp-=dmg; best.hurt=0.18;
+      SFX.hit(); S.shake=3;
+      burst(best.x,best.y,'#ffc633',5,38);
+      if(best.hp<=0) killInvader(best);
+      return;
+    }
+  }
+  // pests first — they're the threat
+  for(let i=pests.length-1;i>=0;i--){
+    const p=pests[i];
+    if(Math.abs(px-p.x)<11 && Math.abs(py-p.y)<11){ hitPest(p); return; }
+  }
+  // small fruit sitting on top of the giant still wins
+  let best=null, bd=1e9;
+  for(const f of fruits){
+    const r = Math.max(9, f.t.spr.width*0.75);
+    const d = Math.hypot(px-f.x, py-f.y);
+    if(d<r && d<bd){ bd=d; best=f; }
+  }
+  if(best){ eatFruit(best); return; }
+
+  // the big one
+  if(G.regrow<=0 && Math.hypot(px-GX, py-GY) < giantDef().r+5){ hitGiant(); return; }
+
+  burst(px,py,'#6b4630',3,20);
+}
+
+function canvasPoint(e){
+  const r=cv.getBoundingClientRect();
+  const t = e.touches ? e.touches[0] : e;
+  return { x:(t.clientX-r.left)/r.width*W, y:(t.clientY-r.top)/r.height*H };
+}
+cv.addEventListener('pointerdown', e=>{
+  e.preventDefault();
+  const p=canvasPoint(e);
+  onTap(p.x,p.y);
+});
+
+/* ---------------------------------------------------------
+   ABILITIES
+   --------------------------------------------------------- */
+function useAbility(){
+  audioInit();
+  const c=caste();
+  if(S.abCd>0){ SFX.denied(); return; }
+  S.abCd=c.ab.cd;
+  SFX.power(); S.shake=6;
+  switch(S.caste){
+    case 'forager': S.frenzy=c.ab.dur; S.abActive=c.ab.dur; toast('FRENZY — TAPS ×3'); break;
+    case 'soldier': {
+      let reward=0;
+      for(const p of pests.slice()){ reward += Math.max(25,perSec()*12)+p.stole; burst(p.x,p.y,'#5c4468',14,60); }
+      pests.length=0;
+      reward += perSec()*30;
+      S.food+=reward; S.lifetime+=reward;
+      floatText(NEST_X,NEST_Y-40,'+'+fmt(reward),'#7dc242');
+      toast('RALLY — RAIDERS CRUSHED'); break;
+    }
+    case 'scout':
+      for(let i=0;i<9;i++) setTimeout(()=>spawnFruit(Math.random()<0.14?'honeydew':undefined, true), i*70);
+      toast('FRUIT RAIN'); break;
+    case 'leafcutter': S.bloom=c.ab.dur; S.abActive=c.ab.dur; toast('BLOOM — INCOME ×5'); break;
+    case 'royal': addAnt(4); SFX.hatch(); toast('DECREE — +4 ANTS'); refreshPanel(); break;
+  }
+  syncHud();
+}
+document.getElementById('ability').addEventListener('click', useAbility);
+
+/* ---------------------------------------------------------
+   UPDATE
+   --------------------------------------------------------- */
+function update(dt){
+  const c=caste();
+
+  // passive income
+  S.food += perSec()*dt;
+  S.lifetime += perSec()*dt;
+  if(S.food>S.best) S.best=S.food;
+
+  // timers
+  if(S.frenzy>0) S.frenzy-=dt;
+  if(S.bloom>0)  S.bloom-=dt;
+  if(S.stun>0)   S.stun-=dt;
+  if(S.flash>0)  S.flash-=dt;
+  if(S.abCd>0)   S.abCd-=dt;
+  if(S.abActive>0) S.abActive-=dt;
+  if(S.shake>0)  S.shake=Math.max(0,S.shake-dt*22);
+
+  // caste unlocks
+  for(const id of CASTE_IDS){
+    if(!S.unlocked[id] && S.ants>=CASTES[id].unlock){
+      S.unlocked[id]=true;
+      toast('NEW CASTE: '+CASTES[id].name.toUpperCase());
+      SFX.power();
+      document.getElementById('classDot').hidden=false;
+    }
+  }
+
+  // royal auto-hatch
+  if(c.autoAnt){
+    S.autoAntT-=dt;
+    if(S.autoAntT<=0){ S.autoAntT=c.autoAnt; addAnt(1); SFX.hatch(); floatText(NEST_X,NEST_Y-30,'+1','#e0a6ff'); refreshPanel(); }
+  }
+
+  // giant fruit: sprout in, wobble out
+  if(G.regrow>0){
+    G.regrow-=dt;
+    G.grow = clamp(1 - G.regrow/0.55, 0, 1);
+    if(G.regrow<=0){ G.grow=1; }
+  }
+  if(G.wob>0) G.wob=Math.max(0,G.wob-dt*5);
+
+  // ---- RAIDS ----
+  if(S.raidWarn>0) S.raidWarn-=dt;
+  if(S.alarm>0) S.alarm-=dt*0.5;
+  if(!S.raid && S.ants>=6){
+    S.raidT-=dt;
+    if(S.raidT<=0) startRaid();
+  }
+  for(let i=spawnQueue.length-1;i>=0;i--){
+    spawnQueue[i].t-=dt;
+    if(spawnQueue[i].t<=0){ spawnInvader(spawnQueue[i].key); spawnQueue.splice(i,1); }
+  }
+  const theftGuard = clamp(lvl('chitin')*0.25 + (S.caste==='soldier'?0.5:0), 0, 0.92);
+  for(let i=invaders.length-1;i>=0;i--){
+    const v=invaders[i];
+    if(v.hurt>0) v.hurt-=dt;
+    v.wig+=dt*7;
+    const dx=NEST_X-v.x, dy=NEST_Y-v.y, d=Math.hypot(dx,dy)||1;
+    if(d>22){
+      v.atNest=false;
+      v.x+=dx/d*v.def.spd*dt;
+      v.y+=dy/d*v.def.spd*dt;
+      v.rot=Math.atan2(dy,dx)+Math.PI/2;
+    } else {
+      v.atNest=true;
+      const steal = v.def.steal * (1+S.wave*0.2) * Math.max(1, perSec()*0.25) * (1-theftGuard) * dt;
+      const take=Math.min(S.food, steal);
+      S.food-=take;
+      if(Math.random()<dt*4) burst(v.x,v.y,'#e05340',2,20);
+    }
+  }
+  // colony ants bite back
+  if(invaders.length){
+    const per = colonyDps()/invaders.length*dt;
+    for(const v of invaders){
+      v.hp-=per;
+      if(v.hp<=0){ killInvader(v); }
+    }
+  }
+
+  // crumbs
+  for(let i=crumbs.length-1;i>=0;i--){
+    const c=crumbs[i];
+    c.life-=dt; c.bob+=dt*4;
+    if(c.settled<1){
+      c.x+=c.vx*dt; c.y+=c.vy*dt;
+      c.vx*=0.90; c.vy*=0.90; c.vy+=40*dt;
+      c.x=clamp(c.x,8,W-8); c.y=clamp(c.y,20,H-14);
+      if(Math.abs(c.vx)+Math.abs(c.vy)<6) c.settled=1;
+    }
+    if(c.life<=0) collectCrumb(c,true);
+  }
+
+  // fruit spawning
+  S.spawnT-=dt*(c.spawnMult||1);
+  if(S.spawnT<=0){
+    spawnFruit();
+    S.spawnT = clamp(2.8 - S.ants*0.008, 1.0, 2.8) * rnd(0.75,1.3);
+  }
+
+  // magnet auto-eat
+  if(lvl('magnet')>0){
+    S.magnetT-=dt;
+    if(S.magnetT<=0){
+      S.magnetT = 7/lvl('magnet');
+      const good = fruits.filter(f=>!f.t.bad);
+      if(good.length){
+        good.sort((a,b)=>b.t.mult-a.t.mult);
+        eatFruit(good[0], true);
+      } else hitGiant(true);
+    }
+  }
+
+  // fruit life
+  for(let i=fruits.length-1;i>=0;i--){
+    const f=fruits[i];
+    f.age+=dt; f.bob+=dt*3; f.pop=Math.min(1,f.pop+dt*7);
+    if(f.age>f.life){
+      burst(f.x,f.y,'#5c3b26',4,22);
+      fruits.splice(i,1);
+    }
+  }
+
+  // pests
+  if(S.ants>=10){
+    S.pestT-=dt;
+    if(S.pestT<=0){
+      spawnPest();
+      S.pestT = clamp(34 - S.ants*0.08, 14, 34)*rnd(0.8,1.2);
+    }
+  }
+  const theftCut = clamp(lvl('chitin')*0.25 + (S.caste==='soldier'?0.5:0), 0, 0.92);
+  for(const p of pests){
+    if(p.hurt>0) p.hurt-=dt;
+    const dx=NEST_X-p.x, dy=NEST_Y-p.y, d=Math.hypot(dx,dy);
+    if(d>26){
+      p.x+=dx/d*15*dt; p.y+=dy/d*15*dt;
+    } else {
+      const steal = Math.max(3, perSec()*0.7)*(1-theftCut)*dt;
+      const take=Math.min(S.food, steal);
+      S.food-=take; p.stole+=take;
+      if(Math.random()<dt*3) burst(p.x,p.y,'#e05340',2,18);
+    }
+  }
+
+  // colony wander / defend
+  for(let ci=0;ci<colony.length;ci++){
+    const a=colony[ci];
+    const defender = invaders.length>0 && ci%4!==0;
+    if(defender){
+      let tgt=null, td=1e9;
+      for(const v of invaders){
+        const d=Math.hypot(v.x-a.x, v.y-a.y);
+        if(d<td){ td=d; tgt=v; }
+      }
+      if(tgt){
+        a.tx = clamp(tgt.x + Math.cos(ci*2.1)*11, 6, W-6);
+        a.ty = clamp(tgt.y + Math.sin(ci*2.1)*11, 6, H-6);
+        a.wait = 0.15;
+      }
+    } else {
+      a.wait-=dt;
+      if(a.wait<=0){
+        const ang=Math.random()*6.283, r=rnd(8,44);
+        a.tx=clamp(NEST_X+Math.cos(ang)*r, 14, W-14);
+        a.ty=clamp(NEST_Y+Math.sin(ang)*r*0.7, H-96, H-12);
+        a.wait=rnd(0.6,2.4);
+      }
+    }
+    const spd = defender ? a.spd*2.6 : a.spd;
+    const dx=a.tx-a.x, dy=a.ty-a.y, d=Math.hypot(dx,dy);
+    if(d>1){
+      a.x+=dx/d*spd*dt; a.y+=dy/d*spd*dt;
+      a.rot=Math.atan2(dy,dx)+Math.PI/2;
+    }
+  }
+
+  // particles
+  for(let i=parts.length-1;i>=0;i--){
+    const p=parts[i];
+    p.life-=dt;
+    p.vy+=160*dt;
+    p.x+=p.vx*dt; p.y+=p.vy*dt;
+    if(p.life<=0) parts.splice(i,1);
+  }
+  for(let i=floats.length-1;i>=0;i--){
+    const f=floats[i];
+    f.life-=dt; f.y+=f.vy*dt; f.vy*=0.94;
+    if(f.life<=0) floats.splice(i,1);
+  }
+}
+
+/* ---------------------------------------------------------
+   DRAW
+   --------------------------------------------------------- */
+function blit(spr,x,y,rot){
+  if(rot){
+    ctx.save();
+    ctx.translate(Math.round(x),Math.round(y));
+    ctx.rotate(rot);
+    ctx.drawImage(spr,-Math.round(spr.width/2),-Math.round(spr.height/2));
+    ctx.restore();
+  } else {
+    ctx.drawImage(spr, Math.round(x-spr.width/2), Math.round(y-spr.height/2));
+  }
+}
+
+function draw(){
+  ctx.save();
+  if(S.shake>0){
+    ctx.translate(rint(-S.shake,S.shake)*0.5, rint(-S.shake,S.shake)*0.5);
+  }
+  ctx.drawImage(bg,0,0);
+  ctx.drawImage(nest, Math.round(NEST_X-45), Math.round(NEST_Y-40));
+
+  // colony ants
+  const antSpr=antSprites[S.caste];
+  const shown=Math.min(colony.length, 40);
+  for(let i=0;i<shown;i++){
+    const a=colony[i];
+    blit(antSpr,a.x,a.y,a.rot);
+  }
+  // queen at the mouth of the nest
+  blit(queenSprites[S.caste], NEST_X, NEST_Y+2, 0);
+
+  // ---- THE GIANT FRUIT ----
+  {
+    const def=giantDef();
+    const t=Date.now()/1000;
+    const bob=Math.sin(t*1.6)*1.5;
+    const wob=G.wob;
+    const sx=(1+wob*0.18)*(0.35+G.grow*0.65);
+    const sy=(1-wob*0.14)*(0.35+G.grow*0.65);
+    const gy=GY+bob+wob*3;
+
+    // ground shadow
+    ctx.fillStyle='rgba(0,0,0,0.30)';
+    const shw=Math.round(def.r*1.7*sx);
+    ctx.fillRect(Math.round(GX-shw/2), Math.round(GY+def.r+2), shw, 3);
+
+    ctx.save();
+    ctx.translate(Math.round(GX), Math.round(gy));
+    ctx.scale(sx,sy);
+    ctx.drawImage(def.spr, -Math.round(def.spr.width/2), -Math.round(def.spr.height/2)+2);
+    ctx.restore();
+
+    // bites eaten out of it
+    if(G.grow>=1){
+      const frac=G.hp/G.maxhp;
+      for(let i=0;i<G.bites.length;i++){
+        if(frac > 1-(i+1)/(G.bites.length+1)) continue;
+        const b=G.bites[i];
+        ctx.fillStyle='#241109';
+        for(let y=-b.r;y<=b.r;y++) for(let x=-b.r;x<=b.r;x++){
+          if(x*x+y*y<=b.r*b.r) ctx.fillRect(Math.round(GX+b.x+x), Math.round(gy+b.y+y),1,1);
+        }
+        ctx.fillStyle=def.dark;
+        for(let x=-b.r;x<=b.r;x++){
+          const y=-Math.round(Math.sqrt(Math.max(0,b.r*b.r-x*x)));
+          ctx.fillRect(Math.round(GX+b.x+x), Math.round(gy+b.y+y),1,1);
+        }
+      }
+    }
+
+    // sparkle on the golden tier / prime loops
+    if(def.glow || giantPrime()>0){
+      const q=Date.now()/110;
+      ctx.fillStyle='#fff5c0';
+      for(let i=0;i<4;i++){
+        const a=q+i*1.57;
+        ctx.fillRect(Math.round(GX+Math.cos(a)*(def.r+6)), Math.round(gy+Math.sin(a)*(def.r+6)),1,1);
+      }
+    }
+
+    // hp bar
+    if(G.grow>=1){
+      const bw=Math.round(def.r*2.2), bx=Math.round(GX-bw/2), by=Math.round(GY+def.r+7);
+      ctx.fillStyle='#14100c'; ctx.fillRect(bx-1,by-1,bw+2,6);
+      ctx.fillStyle='#3b2618'; ctx.fillRect(bx,by,bw,4);
+      const f=clamp(G.hp/G.maxhp,0,1);
+      ctx.fillStyle = f>0.5?'#7dc242' : f>0.22?'#ffc633' : '#e05340';
+      ctx.fillRect(bx,by,Math.round(bw*f),4);
+      ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.fillRect(bx,by,Math.round(bw*f),1);
+      // tier pips
+      for(let i=0;i<GIANTS.length;i++){
+        ctx.fillStyle = i<=(G.tier%GIANTS.length) ? '#ffc633' : '#3b2618';
+        ctx.fillRect(bx+i*5, by+7, 3, 3);
+      }
+    }
+  }
+
+  // crumbs on the ground
+  for(const c of crumbs){
+    if(c.life<2.2 && Math.floor(c.life*7)%2===0) continue;
+    const by=c.settled?Math.sin(c.bob)*1:0;
+    ctx.fillStyle='rgba(0,0,0,0.30)';
+    ctx.fillRect(Math.round(c.x-2), Math.round(c.y+3), 5, 1);
+    blit(SPR.crumb, c.x, c.y+by, 0);
+    const q=Date.now()/140;
+    ctx.fillStyle='#fff5c0';
+    ctx.fillRect(Math.round(c.x+Math.cos(q)*6), Math.round(c.y+by+Math.sin(q)*6),1,1);
+  }
+
+  // invading ants
+  for(const v of invaders){
+    const wig=Math.sin(v.wig)*0.10;
+    if(v.hurt>0 && Math.floor(v.hurt*40)%2===0){
+      ctx.save(); ctx.globalAlpha=0.55;
+      blit(v.def.spr, v.x, v.y, (v.rot||0)+wig);
+      ctx.restore();
+    } else {
+      blit(v.def.spr, v.x, v.y, (v.rot||0)+wig);
+    }
+    // health bar over its back
+    const bw = v.def.boss?24:14, bx=Math.round(v.x-bw/2), by=Math.round(v.y-v.def.hitR-6);
+    ctx.fillStyle='#14100c'; ctx.fillRect(bx-1,by-1,bw+2,4);
+    ctx.fillStyle=v.def.body;
+    ctx.fillRect(bx,by,Math.max(1,Math.round(bw*clamp(v.hp/v.maxhp,0,1))),2);
+    if(v.atNest && Math.floor(Date.now()/220)%2===0){
+      ctx.fillStyle='#e05340';
+      ctx.fillRect(Math.round(v.x-1), Math.round(v.y-v.def.hitR-11),2,4);
+    }
+  }
+
+  // pests
+  for(const p of pests){
+    if(p.hurt>0 && Math.floor(p.hurt*40)%2===0){
+      ctx.save(); ctx.globalAlpha=0.7;
+      blit(p.spr,p.x,p.y,0); ctx.restore();
+    } else blit(p.spr,p.x,p.y,0);
+    // hp pips
+    for(let i=0;i<p.hp;i++){
+      ctx.fillStyle='#e05340';
+      ctx.fillRect(Math.round(p.x-p.hp*2+i*4), Math.round(p.y-9), 3,2);
+    }
+  }
+
+  // fruit
+  for(const f of fruits){
+    const fade = f.age > f.life-1.6;
+    if(fade && Math.floor(f.age*8)%2===0) continue;
+    const by = Math.sin(f.bob)*1.5;
+    // shadow
+    ctx.fillStyle='rgba(0,0,0,0.28)';
+    ctx.fillRect(Math.round(f.x-f.t.spr.width/2+1), Math.round(f.y+f.t.spr.height/2-1), f.t.spr.width-2, 2);
+    if(f.pop<1){
+      const s=0.4+f.pop*0.6;
+      ctx.save();
+      ctx.translate(Math.round(f.x),Math.round(f.y+by));
+      ctx.scale(s,s);
+      ctx.drawImage(f.t.spr,-f.t.spr.width/2|0,-f.t.spr.height/2|0);
+      ctx.restore();
+    } else {
+      blit(f.t.spr,f.x,f.y+by,0);
+    }
+    if(f.t.rare){
+      const t=Date.now()/120;
+      ctx.fillStyle='#fff5c0';
+      for(let i=0;i<3;i++){
+        const a=t+i*2.1;
+        ctx.fillRect(Math.round(f.x+Math.cos(a)*10), Math.round(f.y+by+Math.sin(a)*10),1,1);
+      }
+    }
+    if(f.maxhp>1 && f.hp<f.maxhp){
+      const w=f.t.spr.width;
+      ctx.fillStyle='#14100c'; ctx.fillRect(Math.round(f.x-w/2),Math.round(f.y+f.t.spr.height/2+1),w,3);
+      ctx.fillStyle='#7dc242'; ctx.fillRect(Math.round(f.x-w/2),Math.round(f.y+f.t.spr.height/2+1),Math.round(w*f.hp/f.maxhp),3);
+    }
+  }
+
+  // particles
+  for(const p of parts){
+    ctx.fillStyle=p.col;
+    ctx.fillRect(Math.round(p.x),Math.round(p.y),p.sz,p.sz);
+  }
+
+  // floating numbers
+  for(const f of floats){
+    if(f.life<0.3 && Math.floor(f.life*20)%2===0) continue;
+    const w=textWidth(f.str,2);
+    drawText(f.str, Math.round(f.x-w/2)+1, Math.round(f.y)+1, '#14100c', 2);
+    drawText(f.str, Math.round(f.x-w/2), Math.round(f.y), f.col, 2);
+  }
+
+  ctx.restore();
+
+  // status overlays
+  if(S.flash>0){
+    ctx.fillStyle='rgba(224,83,64,'+(S.flash*0.7)+')';
+    ctx.fillRect(0,0,W,H);
+  }
+  if(S.stun>0){
+    const w=textWidth('!!!',2);
+    drawText('!!!', (W-w)/2, 16, '#e05340', 2);
+  }
+  // raid banner
+  if(S.raid){
+    const left = invaders.length + spawnQueue.length;
+    ctx.fillStyle='#14100c'; ctx.fillRect(0,0,W,11);
+    ctx.fillStyle='#e05340'; ctx.fillRect(0,0,W,1); ctx.fillRect(0,10,W,1);
+    drawText(String(S.wave), 6, 3, '#e05340', 1);
+    drawText(String(left), W-6-textWidth(String(left),1), 3, '#ffc633', 1);
+    for(let i=0;i<Math.min(left,18);i++){
+      ctx.fillStyle='#e05340';
+      ctx.fillRect(22+i*9, 4, 5, 3);
+    }
+    if(S.raidWarn>0 && Math.floor(S.raidWarn*6)%2===0){
+      ctx.fillStyle='rgba(224,83,64,0.16)'; ctx.fillRect(0,0,W,H);
+    }
+    const pulse = 0.35+Math.sin(Date.now()/240)*0.2;
+    ctx.fillStyle='rgba(224,83,64,'+pulse+')';
+    ctx.fillRect(0,11,W,1); ctx.fillRect(0,H-1,W,1);
+    ctx.fillRect(0,11,1,H); ctx.fillRect(W-1,11,1,H);
+  }
+
+  if(S.frenzy>0 || S.bloom>0){
+    ctx.fillStyle = S.frenzy>0 ? 'rgba(255,198,51,0.10)' : 'rgba(125,194,66,0.10)';
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = S.frenzy>0 ? '#ffc633' : '#7dc242';
+    ctx.fillRect(0,0,W,2); ctx.fillRect(0,H-2,W,2);
+  }
+}
+
+/* ---------------------------------------------------------
+   HUD SYNC
+   --------------------------------------------------------- */
+const uiFood=document.getElementById('uiFood'),
+      uiRate=document.getElementById('uiRate'),
+      uiAnts=document.getElementById('uiAnts'),
+      abBtn=document.getElementById('ability'),
+      abFill=abBtn.querySelector('.fill'),
+      abLbl=abBtn.querySelector('.lbl');
+
+function syncHud(){
+  uiFood.textContent=fmt(S.food);
+  uiRate.textContent=fmt(perSec());
+  uiAnts.textContent=S.ants;
+  const c=caste();
+  abBtn.classList.toggle('ready', S.abCd<=0 && S.abActive<=0);
+  abBtn.classList.toggle('active', S.abActive>0);
+  if(S.abActive>0){
+    abLbl.textContent=c.ab.name+'\n'+S.abActive.toFixed(1)+'s';
+    abFill.style.height='100%';
+  } else if(S.abCd>0){
+    abLbl.textContent=c.ab.name+'\n'+Math.ceil(S.abCd)+'s';
+    abFill.style.height=(100-S.abCd/c.ab.cd*100)+'%';
+  } else {
+    abLbl.textContent=c.ab.name+'\nREADY';
+    abFill.style.height='100%';
+  }
+}
+
+/* ---------------------------------------------------------
+   PANELS
+   --------------------------------------------------------- */
+const panel=document.getElementById('panel'),
+      panelBody=document.getElementById('panelBody'),
+      panelTitle=document.getElementById('panelTitle');
+let openTab=null, resetArmed=false, resetTimer=null;
+
+document.querySelectorAll('.tab').forEach(b=>{
+  b.addEventListener('click',()=>{
+    audioInit();
+    if(openTab===b.dataset.tab){ closePanel(); return; }
+    openTab=b.dataset.tab;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===openTab));
+    panel.classList.add('open');
+    if(openTab==='class') document.getElementById('classDot').hidden=true;
+    refreshPanel();
+  });
+});
+document.getElementById('close').addEventListener('click',closePanel);
+function closePanel(){
+  openTab=null; panel.classList.remove('open');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+}
+
+function refreshPanel(){
+  if(!openTab) return;
+  if(openTab==='colony') renderColony();
+  else if(openTab==='class') renderCastes();
+  else renderGear();
+}
+
+function renderColony(){
+  panelTitle.textContent='Colony';
+  const cost=antCost();
+  let h='';
+  h+=`<div class="card">
+        <div class="icon">🐜</div>
+        <div class="body">
+          <h3>Hatch an ant</h3>
+          <p>Every ant forages on its own. +0.3 food/sec each, before bonuses.</p>
+          <div class="lvl">Colony: ${S.ants} ants · ${fmt(perSec())}/sec</div>
+        </div>
+        <button class="buy" data-act="ant" ${S.food<cost?'disabled':''}>${fmt(cost)}</button>
+      </div>`;
+  const cost10=(()=>{let t=0,n=S.ants;const c=caste();const disc=clamp(lvl('jelly')*0.07+(c.antDisc||0),0,0.75);
+    for(let i=0;i<10;i++) t+=Math.floor(18*Math.pow(1.17,n-1+i)*(1-disc)); return t;})();
+  h+=`<div class="card">
+        <div class="icon">🥚</div>
+        <div class="body">
+          <h3>Hatch ten</h3>
+          <p>Same ants, one tap. The price climbs with every egg.</p>
+        </div>
+        <button class="buy" data-act="ant10" ${S.food<cost10?'disabled':''}>${fmt(cost10)}</button>
+      </div>`;
+
+  const gd=giantDef();
+  h+=`<div class="divider">The big fruit</div>
+      <div class="card on">
+        <div class="icon" style="background:${gd.body}"></div>
+        <div class="body">
+          <h3>${gd.name}${giantPrime()?' ✦'+giantPrime():''}</h3>
+          <p>Sits in the middle of the garden. Tap it until it splits — each one you break is replaced by a bigger, tougher fruit worth more.</p>
+          <div class="lvl">${Math.max(0,Math.ceil(G.hp))} / ${G.maxhp} left · pays ${fmt(G.maxhp*2*(1+giantPrime()*0.25))} · ${Math.ceil(G.hp/tapPower())} taps to go</div>
+        </div>
+        <div class="buy" style="background:var(--soil-deep);border-color:var(--soil-lt);color:var(--honey)">${G.broken}<br><span style="font-size:8px">BROKEN</span></div>
+      </div>`;
+
+  h+=`<div class="divider">Loose food nearby</div>`;
+  for(const k in FRUIT){
+    const f=FRUIT[k];
+    const locked=S.ants<f.tier;
+    h+=`<div class="fruitrow" style="opacity:${locked?0.4:1}">
+          <span class="swatch" style="background:${f.color}"></span>
+          <b style="color:#f4e6c8;min-width:70px">${f.label}</b>
+          <span>${locked?`unlocks at ${f.tier} ants`:(f.bad?'costs you food — do not tap':`×${f.mult} value${f.hp>1?` · ${f.hp} taps`:''}`)}</span>
+        </div>`;
+  }
+  h+=`<div class="divider">Raids · wave ${S.wave}</div>
+      <div class="note">${S.ants<6
+        ? 'Raids begin once you have 6 ants.'
+        : S.raid
+          ? `<b style="color:#e05340">RAID IN PROGRESS</b> — ${invaders.length+spawnQueue.length} invaders left.`
+          : `Next raid in about ${Math.max(0,Math.ceil(S.raidT))}s. Each wave is bigger than the last.`}
+        <br><br>Rival ants march on the nest from every edge. Your colony charges out to meet them on its own — more ants means more bite. Tap invaders to help, and every one that falls scatters <b style="color:#ffc633">crumbs</b> across the ground. Tap crumbs for full value; if you leave them, your ants haul them in for half.</div>`;
+  for(const k in INVADERS){
+    const v=INVADERS[k];
+    h+=`<div class="fruitrow">
+          <span class="swatch" style="background:${v.body}"></span>
+          <b style="color:#f4e6c8;min-width:80px">${v.name}</b>
+          <span>${v.hp} HP · ${v.crumbs} crumb${v.crumbs>1?'s':''}${v.boss?' · every 5th wave':''}</span>
+        </div>`;
+  }
+  h+=`<div class="note" style="padding-top:8px">Colony damage: ${colonyDps().toFixed(1)}/sec · Tap damage: ${(tapPower()*(S.caste==='soldier'?3:1)).toFixed(1)}${S.caste==='soldier'?' (Soldier ×3)':''}</div>`;
+  h+=`<div class="divider">Lone thieves</div>
+      <div class="note">At 10 ants, spiders and beetles also wander in between raids. They sit on the nest and drain food. Tap them until they break — they drop everything they took.</div>`;
+  h+=`<div class="divider">Numbers</div>
+      <div class="note">Tap power: ${tapPower().toFixed(1)} per fruit value<br>Income: ${fmt(perSec())}/sec<br>Lifetime food: ${fmt(S.lifetime)}<br>Giants broken: ${G.broken} · Waves held: ${S.wave}</div>`;
+  h+=`<div class="divider">Save</div>
+      <div class="note">${storageOK
+        ? 'Progress saves automatically every few seconds and whenever you leave. Ants forage at half speed while you are away, banking up to 8 hours.'
+        : '<b style="color:#e05340">Saving is unavailable here.</b> This preview blocks browser storage — progress will be lost when you close the tab. It saves normally on a real site.'}</div>
+      <button class="danger ${resetArmed?'armed':''}" id="resetBtn">${resetArmed?'Tap again to wipe everything':'Reset colony'}</button>`;
+  panelBody.innerHTML=h;
+  bindBuys();
+  const rb=document.getElementById('resetBtn');
+  if(rb){
+    rb.addEventListener('click',()=>{
+      if(resetArmed){ resetArmed=false; resetGame(); return; }
+      resetArmed=true;
+      clearTimeout(resetTimer);
+      resetTimer=setTimeout(()=>{ resetArmed=false; refreshPanel(); },3500);
+      refreshPanel();
+    });
+  }
+  return;
+}
+
+function renderCastes(){
+  panelTitle.textContent='Caste';
+  let h=`<div class="note">Pick the caste that fits how you play. Switching is free and instant — the whole colony changes color with you.</div>`;
+  for(const id of CASTE_IDS){
+    const c=CASTES[id];
+    const unlocked=S.unlocked[id];
+    const on=S.caste===id;
+    h+=`<div class="card ${unlocked?'':'locked'} ${on?'on':''}">
+          <div class="icon">${c.icon}</div>
+          <div class="body">
+            <h3>${c.name}</h3>
+            <p>${c.desc}</p>
+            <div class="lvl">${c.perk} · ${c.ab.name}: ${c.ab.desc}</div>
+          </div>
+          <button class="buy ${on?'equipped':''}" data-act="caste" data-id="${id}" ${!unlocked||on?'disabled':''}>
+            ${on?'ACTIVE':unlocked?'EQUIP':c.unlock+' ANTS'}
+          </button>
+        </div>`;
+  }
+  panelBody.innerHTML=h;
+  bindBuys();
+}
+
+function gearCost(g){ return Math.floor(g.base*Math.pow(g.grow, lvl(g.id))); }
+
+function renderGear(){
+  panelTitle.textContent='Gear';
+  let h=`<div class="note">Gear is permanent and stacks with every caste.</div>`;
+  for(const g of GEAR){
+    const l=lvl(g.id), maxed=l>=g.max, cost=gearCost(g);
+    h+=`<div class="card">
+          <div class="icon">${g.icon}</div>
+          <div class="body">
+            <h3>${g.name}</h3>
+            <p>${l>0?g.desc(l):'<span style="color:#7a6650">Not owned yet — '+g.desc(1)+'</span>'}</p>
+            <div class="lvl">${'▮'.repeat(l)}${'▯'.repeat(g.max-l)} ${l}/${g.max}</div>
+          </div>
+          <button class="buy" data-act="gear" data-id="${g.id}" ${maxed||S.food<cost?'disabled':''}>
+            ${maxed?'MAX':fmt(cost)}
+          </button>
+        </div>`;
+  }
+  panelBody.innerHTML=h;
+  bindBuys();
+}
+
+function bindBuys(){
+  panelBody.querySelectorAll('.buy').forEach(b=>{
+    b.addEventListener('click',()=>{
+      audioInit();
+      const act=b.dataset.act;
+      if(act==='ant'){
+        const c=antCost();
+        if(S.food<c){SFX.denied();return;}
+        S.food-=c; addAnt(1); SFX.hatch();
+      } else if(act==='ant10'){
+        let spent=0;
+        for(let i=0;i<10;i++){
+          const c=antCost();
+          if(S.food-spent<c) break;
+          spent+=c; addAnt(1);
+        }
+        if(spent===0){SFX.denied();return;}
+        S.food-=spent; SFX.hatch();
+      } else if(act==='caste'){
+        const id=b.dataset.id;
+        if(!S.unlocked[id]){SFX.denied();return;}
+        S.caste=id; S.abCd=0; S.abActive=0; S.frenzy=0; S.bloom=0;
+        SFX.buy(); toast(CASTES[id].name.toUpperCase()+' EQUIPPED');
+      } else if(act==='gear'){
+        const g=gearById[b.dataset.id];
+        const c=gearCost(g);
+        if(lvl(g.id)>=g.max || S.food<c){SFX.denied();return;}
+        S.food-=c; S.gear[g.id]++;
+        SFX.buy();
+      }
+      refreshPanel(); syncHud();
+    });
+  });
+}
+
+/* ---------------------------------------------------------
+   SOUND TOGGLE
+   --------------------------------------------------------- */
+const soundBtn=document.getElementById('sound');
+soundBtn.addEventListener('click',()=>{
+  audioInit();
+  soundOn=!soundOn;
+  soundBtn.classList.toggle('off',!soundOn);
+  soundBtn.textContent=soundOn?'♪':'✕';
+});
+
+/* ---------------------------------------------------------
+   SAVE / LOAD / OFFLINE PROGRESS
+   localStorage is unavailable in some sandboxed previews, so
+   every access is guarded — the game runs fine without it.
+   --------------------------------------------------------- */
+const SAVE_KEY = 'anthill.save.v1';
+const OFFLINE_CAP  = 8*3600;   // 8 hours of banked time
+const OFFLINE_RATE = 0.5;      // ants forage at half speed unsupervised
+let storageOK = true;
+
+function store(){
+  try{ return window.localStorage; }catch(e){ storageOK=false; return null; }
+}
+function saveGame(){
+  const ls=store(); if(!ls) return;
+  try{
+    ls.setItem(SAVE_KEY, JSON.stringify({
+      v:1, ts:Date.now(),
+      food:S.food, lifetime:S.lifetime, ants:S.ants,
+      caste:S.caste, unlocked:S.unlocked, gear:S.gear,
+      wave:S.wave, tapped:S.tapped, sound:soundOn,
+      gTier:G.tier, gBroken:G.broken, gHp:G.hp
+    }));
+  }catch(e){ storageOK=false; }
+}
+function clearSave(){
+  const ls=store(); if(!ls) return;
+  try{ ls.removeItem(SAVE_KEY); }catch(e){}
+}
+
+function loadGame(){
+  const ls=store(); if(!ls) return null;
+  let raw;
+  try{ raw = ls.getItem(SAVE_KEY); }catch(e){ storageOK=false; return null; }
+  if(!raw) return null;
+  let d;
+  try{ d = JSON.parse(raw); }catch(e){ return null; }
+  if(!d || d.v!==1) return null;
+
+  S.food     = Number(d.food)||0;
+  S.lifetime = Number(d.lifetime)||0;
+  S.ants     = Math.max(1, Math.floor(Number(d.ants)||1));
+  S.wave     = Math.floor(Number(d.wave)||0);
+  S.tapped   = !!d.tapped;
+  if(d.caste && CASTES[d.caste]) S.caste = d.caste;
+  if(d.unlocked) for(const k in d.unlocked) if(CASTES[k]) S.unlocked[k]=!!d.unlocked[k];
+  S.unlocked.forager = true; S.unlocked.soldier = true;
+  // merge gear so saves made before new gear existed still load
+  if(d.gear) for(const g of GEAR){
+    const v=Math.floor(Number(d.gear[g.id])||0);
+    S.gear[g.id]=clamp(v,0,g.max);
+  }
+  if(typeof d.sound==='boolean') soundOn=d.sound;
+
+  // rebuild the visible colony
+  colony.length=0;
+  const n=Math.min(S.ants, MAX_ANT_ENTITIES);
+  for(let i=0;i<n;i++){
+    colony.push({
+      x:NEST_X+rnd(-30,30), y:NEST_Y+rnd(-22,20),
+      tx:NEST_X, ty:NEST_Y, spd:rnd(9,17), wait:rnd(0,1.5), rot:0
+    });
+  }
+
+  // restore the giant fruit
+  G.tier   = Math.max(0, Math.floor(Number(d.gTier)||0));
+  G.broken = Math.max(0, Math.floor(Number(d.gBroken)||0));
+  G.maxhp  = giantHpFor(G.tier);
+  G.hp     = clamp(Number(d.gHp)||G.maxhp, 1, G.maxhp);
+  G.grow=1; G.regrow=0;
+  rollBites();
+
+  if(S.tapped){ const h=document.getElementById('hint'); if(h) h.remove(); }
+
+  return Math.max(0, (Date.now() - (Number(d.ts)||Date.now()))/1000);
+}
+
+function humanTime(sec){
+  sec=Math.floor(sec);
+  const h=Math.floor(sec/3600), m=Math.floor(sec%3600/60), s=sec%60;
+  if(h) return h+'h '+m+'m';
+  if(m) return m+'m '+s+'s';
+  return s+'s';
+}
+
+function applyOffline(elapsed){
+  if(elapsed < 60) return;
+  const banked = Math.min(elapsed, OFFLINE_CAP);
+  const earned = perSec() * banked * OFFLINE_RATE;
+  if(earned < 1) return;
+  S.food += earned; S.lifetime += earned;
+
+  document.getElementById('wTime').textContent =
+    'AWAY FOR ' + humanTime(elapsed) + (elapsed>OFFLINE_CAP ? ' (capped at 8h)' : '');
+  document.getElementById('wFood').textContent = '+' + fmt(earned);
+  document.getElementById('wNote').textContent =
+    'Your ants foraged at half speed while the nest was quiet. ' +
+    (elapsed>OFFLINE_CAP ? 'Check in more often to bank the full haul.' : '');
+  document.getElementById('welcome').classList.add('open');
+}
+
+document.getElementById('wOk').addEventListener('click',()=>{
+  audioInit();
+  document.getElementById('welcome').classList.remove('open');
+  SFX.buy();
+});
+
+function resetGame(){
+  clearSave();
+  S.food=0; S.lifetime=0; S.ants=1; S.wave=0;
+  S.caste='forager';
+  S.unlocked={forager:true, soldier:true};
+  GEAR.forEach(g=>S.gear[g.id]=0);
+  S.frenzy=0; S.bloom=0; S.stun=0; S.abCd=0; S.abActive=0;
+  S.raid=false; S.raidT=38; S.raidWarn=0;
+  fruits.length=0; pests.length=0; parts.length=0; floats.length=0;
+  invaders.length=0; crumbs.length=0; spawnQueue.length=0;
+  colony.length=0;
+  colony.push({x:NEST_X-16,y:NEST_Y-6,tx:NEST_X,ty:NEST_Y,spd:12,wait:0,rot:0});
+  G.tier=0; G.broken=0; newGiant();
+  toast('COLONY RESET');
+  syncHud(); refreshPanel();
+}
+
+/* boot: restore, then bank whatever was earned while away */
+{
+  const away = loadGame();
+  soundBtn.classList.toggle('off', !soundOn);
+  soundBtn.textContent = soundOn ? '♪' : '✕';
+  if(away !== null) applyOffline(away);
+}
+
+/* autosave */
+setInterval(saveGame, 5000);
+window.addEventListener('pagehide', saveGame);
+window.addEventListener('beforeunload', saveGame);
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden){
+    saveGame();
+    if(musicTimer){ clearInterval(musicTimer); musicTimer=null; }
+  } else {
+    last = performance.now();
+    if(actx && !musicTimer) startMusic();
+  }
+});
+
+/* ---------------------------------------------------------
+   LOOP
+   --------------------------------------------------------- */
+let last=performance.now(), hudT=0, panelT=0;
+function frame(t){
+  let dt=(t-last)/1000; last=t;
+  if(dt>0.1) dt=0.1;
+  update(dt);
+  draw();
+  hudT-=dt;
+  if(hudT<=0){ syncHud(); hudT=0.1; }
+  panelT-=dt;
+  if(panelT<=0 && openTab){ refreshPanel(); panelT=0.6; }
+  requestAnimationFrame(frame);
+}
+syncHud();
+requestAnimationFrame(frame);
+
+/* keep the canvas as large as it can be without breaking pixel alignment */
+function fit(){
+  const stage=document.getElementById('stage');
+  const s=Math.min(stage.clientWidth/W, stage.clientHeight/H);
+  cv.style.width=Math.floor(W*s)+'px';
+  cv.style.height=Math.floor(H*s)+'px';
+}
+window.addEventListener('resize',fit);
+window.addEventListener('orientationchange',()=>setTimeout(fit,150));
+fit();
+</script>
+</body>
+</html>
