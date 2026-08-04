@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getTopScores, insertScore } from '@/lib/db'
+import { getGame } from '@/lib/games'
 
-const GAME_LIMITS: Record<string, { maxScore: number; maxKills: number; maxLevel: number }> = {
-  'aqua-survivor': { maxScore: 7200, maxKills: 9999, maxLevel: 200 }, // score = survival seconds, 2hr cap
-  'elemental-trials': { maxScore: 500000, maxKills: 999, maxLevel: 200 }, // score = points, endless-loop runs
-  'haunted-mansion': { maxScore: 20000, maxKills: 200, maxLevel: 4 }, // score = roomsCleared*1000 + kills*25 + secondsSurvived
+/* A game is submittable only if the registry gives it a leaderboard config —
+   that config also supplies the caps, so validation and the UI can't drift. */
+function boardFor(slug: unknown) {
+  if (typeof slug !== 'string') return null
+  return getGame(slug)?.leaderboard ?? null
 }
-const VALID_GAMES = new Set(Object.keys(GAME_LIMITS))
 
 export async function GET(req: NextRequest) {
   const game = req.nextUrl.searchParams.get('game') ?? ''
-  const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') ?? '15', 10), 50)
+  const limit = Math.min(parseInt(req.nextUrl.searchParams.get('limit') ?? '15', 10) || 15, 50)
 
-  if (!VALID_GAMES.has(game)) {
+  if (!boardFor(game)) {
     return NextResponse.json({ error: 'Unknown game' }, { status: 400 })
   }
 
@@ -38,32 +39,36 @@ export async function POST(req: NextRequest) {
 
   const { game, playerName, score, kills, level } = body as Record<string, unknown>
 
-  if (typeof game !== 'string' || !VALID_GAMES.has(game)) {
+  const board = boardFor(game)
+  if (!board) {
     return NextResponse.json({ error: 'Invalid game' }, { status: 400 })
   }
-  const limits = GAME_LIMITS[game]
+  const { limits, statLabels } = board
+
   if (typeof playerName !== 'string' || playerName.trim().length < 1 || playerName.trim().length > 20) {
     return NextResponse.json({ error: 'Name must be 1–20 characters' }, { status: 400 })
   }
-  if (typeof score !== 'number' || score < 0 || score > limits.maxScore || !Number.isInteger(score)) {
-    return NextResponse.json({ error: 'Invalid score' }, { status: 400 })
-  }
-  if (typeof kills !== 'number' || kills < 0 || kills > limits.maxKills || !Number.isInteger(kills)) {
-    return NextResponse.json({ error: 'Invalid kills' }, { status: 400 })
-  }
-  if (typeof level !== 'number' || level < 1 || level > limits.maxLevel || !Number.isInteger(level)) {
-    return NextResponse.json({ error: 'Invalid level' }, { status: 400 })
+
+  const checks: Array<[unknown, number, string]> = [
+    [score, limits.maxScore, statLabels.score],
+    [kills, limits.maxKills, statLabels.kills],
+    [level, limits.maxLevel, statLabels.level],
+  ]
+  for (const [value, max, label] of checks) {
+    if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > max) {
+      return NextResponse.json({ error: `Invalid ${label.toLowerCase()}` }, { status: 400 })
+    }
   }
 
   const cleanName = playerName.trim().replace(/[^\w\s\-\.]/g, '').slice(0, 20) || 'ANON'
 
   try {
     const entry = await insertScore({
-      gameSlug: game,
+      gameSlug: game as string,
       playerName: cleanName,
-      score,
-      kills,
-      level,
+      score: score as number,
+      kills: kills as number,
+      level: level as number,
     })
     return NextResponse.json({ entry }, { status: 201 })
   } catch {

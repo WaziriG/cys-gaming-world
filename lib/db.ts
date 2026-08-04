@@ -22,7 +22,7 @@ export async function getTopScores(gameSlug: string, limit = 15): Promise<Leader
     SELECT id, game_slug, player_name, score, kills, level, created_at
     FROM leaderboard
     WHERE game_slug = ${gameSlug}
-    ORDER BY score DESC
+    ORDER BY score DESC, kills DESC, created_at ASC
     LIMIT ${limit}
   `
   return rows as LeaderboardEntry[]

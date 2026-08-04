@@ -1,143 +1,5 @@
-import { GameCard, type Game } from '@/components/GameCard'
-
-const GAMES: Game[] = [
-  {
-    slug: 'anthill',
-    title: 'ANTHILL',
-    tagline: 'Tap the fruit. Grow the colony.',
-    description:
-      'A colony that keeps working after you close the tab. Tap the big fruit, hatch new castes, buy permanent gear that stacks across every ant, and hold the line when a raid hits. Come back to eight hours of banked foraging.',
-    icon: '🐜',
-    iconBg: '🍎',
-    accentColor: '#e05340',
-    glowColor: 'rgba(224, 83, 64, 0.35)',
-    borderColor: 'rgba(224, 83, 64, 0.5)',
-    hoverBorder: 'rgba(255, 138, 120, 0.9)',
-    href: '/games/anthill',
-    live: true,
-    genre: 'IDLE TAPPER',
-    players: '1P',
-  },
-  {
-    slug: 'nano-slime',
-    title: 'NANO SLIME',
-    tagline: 'Eat. Grow. Evolve.',
-    description:
-      'Start as a speck in the grass and eat your way up the food chain. Unlock new slime forms, stockpile acorns and pumpkins, earn costumes, and chase your best form ever — with a hardcore mode and a sandbox for testing builds.',
-    icon: '🦠',
-    iconBg: '🌿',
-    accentColor: '#8fd07a',
-    glowColor: 'rgba(143, 208, 122, 0.35)',
-    borderColor: 'rgba(143, 208, 122, 0.5)',
-    hoverBorder: 'rgba(190, 240, 170, 0.9)',
-    href: '/games/nano-slime',
-    live: true,
-    genre: 'GROWTH',
-    players: '1P',
-  },
-  {
-    slug: 'aqua-survivor',
-    title: 'AQUATIC SURVIVAL',
-    tagline: 'Survive the deep. Battle the bosses.',
-    description:
-      'Top-down arena survival. Play as Aqua the tuxedo turtle across two worlds — underwater gauntlet and the surface land. Dozens of bosses. How long can you last?',
-    icon: '🐢',
-    iconBg: '🌊',
-    accentColor: '#3fd2e6',
-    glowColor: 'rgba(63, 210, 230, 0.35)',
-    borderColor: 'rgba(63, 210, 230, 0.5)',
-    hoverBorder: 'rgba(125, 249, 255, 0.9)',
-    href: '/games/aqua-survivor',
-    live: true,
-    genre: 'SURVIVAL',
-    players: '1P',
-  },
-  {
-    slug: 'elemental-trials',
-    title: 'ELEMENTAL TRIALS',
-    tagline: 'Seven guardians. One gauntlet.',
-    description:
-      'Battle 7 elemental guardians (and a hidden Void Universe of 5 more) across themed arenas. Collect and merge weapons, exploit boss weaknesses, and loop endlessly as bosses grow stronger.',
-    icon: '⚔️',
-    iconBg: '🔥',
-    accentColor: '#ff6b6b',
-    glowColor: 'rgba(255, 107, 107, 0.35)',
-    borderColor: 'rgba(255, 107, 107, 0.5)',
-    hoverBorder: 'rgba(255, 157, 157, 0.9)',
-    href: '/games/elemental-trials',
-    live: true,
-    genre: 'BOSS RUSH',
-    players: '1P',
-  },
-  {
-    slug: 'haunted-mansion',
-    title: 'HAUNTED MANSION',
-    tagline: 'Four rooms. One way out.',
-    description:
-      'Search a cursed mansion for keys, dodge spiders, smash cursed mirrors, and outrun the monster in the final chase. Find weapons, armor, and the rare Totem before the night ends you.',
-    icon: '🏚️',
-    iconBg: '🌕',
-    accentColor: '#ffd166',
-    glowColor: 'rgba(255, 209, 102, 0.35)',
-    borderColor: 'rgba(255, 209, 102, 0.5)',
-    hoverBorder: 'rgba(255, 224, 153, 0.9)',
-    href: '/games/haunted-mansion',
-    live: true,
-    genre: 'SURVIVAL HORROR',
-    players: '1P',
-  },
-  {
-    slug: 'luffys-quest',
-    title: "LUFFY'S SURVIVAL QUEST",
-    tagline: 'Become King of the Pirates.',
-    description:
-      'Fight through 4 islands — The Town, Sky Island, Volcano Island, and Monkey Island. Master 6 powers from Lightning to Gear 5 Nika Mode, freeze crowds with Conqueror’s Haki, and take down every boss.',
-    icon: '👒',
-    iconBg: '🏴‍☠️',
-    accentColor: '#ff9f43',
-    glowColor: 'rgba(255, 159, 67, 0.35)',
-    borderColor: 'rgba(255, 159, 67, 0.5)',
-    hoverBorder: 'rgba(255, 190, 118, 0.9)',
-    href: '/games/luffys-quest',
-    live: true,
-    genre: 'SURVIVAL',
-    players: '1P',
-  },
-  {
-    slug: 'quadratic-quest',
-    title: "ADRIAN'S QUADRATIC QUEST",
-    tagline: 'Solve the equation. Blast through the gate.',
-    description:
-      'An endless run across an alien planet — double-jump over space rocks and slimes, grab crystals, and outrun the dark. Every so often a MATH GATE blocks the path, and only the right root of the quadratic opens it.',
-    icon: '🚀',
-    iconBg: '🪐',
-    accentColor: '#a78bfa',
-    glowColor: 'rgba(167, 139, 250, 0.35)',
-    borderColor: 'rgba(167, 139, 250, 0.5)',
-    hoverBorder: 'rgba(199, 180, 255, 0.9)',
-    href: '/games/quadratic-quest',
-    live: true,
-    genre: 'MATH RUNNER',
-    players: '1P',
-  },
-  {
-    slug: 'sprite-forge',
-    title: 'SPRITE FORGE',
-    tagline: 'Draw your own monsters.',
-    description:
-      'A touch-friendly pixel-art editor built for making game characters. Draw sprites on a grid, save a gallery, and export paste-ready code to drop into any canvas game.',
-    icon: '🖌️',
-    iconBg: '🎨',
-    accentColor: '#3fd2e6',
-    glowColor: 'rgba(63, 210, 230, 0.35)',
-    borderColor: 'rgba(63, 210, 230, 0.5)',
-    hoverBorder: 'rgba(125, 249, 255, 0.9)',
-    href: '/games/sprite-forge',
-    live: true,
-    genre: 'TOOL',
-    players: '1P',
-  },
-]
+import { GameCard } from '@/components/GameCard'
+import { GAMES, toCardGame } from '@/lib/games'
 
 export default function ArcadeLobby() {
   return (
@@ -181,7 +43,7 @@ export default function ArcadeLobby() {
       <main className="flex-1 w-full max-w-5xl px-4 pb-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
           {GAMES.map(game => (
-            <GameCard key={game.slug} game={game} />
+            <GameCard key={game.slug} game={toCardGame(game)} />
           ))}
         </div>
 
@@ -190,7 +52,7 @@ export default function ArcadeLobby() {
           className="mt-12 border rounded-lg px-6 py-4 flex flex-wrap gap-6 justify-center"
           style={{ borderColor: 'rgba(63,210,230,0.2)', background: 'rgba(13,27,42,0.8)' }}
         >
-          <Stat label="GAMES" value="8" />
+          <Stat label="GAMES" value={String(GAMES.length)} />
           <Stat label="TOTAL BOSSES" value="40+" />
           <Stat label="WORLDS" value="8" />
           <Stat label="PLAYERS" value="1" />
