@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { getGame } from '@/lib/games'
 
@@ -37,6 +37,16 @@ export function GameFrame({ slug }: { slug: string }) {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+
+  /* On-demand games are asked for their standing; the reply comes back
+     through the same nano-game-over listener below. */
+  function requestScore() {
+    iframeRef.current?.contentWindow?.postMessage(
+      { type: 'nano-request-score', game: slug },
+      '*',
+    )
+  }
 
   const fetchLeaderboard = useCallback(async () => {
     setLoadingLB(true)
@@ -152,9 +162,9 @@ export function GameFrame({ slug }: { slug: string }) {
             >
               🏆 SCORES
             </button>
-            {gameResult && !showScoreModal && (
+            {(board.submitMode === 'on-demand' || (gameResult && !showScoreModal)) && (
               <button
-                onClick={() => setShowScoreModal(true)}
+                onClick={board.submitMode === 'on-demand' ? requestScore : () => setShowScoreModal(true)}
                 className="font-pixel rounded px-3 py-1 cursor-pointer"
                 style={{
                   fontSize: '8px',
@@ -176,6 +186,7 @@ export function GameFrame({ slug }: { slug: string }) {
       {/* Game iframe */}
       <div className="flex-1 relative">
         <iframe
+          ref={iframeRef}
           src={`/games/${slug}.html`}
           title={game.title}
           className="absolute inset-0 w-full h-full border-0"

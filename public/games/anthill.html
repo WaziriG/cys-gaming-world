@@ -1980,6 +1980,27 @@ function fit(){
 window.addEventListener('resize',fit);
 window.addEventListener('orientationchange',()=>setTimeout(fit,150));
 fit();
+
+/* ---------------------------------------------------------
+   LEADERBOARD — an idle game never ends, so instead of
+   reporting at a game over that never comes, the arcade
+   frame asks for the colony's standing when the player
+   presses SUBMIT.
+   --------------------------------------------------------- */
+window.addEventListener('message', function(e){
+  var d = e.data;
+  if(!d || d.type !== 'nano-request-score' || d.game !== 'anthill') return;
+  try{
+    window.parent.postMessage({
+      type:  'nano-game-over',
+      game:  'anthill',
+      score: CASTE_IDS.indexOf(S.caste) + 1,
+      kills: Math.floor(S.lifetime),
+      level: S.wave,
+      reason:'win'
+    }, '*');
+  }catch(_){}
+});
 </script>
 </body>
 </html>

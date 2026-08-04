@@ -1928,6 +1928,12 @@ function update(dt){
   /* --- death --- */
   if(player.hp <= 0 && !player.dead){
     player.dead = 1.4;
+    /* sandbox runs are for testing builds — they never touch the board */
+    if(!sandbox){
+      try{ window.parent.postMessage({ type:'nano-game-over', game:'nano-slime',
+        score: meta.best, kills: Math.floor(meta.goo), level: player.pumpkins,
+        reason: 'dead' }, '*'); }catch(_){}
+    }
     SFX.die();
     burst(player.x, player.y, '#e0574a', 30);
     if(meta.useGhost && own('ghost') && !player.ghost){

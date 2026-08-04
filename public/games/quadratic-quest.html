@@ -431,6 +431,9 @@ function gameOver() {
   document.getElementById('overTitle').textContent = gatesSolved >= 5 ? '🏆 AMAZING RUN, ADRIAN!' : '💥 MISSION OVER';
   document.getElementById('overScreen').classList.remove('hidden');
   beep(300, .5, 'sawtooth', .12, 80);
+  try{ window.parent.postMessage({ type:'nano-game-over', game:'quadratic-quest',
+    score: score, kills: gatesSolved, level: Math.floor(distance),
+    reason: gatesSolved >= 5 ? 'win' : 'dead' }, '*'); }catch(_){}
 }
 let sessionBest = 0;
 

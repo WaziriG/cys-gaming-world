@@ -8,6 +8,9 @@ export interface LeaderboardConfig {
   limits: { maxScore: number; maxKills: number; maxLevel: number }
   winText: string
   loseText: string
+  /* Idle games never reach a game over, so the frame has to ask them
+     for a standing instead of waiting to be told. */
+  submitMode?: 'run-end' | 'on-demand'
   /* Games that shipped before the shared frame each emit their own event
      name. New games use the standard 'nano-game-over'. */
   legacyEventType?: string
@@ -53,8 +56,9 @@ export const GAMES: GameDef[] = [
          totals just ranks whoever left the tab closed longest. */
       statLabels: { score: 'TIER', kills: 'FOOD', level: 'RAIDS' },
       limits: { maxScore: 50, maxKills: 2000000000, maxLevel: 10000 },
-      winText: 'COLONY THRIVES',
-      loseText: 'COLONY FALLS',
+      winText: 'COLONY STANDING',
+      loseText: 'COLONY STANDING',
+      submitMode: 'on-demand',
     },
   },
   {
@@ -73,7 +77,7 @@ export const GAMES: GameDef[] = [
     genre: 'GROWTH',
     players: '1P',
     leaderboard: {
-      statLabels: { score: 'FORM', kills: 'EATEN', level: 'PUMPKINS' },
+      statLabels: { score: 'FORM', kills: 'GOO', level: 'PUMPKINS' },
       limits: { maxScore: 100, maxKills: 1000000, maxLevel: 100000 },
       winText: 'APEX SLIME',
       loseText: 'RUN OVER',
@@ -164,7 +168,7 @@ export const GAMES: GameDef[] = [
     genre: 'SURVIVAL',
     players: '1P',
     leaderboard: {
-      statLabels: { score: 'SCORE', kills: 'DEFEATED', level: 'ISLAND' },
+      statLabels: { score: 'SCORE', kills: 'WAVES', level: 'ISLAND' },
       limits: { maxScore: 1000000, maxKills: 9999, maxLevel: 4 },
       winText: 'KING OF THE PIRATES',
       loseText: 'YOU FELL',
@@ -186,8 +190,8 @@ export const GAMES: GameDef[] = [
     genre: 'MATH RUNNER',
     players: '1P',
     leaderboard: {
-      statLabels: { score: 'SCORE', kills: 'GATES', level: 'CRYSTALS' },
-      limits: { maxScore: 1000000, maxKills: 9999, maxLevel: 99999 },
+      statLabels: { score: 'SCORE', kills: 'GATES', level: 'DISTANCE' },
+      limits: { maxScore: 1000000, maxKills: 9999, maxLevel: 10000000 },
       winText: 'RUN COMPLETE',
       loseText: 'GAME OVER',
     },
